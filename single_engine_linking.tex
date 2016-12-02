@@ -1,0 +1,104 @@
+\begin{center}
+\begin{tikzpicture}[thick]
+\node at (0.0, 6.0)[circle, minimum size=3cm, fill=blue!20](FanAndLPC){FanAndLPC};
+\node at (5.706339097770921, 1.8541019662496847)[circle, minimum size=3cm, fill=blue!20](CombustorCooling){CombustorCooling};
+\node at (3.5267115137548393, -4.854101966249684)[circle, minimum size=3cm, fill=blue!20](Turbine){Turbine};
+\node at (-3.5267115137548384, -4.854101966249685)[circle, minimum size=3cm, fill=blue!20](ExhaustAndThrust){ExhaustAndThrust};
+\node at (-5.706339097770922, 1.8541019662496834)[circle, minimum size=3cm, fill=blue!20](Sizing){Sizing};
+\node at (-2.85,3.93)[draw,rectangle, color=red, align=left, fill=white]({pi_f P_{t_2} T_{t_{1.8}} T_{t_{2.5}} P_{t_{2.5}} P_{t_{1.8}} T_{t_2} pi_{hc} pi_{lc}}){$\pi_f$\\$P_{t_2}$\\$T_{t_{1.8}}$\\$T_{t_{2.5}}$\\$P_{t_{2.5}}$\\$P_{t_{1.8}}$\\$T_{t_2}$\\$\pi_{hc}$\\$\pi_{lc}$};
+\begin{pgfonlayer}{background}
+\draw[color=red] ({pi_f P_{t_2} T_{t_{1.8}} T_{t_{2.5}} P_{t_{2.5}} P_{t_{1.8}} T_{t_2} pi_{hc} pi_{lc}})--(FanAndLPC);
+\end{pgfonlayer}
+\begin{pgfonlayer}{background}
+\draw[color=red] ({pi_f P_{t_2} T_{t_{1.8}} T_{t_{2.5}} P_{t_{2.5}} P_{t_{1.8}} T_{t_2} pi_{hc} pi_{lc}})--(Sizing);
+\end{pgfonlayer}
+\node at (1.76,0.57)[draw,rectangle, color=blue, align=left, fill=white]({h_{t_2} h_{t_{2.5}} h_{t_2.1} h_{t_{1.8}}}){$h_{t_2}$\\$h_{t_{2.5}}$\\$h_{t_2.1}$\\$h_{t_{1.8}}$};
+\begin{pgfonlayer}{background}
+\draw[color=blue] ({h_{t_2} h_{t_{2.5}} h_{t_2.1} h_{t_{1.8}}})--(FanAndLPC);
+\end{pgfonlayer}
+\begin{pgfonlayer}{background}
+\draw[color=blue] ({h_{t_2} h_{t_{2.5}} h_{t_2.1} h_{t_{1.8}}})--(Turbine);
+\end{pgfonlayer}
+\node at (4.62,-1.50)[draw,rectangle, color=cyan , align=left, fill=white]({h_{t_{4.1}}}){$h_{t_{4.1}}$};
+\begin{pgfonlayer}{background}
+\draw[color=cyan ] ({h_{t_{4.1}}})--(CombustorCooling);
+\end{pgfonlayer}
+\begin{pgfonlayer}{background}
+\draw[color=cyan ] ({h_{t_{4.1}}})--(Turbine);
+\end{pgfonlayer}
+\node at (0.00,-1.50)[draw,rectangle, color=magenta, align=left, fill=white]({f}){$f$};
+\begin{pgfonlayer}{background}
+\draw[color=magenta] ({f})--(CombustorCooling);
+\end{pgfonlayer}
+\begin{pgfonlayer}{background}
+\draw[color=magenta] ({f})--(Turbine);
+\end{pgfonlayer}
+\begin{pgfonlayer}{background}
+\draw[color=magenta] ({f})--(ExhaustAndThrust);
+\end{pgfonlayer}
+\begin{pgfonlayer}{background}
+\draw[color=magenta] ({f})--(Sizing);
+\end{pgfonlayer}
+\node at (-4.62,-1.50)[draw,rectangle, color=brown, align=left, fill=white]({alpha TSFC F m_{core}}){$\alpha$\\$TSFC$\\$F$\\$m_{core}$};
+\begin{pgfonlayer}{background}
+\draw[color=brown] ({alpha TSFC F m_{core}})--(ExhaustAndThrust);
+\end{pgfonlayer}
+\begin{pgfonlayer}{background}
+\draw[color=brown] ({alpha TSFC F m_{core}})--(Sizing);
+\end{pgfonlayer}
+\node at (-1.09,-1.50)[draw,rectangle, color=gray, align=left, fill=white]({pi_{tn} P_{t_{4.5}} T_{t_{4.5}} P_{t_{4.9}}}){$\pi_{tn}$\\$P_{t_{4.5}}$\\$T_{t_{4.5}}$\\$P_{t_{4.9}}$};
+\begin{pgfonlayer}{background}
+\draw[color=gray] ({pi_{tn} P_{t_{4.5}} T_{t_{4.5}} P_{t_{4.9}}})--(Turbine);
+\end{pgfonlayer}
+\begin{pgfonlayer}{background}
+\draw[color=gray] ({pi_{tn} P_{t_{4.5}} T_{t_{4.5}} P_{t_{4.9}}})--(Sizing);
+\end{pgfonlayer}
+\node at (1.18,-0.38)[draw,rectangle, color=olive, align=left, fill=white]({P_{t_{4.1}} T_{t_{4.1}}}){$P_{t_{4.1}}$\\$T_{t_{4.1}}$};
+\begin{pgfonlayer}{background}
+\draw[color=olive] ({P_{t_{4.1}} T_{t_{4.1}}})--(CombustorCooling);
+\end{pgfonlayer}
+\begin{pgfonlayer}{background}
+\draw[color=olive] ({P_{t_{4.1}} T_{t_{4.1}}})--(Turbine);
+\end{pgfonlayer}
+\begin{pgfonlayer}{background}
+\draw[color=olive] ({P_{t_{4.1}} T_{t_{4.1}}})--(Sizing);
+\end{pgfonlayer}
+\node at (2.85,3.93)[draw,rectangle, color=orange, align=left, fill=white]({P_{t_3}}){$P_{t_3}$};
+\begin{pgfonlayer}{background}
+\draw[color=orange] ({P_{t_3}})--(FanAndLPC);
+\end{pgfonlayer}
+\begin{pgfonlayer}{background}
+\draw[color=orange] ({P_{t_3}})--(CombustorCooling);
+\end{pgfonlayer}
+\node at (-3.08,1.00)[draw,rectangle, color=black, align=left, fill=white]({T_{t_7} P_{t_7} u_0}){$T_{t_7}$\\$P_{t_7}$\\$u_0$};
+\begin{pgfonlayer}{background}
+\draw[color=black] ({T_{t_7} P_{t_7} u_0})--(FanAndLPC);
+\end{pgfonlayer}
+\begin{pgfonlayer}{background}
+\draw[color=black] ({T_{t_7} P_{t_7} u_0})--(ExhaustAndThrust);
+\end{pgfonlayer}
+\begin{pgfonlayer}{background}
+\draw[color=black] ({T_{t_7} P_{t_7} u_0})--(Sizing);
+\end{pgfonlayer}
+\node at (3.08,1.00)[draw,rectangle, color=red, align=left, fill=white]({h_{t_3}}){$h_{t_3}$};
+\begin{pgfonlayer}{background}
+\draw[color=red] ({h_{t_3}})--(FanAndLPC);
+\end{pgfonlayer}
+\begin{pgfonlayer}{background}
+\draw[color=red] ({h_{t_3}})--(CombustorCooling);
+\end{pgfonlayer}
+\begin{pgfonlayer}{background}
+\draw[color=red] ({h_{t_3}})--(Turbine);
+\end{pgfonlayer}
+\node at (-1.90,-2.62)[draw,rectangle, color=cyan , align=left, fill=white]({T_{t_5} P_{t_5}}){$T_{t_5}$\\$P_{t_5}$};
+\begin{pgfonlayer}{background}
+\draw[color=cyan ] ({T_{t_5} P_{t_5}})--(Turbine);
+\end{pgfonlayer}
+\begin{pgfonlayer}{background}
+\draw[color=cyan ] ({T_{t_5} P_{t_5}})--(ExhaustAndThrust);
+\end{pgfonlayer}
+\begin{pgfonlayer}{background}
+\draw[color=cyan ] ({T_{t_5} P_{t_5}})--(Sizing);
+\end{pgfonlayer}
+\end{tikzpicture}
+\end{center}

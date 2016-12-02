@@ -1,0 +1,49 @@
+\begin{center}
+\begin{tikzpicture}[thick]
+\node at (0.0, 6.0)[circle, minimum size=3cm, fill=blue!20](Sizing){Sizing};
+\node at (6.0, 3.6739403974420594e-16)[circle, minimum size=3cm, fill=blue!20](FanMap){FanMap};
+\node at (7.347880794884119e-16, -6.0)[circle, minimum size=3cm, fill=blue!20](LPCMap){LPCMap};
+\node at (-6.0, -1.102182119232618e-15)[circle, minimum size=3cm, fill=blue!20](HPCMap){HPCMap};
+\node at (-3.00,3.00)[draw,rectangle, color=red, align=left, fill=white]({m_{hc_D} T_{t_{2.5}} P_{t_{2.5}} pi_{hc} m_{hc} N_2}){$m_{hc_D}$\\$T_{t_{2.5}}$\\$P_{t_{2.5}}$\\$\pi_{hc}$\\$m_{hc}$\\$N_2$};
+\begin{pgfonlayer}{background}
+\draw[color=red] ({m_{hc_D} T_{t_{2.5}} P_{t_{2.5}} pi_{hc} m_{hc} N_2})--(Sizing);
+\end{pgfonlayer}
+\begin{pgfonlayer}{background}
+\draw[color=red] ({m_{hc_D} T_{t_{2.5}} P_{t_{2.5}} pi_{hc} m_{hc} N_2})--(HPCMap);
+\end{pgfonlayer}
+\node at (2.00,0.00)[draw,rectangle, color=blue, align=left, fill=white]({T_{t_2} P_{t_2}}){$T_{t_2}$\\$P_{t_2}$};
+\begin{pgfonlayer}{background}
+\draw[color=blue] ({T_{t_2} P_{t_2}})--(Sizing);
+\end{pgfonlayer}
+\begin{pgfonlayer}{background}
+\draw[color=blue] ({T_{t_2} P_{t_2}})--(FanMap);
+\end{pgfonlayer}
+\begin{pgfonlayer}{background}
+\draw[color=blue] ({T_{t_2} P_{t_2}})--(LPCMap);
+\end{pgfonlayer}
+\node at (3.00,3.00)[draw,rectangle, color=cyan , align=left, fill=white]({pi_f m_{fan} bar{m}_{fan_{D}} N_f}){$\pi_f$\\$m_{fan}$\\$\bar{m}_{fan_{D}}$\\$N_f$};
+\begin{pgfonlayer}{background}
+\draw[color=cyan ] ({pi_f m_{fan} bar{m}_{fan_{D}} N_f})--(Sizing);
+\end{pgfonlayer}
+\begin{pgfonlayer}{background}
+\draw[color=cyan ] ({pi_f m_{fan} bar{m}_{fan_{D}} N_f})--(FanMap);
+\end{pgfonlayer}
+\node at (0.00,0.00)[draw,rectangle, color=magenta, align=left, fill=white]({m_{lc} N_1 pi_{lc} m_{lc_D}}){$m_{lc}$\\$N_1$\\$\pi_{lc}$\\$m_{lc_D}$};
+\begin{pgfonlayer}{background}
+\draw[color=magenta] ({m_{lc} N_1 pi_{lc} m_{lc_D}})--(Sizing);
+\end{pgfonlayer}
+\begin{pgfonlayer}{background}
+\draw[color=magenta] ({m_{lc} N_1 pi_{lc} m_{lc_D}})--(LPCMap);
+\end{pgfonlayer}
+\node at (-2.00,-0.00)[draw,rectangle, color=brown, align=left, fill=white]({m_{core}}){$m_{core}$};
+\begin{pgfonlayer}{background}
+\draw[color=brown] ({m_{core}})--(Sizing);
+\end{pgfonlayer}
+\begin{pgfonlayer}{background}
+\draw[color=brown] ({m_{core}})--(LPCMap);
+\end{pgfonlayer}
+\begin{pgfonlayer}{background}
+\draw[color=brown] ({m_{core}})--(HPCMap);
+\end{pgfonlayer}
+\end{tikzpicture}
+\end{center}

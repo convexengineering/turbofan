@@ -1,0 +1,13 @@
+\begin{center}
+\begin{tikzpicture}[thick]
+\node at (0.0, 6.0)[circle, minimum size=3cm, fill=blue!20](OffDesignTOC){OffDesignTOC};
+\node at (7.347880794884119e-16, -6.0)[circle, minimum size=3cm, fill=blue!20](OffDesignOnDRerun){OffDesignOnDRerun};
+\node at (0.00,0.00)[draw,rectangle, color=red, align=left, fill=white]({A_7 A_5 A_2 m_{coreD} m_{fan_bar_D} m_{htD} m_{hc_D} m_{ltD} W_{engine} m_{lc_D} A_{2.5}}){$A_7$\\$A_5$\\$A_2$\\$m_{coreD}$\\$m_{fan_bar_D}$\\$m_{htD}$\\$m_{hc_D}$\\$m_{ltD}$\\$W_{engine}$\\$m_{lc_D}$\\$A_{2.5}$};
+\begin{pgfonlayer}{background}
+\draw[color=red] ({A_7 A_5 A_2 m_{coreD} m_{fan_bar_D} m_{htD} m_{hc_D} m_{ltD} W_{engine} m_{lc_D} A_{2.5}})--(OffDesignTOC);
+\end{pgfonlayer}
+\begin{pgfonlayer}{background}
+\draw[color=red] ({A_7 A_5 A_2 m_{coreD} m_{fan_bar_D} m_{htD} m_{hc_D} m_{ltD} W_{engine} m_{lc_D} A_{2.5}})--(OffDesignOnDRerun);
+\end{pgfonlayer}
+\end{tikzpicture}
+\end{center}

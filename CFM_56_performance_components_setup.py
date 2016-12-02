@@ -383,27 +383,6 @@ class Compressor(Model):
         gammaAir = Variable('gamma_{air}', 1.4, '-', 'Specific Heat Ratio for Ambient Air')
         Cpair = Variable('Cp_{air}', 1003, 'J/kg/K', "Cp Value for Air at 250K")
 
-        #constraints
-        constraints = []
-
-        constraints.extend([
-            #fan, LPC, HPC
-            Cp1 == Cp1,
-            Cp2 == Cp2,
-
-            hold25 == hold25,
-            hold2 == hold2,
-            c1 == c1,
-
-            pid == pid,
-            pifn == pifn,
-
-            gammaAir == gammaAir,
-            Cpair == Cpair,
-            ])
-
-        return constraints
-
     def dynamic(self, engine, state):
         """
         creates an instance of the compressor performance model
@@ -532,29 +511,6 @@ class Combustor(Model):
 
         Ttf = Variable('T_{t_f}', 'K', 'Incoming Fuel Total Temperature')
 
-        #constraints
-        constraints = []
-
-        constraints.extend([
-            Cpc == Cpc,
-            Cpfuel == Cpfuel,
-
-            ac == ac,
-            ruc == ruc,
-
-            etaB == etaB,
-
-            hf == hf,
-
-            pib == pib,
-
-            hold4a == hold4a,
-
-            Ttf == Ttf,
-            ])
-
-        return constraints
-
     def dynamic(self, engine, state):
         """
         creates an instance of the fan map performance model
@@ -610,8 +566,6 @@ class CombustorPerformance(Model):
 
                 #making f+1 GP compatible --> needed for convergence
                 SignomialEquality(fp1,f+1),
-                fp1 == fp1,
-                f==f,
 
                 #investigate doing this with a substitution
                 M4a == .1025,
@@ -658,22 +612,6 @@ class Turbine(Model):
         #---------------------------efficiencies & takeoffs-----------------------
         etaHPshaft = Variable('\eta_{HPshaft}', '-', 'Power Transmission Efficiency of High Pressure Shaft, Smears in Losses for Electrical Power')
         etaLPshaft = Variable('\eta_{LPshaft}', '-', 'Power Transmission Efficiency of Low Pressure Shaft, Smeras in Losses for Electrical Power')
-
-        #constraints
-        constraints = []
-
-        constraints.extend([
-            #turbines
-            Cpt1 == Cpt1,
-            Cpt2 == Cpt2,
-
-            pitn == pitn,
-
-            etaHPshaft == etaHPshaft,
-            etaLPshaft == etaLPshaft,
-            ])
-
-        return constraints
 
     def dynamic(self, engine):
         """
@@ -742,18 +680,6 @@ class FanMap(Model):
         mFanBarD = Variable('\\bar{m}_{fan_{D}}', 'kg/s', 'Fan On-Design Corrected Mass Flow')
         piFanD = Variable('\pi_{f_D}', '-', 'On-Design Pressure Ratio')
 
-        #constraints
-        constraints = []
-
-        constraints.extend([
-            mFanD == mFanD,
-            mFanBarD == mFanBarD,
-            piFanD == piFanD,
-            ])
-
-
-        return constraints
-
     def dynamic(self, engine):
         """
         creates an instance of the fan map performance model
@@ -802,16 +728,6 @@ class LPCMap(Model):
         #-----------------LPC map variables-------------------
         mlcD = Variable('m_{lc_D}', 'kg/s', 'On Design LPC Corrected Mass Flow')
         pilcD = Variable('\pi_{lc_D}', '-', 'LPC On-Design Pressure Ratio')
-
-        #constraints
-        constraints = []
-
-        constraints.extend([
-            mlcD == mlcD,
-            pilcD == pilcD,
-            ])
-
-        return constraints
 
     def dynamic(self, engine):
         """
@@ -863,17 +779,6 @@ class HPCMap(Model):
         pihcD = Variable('\pi_{hc_D}', '-', 'HPC On-Design Pressure Ratio')
         mhcD = Variable('m_{hc_D}', 'kg/s', 'On Design HPC Corrected Mass Flow')
 
-        #constraints
-        constraints = []
-
-        constraints.extend([
-            mhcD == mhcD,
-            pihcD == pihcD,
-            mhcD == mhcD,
-            ])
-
-        return constraints
-
     def dynamic(self, engine):
         """
         creates an instance of the HPC map performance model
@@ -922,17 +827,6 @@ class Thrust(Model):
         #fan and exhaust
         Cptex =Variable('Cp_tex', 1029, 'J/kg/K', "Cp Value for Combustion Products at Core Exhaust") #500K, gamma = 1.387
         Cpfanex = Variable('Cp_fex', 1005, 'J/kg/K', "Cp Value for Air at 300K") #gamma =1.4        #heat of combustion of jet fuel
- 
-        #constraints
-        constraints = []
-
-        constraints.extend([
-            #fan and exhaust
-            Cptex == Cptex,
-            Cpfanex == Cpfanex,
-            ])
-
-        return constraints
 
     def dynamic(self, engine, state):
         """
@@ -1070,19 +964,8 @@ class Sizing(Model):
         constraints = []
 
         constraints.extend([
-            mCoreD == mCoreD,
-            
             #-------------------------Areas------------------------
-            A25 == A25,
             A5 + A7 <= A2,
-
-            #gear ratio, set to 1 if no gearing present
-            Gf == Gf,
-
-            mhtD == mhtD,
-            mltD == mltD,
-
-            alpha_OD == alpha_OD,
             ])
 
 

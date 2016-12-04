@@ -1,3 +1,4 @@
+"SP Implementation of the TASOPT engine model"
 import numpy as np
 from gpkit import Model, Variable, SignomialsEnabled, units, Vectorize, SignomialEquality
 ##from gpkit.nomials import SignomialEquality
@@ -60,7 +61,7 @@ turbexexp = (sta6gamma - 1) / sta6gamma
 
 class Engine(Model):
     """
-    Engine model
+    Tasopt engine model
     """
     def setup(self, res7, cooling, N):
         """
@@ -68,7 +69,7 @@ class Engine(Model):
 
         Arguments
         ---------
-        res7 - 0= 1=
+        res7 - 0 = Thrust constrained engine, 1 = burner exit temp/turbine entry temp constrained engine
         cooling - True = use cooling flow and mixing model, False = neglect cooling flow and mixing
         N - the number of flight segments
         """
@@ -90,7 +91,6 @@ class Engine(Model):
             Fspec = Variable('F_{spec}', 'N', 'Specified Total Thrust')
             Tt4spec = Variable('T_{t_{4spec}}', 'K', 'Specified Combustor Exit (Station 4) Stagnation Temperature')
 
-##        models = [self.compressor , self. combustor, self. turbine, self. thrust]
         models = [self.compressor , self. combustor, self. turbine, self. thrust, self.fanmap, self.lpcmap, self.hpcmap, self.sizing, self.state, self.engineP]
 
         #declare variables
@@ -130,7 +130,7 @@ class Engine(Model):
             fnomix = [
                 #only if mixing = false
                 #compute f without mixing, overestimation if there is cooling
-                TCS([self.combustor['eta_{B}'] * self.engineP['f'] * self.combustor['h_f'] + self.engineP['h_{t_3}'] >= 'h_{t_4}']),
+                TCS([self.combustor['eta_{B}'] * self.engineP['f'] * self.combustor['h_f'] + self.engineP['h_{t_3}'] >= self.engineP['h_{t_4}']]),
 
                 self.engineP['P_{t_4}'] == self.combustor['\pi_{b}'] * self.engineP['P_{t_3}'],   #B.145
                 ]
@@ -235,7 +235,6 @@ class Engine(Model):
                 (self.engineP['T_{7}']/self.engineP['T_{t_7}'])**-1 >= 1 + .2 * self.engineP['M_7']**2,
                 ]
 
-
             res5 = [
                 #residual 5 core nozzle mass flow
                 (self.engineP['P_{5}']/self.engineP['P_{t_5}']) == (self.engineP['T_{5}']/self.engineP['T_{t_5}'])**(3.583979),
@@ -310,7 +309,6 @@ class Engine(Model):
             constraints = [weight, fnomix, fnomix, shaftpower, hptexit, fanmap, lpcmap, hpcmap, thrust, res1, res2, res3, res4, res5, massflux, fanarea, HPCarea, onDest, res7list]
         
         return models, constraints
-
 
     def dynamic(self, state, res7):
         """
@@ -450,7 +448,6 @@ class CompressorPerformance(Model):
             ht18 == ht0,        #B.115
             ]
 
-
         fan = [
             #fan inlet constraints (station 2)
             Tt2 == Tt18,    #B.120
@@ -517,7 +514,6 @@ class Combustor(Model):
         """
         return CombustorPerformance(self, engine, state) 
 
-        
 class CombustorPerformance(Model):
     """
     combustor perfomrance constraints
@@ -888,11 +884,10 @@ class ThrustPerformance(Model):
 
             #exhaust and thrust constraints
             constraints.extend([
- 
                 P8 == state["P_{atm}"],
                 h8 == self.thrust['Cp_fex'] * T8,
                 TCS([u8**2 + 2*h8 <= 2*ht8]),
-    ##               SignomialEquality(u8**2 + 2*h8, 2*ht8),
+##               SignomialEquality(u8**2 + 2*h8, 2*ht8),
                 (P8/Pt8)**(fanexexp) == T8/Tt8,
                 ht8 == self.thrust['Cp_fex'] * Tt8,
                 
@@ -901,7 +896,7 @@ class ThrustPerformance(Model):
  
                 (P6/Pt6)**(turbexexp) == T6/Tt6,
                 TCS([u6**2 + 2*h6 <= 2*ht6]),
-    ##                SignomialEquality(u6**2 + 2*h6, 2*ht6),
+##                SignomialEquality(u6**2 + 2*h6, 2*ht6),
                 h6 == self.thrust['Cp_tex'] * T6,
                 ht6 == self.thrust['Cp_tex'] * Tt6,
 
@@ -921,11 +916,10 @@ class ThrustPerformance(Model):
 
                 #SIGNOMIAL
                 TCS([F <= F6 + F8]),
-    ##                SignomialEquality(F, F6 + F8),
+##                SignomialEquality(F, F6 + F8),
 
                 Fsp == F/((self.engine['alphap1'])*mCore*state['a']),   #B.191
 
-        
                 F >= .1*units('N'),
 
                 #TSFC
@@ -968,7 +962,6 @@ class Sizing(Model):
             A5 + A7 <= A2,
             ])
 
-
         return constraints
 
     def dynamic(self, engine, compressor, fanmap, lpcmap, hpcmap, state, res7):
@@ -976,8 +969,6 @@ class Sizing(Model):
         creates an instance of the engine sizing performance model
         """
         return SizingPerformance(self, engine, compressor, fanmap, lpcmap, hpcmap, state, res7)
-        
-        
 
 class SizingPerformance(Model):
     """
@@ -1070,7 +1061,6 @@ class SizingPerformance(Model):
 
         return constraints
 
-
 class TestState(Model):
     """
     state class only to be used for testing purposes
@@ -1099,11 +1089,9 @@ class TestState(Model):
 
         constraints.extend([
             rho == .38*units('kg/m^3'),
-            V == V,
             V == M * a,
             a  == (gamma * R * T_atm)**.5,
             a == 297 * units('m/s'),
-##            mu == mu,
             T_atm == 218*units('K'),
             p_atm == 60000*units('Pa'),
             M == .8,

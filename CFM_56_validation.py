@@ -1,7 +1,7 @@
 import numpy as np
 from gpkit import Model, Variable, SignomialsEnabled, units, ConstraintSet
 from gpkit.constraints.linked import LinkedConstraintSet
-from gpkit.constraints.tight import TightConstraintSet as TCS
+from gpkit.constraints.tight import Tight as TCS
 from CFM_56_validation_components import FanAndLPC, CombustorCooling, Turbine, ExhaustAndThrust, Sizing, FanMap, LPCMap, HPCMap
 from collections import defaultdict
 from gpkit.small_scripts import mag
@@ -31,6 +31,8 @@ class OperatingPoint1(Model):
         M0 = .8
         
         offD = Sizing(res7, mixing)
+        
+        self.odcost = offD.cost
 
         #only add the HPCmap if residual 7 specifies a thrust
         if res7 ==0:
@@ -282,6 +284,7 @@ class FullEngineRun(Model):
         W_engine = Variable('W_{engine}', 'N', 'Weight of a Single Turbofan Engine')
     
         engine1 = OperatingPoint1()
+
         engine2 = OperatingPoint2()
         engine3 = SizingTO()
     ##    sol1 = engine1.localsolve(verbosity = 4, solver="mosek")
@@ -373,18 +376,21 @@ class FullEngineRun(Model):
         #SUB IN FOR C1??
 
         Model.__init__(self, (engine2.cost+engine1.cost), constraints, valsubs)
-
-        sol = self.localsolve(verbosity = 4, solver="mosek", iteration_limit=100)
+##        print engine1.cost
+##        print engine2.cost
+##        for posy in self.sp().gp().posynomials:
+##            print posy.str_without(["models"])
+##        sol = self.localsolve(verbosity = 4, solver="mosek", iteration_limit=100)
 
                 
 ##        bounds, sol = engine1.determine_unbounded_variables(self, solver="mosek",verbosity=4, iteration_limit=200)
-        print sol.table()
+##        print sol.table()
 ##        print bounds
 
-        tocerror = 100*(mag(sol('TSFC_OperatingPoint1, FullEngineRun')) - .6941)/.6941
-        cruiseerror = 100*(mag(sol('TSFC_OperatingPoint2, FullEngineRun')) - .6793)/.6793
-
-        print tocerror, cruiseerror
+##        tocerror = 100*(mag(sol('TSFC_OperatingPoint1, FullEngineRun')) - .6941)/.6941
+##        cruiseerror = 100*(mag(sol('TSFC_OperatingPoint2, FullEngineRun')) - .6793)/.6793
+##
+##        print tocerror, cruiseerror
 
 
 

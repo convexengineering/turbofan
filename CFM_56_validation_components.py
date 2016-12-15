@@ -1,7 +1,7 @@
 import numpy as np
 from gpkit import Model, Variable, SignomialsEnabled, units,SignomialEquality
 ##from gpkit.nomials import SignomialEquality
-from gpkit.constraints.tight import TightConstraintSet as TCS
+from gpkit.constraints.tight import Tight as TCS
 
 #Cp and gamma values estimated from https://www.ohio.edu/mechanical/thermo/property_tables/air/air_Cp_Cv.html
 
@@ -441,6 +441,10 @@ class ExhaustAndThrust(Model):
         fp1 = Variable('fp1', '-', 'f + 1')
 
         Mtakeoff = Variable('M_{takeoff}', '-', '1 Minus Percent mass flow loss for de-ice, pressurization, etc.')
+
+        print F8/(alpha * mCore) + u0 <= u8
+
+        1/0
 
         with SignomialsEnabled():
             constraints = [

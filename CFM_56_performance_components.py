@@ -148,6 +148,30 @@ class Engine(Model):
         return EnginePerformance(self, self.compressor, self.combustor, self.turbine,
                                  self.fanmap, self.lpcmap, self.hpcmap, self.thrust, self.sizing, state)
 
+class EnginePerformance(Model):
+    """
+    Engine performance model
+    """
+    def __init__(self, engine, compressor, combustor, turbine, fanmap, LPCmap, HPCmap, thrust, sizing, state, **kwargs):
+        res7 = 0
+
+        #create the subcomponent performance models
+        self.compP = compressor.dynamic(engine, state)
+        self.combP = combustor.dynamic(self.compP, engine, state)
+        self.turbineP = turbine.dynamic(self.compP, self.combP, engine)
+        self.thrustP = thrust.dynamic(engine, self.compP, self.combP, self.turbineP, state)
+        self.fanmapP = fanmap.dynamic(self.compP, self.thrustP, engine)
+        self.LPCmapP = LPCmap.dynamic(self.compP, self.thrustP, engine)
+        self.HPCmapP = HPCmap.dynamic(self.compP, self.thrustP, engine)
+        self.sizingP = sizing.dynamic(engine, self.compP, self.combP, self.turbineP, self.fanmapP, self.LPCmapP, self.HPCmapP, self.thrustP, compressor, fanmap, LPCmap, HPCmap, state, res7)
+
+        models = [self.compP, self.combP, self.turbineP, self.thrustP, self.fanmapP, self.LPCmapP, self.HPCmapP, self.sizingP]
+
+##        models = [self.compP, self.combP, self.turbineP, self.thrustP]
+    
+        Model.__init__(self, None, models, **kwargs)
+##        sum(self.thrustP['TSFC']) * (engine['W_{engine}'] * units('1/hr/N'))**.00001
+
 class Compressor(Model):
     """"
     Compressor model
@@ -892,7 +916,7 @@ class ThrustPerformance(Model):
                 Fsp == F/((self.engine['alphap1'])*mCore*state['a']),   #B.191
 
         
-                F >= .1*units('N'),
+##                F >= .1*units('N'),
 
 
 
@@ -1148,30 +1172,6 @@ class SizingPerformance(Model):
         Model.__init__(self, None, constraints)
 
         
-class EnginePerformance(Model):
-    """
-    Engine performance model
-    """
-    def __init__(self, engine, compressor, combustor, turbine, fanmap, LPCmap, HPCmap, thrust, sizing, state, **kwargs):
-        res7 = 0
-
-        #create the subcomponent performance models
-        self.compP = compressor.dynamic(engine, state)
-        self.combP = combustor.dynamic(self.compP, engine, state)
-        self.turbineP = turbine.dynamic(self.compP, self.combP, engine)
-        self.thrustP = thrust.dynamic(engine, self.compP, self.combP, self.turbineP, state)
-        self.fanmapP = fanmap.dynamic(self.compP, self.thrustP, engine)
-        self.LPCmapP = LPCmap.dynamic(self.compP, self.thrustP, engine)
-        self.HPCmapP = HPCmap.dynamic(self.compP, self.thrustP, engine)
-        self.sizingP = sizing.dynamic(engine, self.compP, self.combP, self.turbineP, self.fanmapP, self.LPCmapP, self.HPCmapP, self.thrustP, compressor, fanmap, LPCmap, HPCmap, state, res7)
-
-        models = [self.compP, self.combP, self.turbineP, self.thrustP, self.fanmapP, self.LPCmapP, self.HPCmapP, self.sizingP]
-
-##        models = [self.compP, self.combP, self.turbineP, self.thrustP]
-    
-        Model.__init__(self, None, models, **kwargs)
-##        sum(self.thrustP['TSFC']) * (engine['W_{engine}'] * units('1/hr/N'))**.00001
-
 class TestState(Model):
     """
     state class only to be used for testing purposes
@@ -1199,14 +1199,14 @@ class TestState(Model):
         constraints = []
 
         constraints.extend([
-            rho == .38*units('kg/m^3'),
+##            rho == .38*units('kg/m^3'),
             V == V,
             V == M * a,
             a  == (gamma * R * T_atm)**.5,
-            a == 297 * units('m/s'),
+##            a == 297 * units('m/s'),
 ##            mu == mu,
             T_atm == 218*units('K'),
-            p_atm == 60000*units('Pa'),
+            p_atm == 23.84*units('kPa'),
             M == .8,
             ])
 
@@ -1269,8 +1269,8 @@ if __name__ == "__main__":
         engineP.sizingP['F_{spec}'][0] == 5496.4 * 4.4 * units('N'),
         engineP.sizingP['F_{spec}'][1] == 5961.9*4.4 * units('N'),
 
-        engineP.sizingP['T_{t_{4spec}}'] [0]== 1400*units('K'),
-        engineP.sizingP['T_{t_{4spec}}'][1] == 1400*units('K'),
+##        engineP.sizingP['T_{t_{4spec}}'] [0]== 1400*units('K'),
+##        engineP.sizingP['T_{t_{4spec}}'][1] == 1400*units('K'),
 
         state['P_{atm}'][0] == 23.84*units('kPa'),    #36K feet
         state['M'][0] == M0,

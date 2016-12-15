@@ -8,6 +8,7 @@ from gpkit.small_scripts import mag
 
 #Cp and gamma values estimated from https://www.ohio.edu/mechanical/thermo/property_tables/air/air_Cp_Cv.html
 
+#goption sets the gamma value
 goption = 1
 
 if goption == 1:
@@ -95,11 +96,11 @@ class Engine(Model):
 
         #declare variables
         #max variables for the engine weight model
-        mtotmax = Variable('\dot{m}_{tot_{max}}', 'kg/s', 'Max Fan Mass Flow')
-        mCoremax = Variable('\dot{m}_{core_{max}}', 'kg/s', 'Max Core Mass Flow')
-        pifmax = Variable('\\pi_{f_{max}}', '-', 'Max Fan Pressure Ratio')
-        pilcmax = Variable('\\pi_{lc_{max}}', '-', 'Max LPC Pressure Ratio')
-        pihcmax = Variable('\\pi_{hc_{max}}', '-', 'Max HPC Pressure Ratio')
+##        mtotmax = Variable('\dot{m}_{tot_{max}}', 'kg/s', 'Max Fan Mass Flow')
+##        mCoremax = Variable('\dot{m}_{core_{max}}', 'kg/s', 'Max Core Mass Flow')
+##        pifmax = Variable('\\pi_{f_{max}}', '-', 'Max Fan Pressure Ratio')
+##        pilcmax = Variable('\\pi_{lc_{max}}', '-', 'Max LPC Pressure Ratio')
+##        pihcmax = Variable('\\pi_{hc_{max}}', '-', 'Max HPC Pressure Ratio')
 
         #engine weight
         W_engine = Variable('W_{engine}', 'N', 'Weight of a Single Turbofan Engine')
@@ -107,14 +108,25 @@ class Engine(Model):
         #make the constraints
         constraints = []
 
+##        self.engineP['m_{total}']
+##        self.constants['alphap1']
+##        self.engineP['m_{core}']
+##        self.engineP['m_{core}']
+##        self.engineP['\pi_f']
+##        self.engineP['\pi_{lc}']
+##        self.engineP['\pi_{hc}']
+##        self.engineP['\\alpha']
+##        self.sizing['dum2']
+
+
         with SignomialsEnabled():
 
             weight = [
-                W_engine >= ((mtotmax/(self.constants['\\alpha_{+1_{max}}']*mCoremax)*mCoremax)*.0984)*(1684.5+17.7*(pifmax*pilcmax*pihcmax)/30+1662.2*(self.constants['\\alpha_{max}']/5)**1.2)*units('m/s'),
-##                W_engine >= ((mtot/(self.engine['alphap1']*self.engineP['m_{core}'])*self.engineP['m_{core}'])*.0984)*(1684.5+17.7*(self.engineP['\pi_f']*self.engineP['\pi_{lc}']*self.self.engineP['\pi_{hc}'])/30+1662.2*(self.engineP['\\alpha']/5)**1.2)*self.sizing['dum2'],
+##                W_engine >= ((mtotmax/(self.constants['\\alpha_{+1_{max}}']*mCoremax)*mCoremax)*.0984)*(1684.5+17.7*(pifmax*pilcmax*pihcmax)/30+1662.2*(self.constants['\\alpha_{max}']/5)**1.2)*units('m/s'),
+                W_engine >= ((self.engineP['m_{total}']/(self.constants['alphap1']*self.engineP['m_{core}'])*self.engineP['m_{core}'])*.0984)*(1684.5+17.7*(self.engineP['\pi_f']*self.engineP['\pi_{lc}']*self.engineP['\pi_{hc}'])/30+1662.2*(self.engineP['\\alpha']/5)**1.2)*self.engineP['dum2'],
 
-                mtotmax >= self.engineP['m_{total}'],
-                mCoremax >= self.engineP['m_{core}'],
+##                mtotmax >= self.engineP['m_{total}'],
+##                mCoremax >= self.engineP['m_{core}'],
                   ]
 
             fmix = [
@@ -162,7 +174,7 @@ class Engine(Model):
 
                 self.engineP['\pi_f'] >= 1,
 
-                pifmax >= self.engineP['\pi_f'],
+##                pifmax >= self.engineP['\pi_f'],
                 ]
 
             lpcmap = [
@@ -172,7 +184,7 @@ class Engine(Model):
 
                 self.engineP['\pi_{lc}'] >= 1,
 
-                pilcmax >= self.engineP['\pi_{lc}'],
+##                pilcmax >= self.engineP['\pi_{lc}'],
 
                 #define mbar..technially not needed b/c constrained in res 2 and/or 3
                 self.engineP['m_{lc}'] == self.engineP['m_{core}']*((self.engineP['T_{t_2}']/self.constants['T_{ref}'])**.5)/(self.engineP['P_{t_2}']/self.constants['P_{ref}']),    #B.280
@@ -187,7 +199,7 @@ class Engine(Model):
 
                 self.engineP['\pi_{hc}'] >= 1,
 
-                pihcmax >= self.engineP['\pi_{hc}']
+##                pihcmax >= self.engineP['\pi_{hc}']
                 ]
 
             thrust = [
@@ -357,7 +369,7 @@ class EngineConstants(Model):
 
         #------------------By-Pass Ratio (BPR)----------------------------
         alphap1 = Variable('alphap1', '-', '1 plus BPR')
-        alphap1max = Variable('\\alpha_{+1_{max}}', '-', '1 Plus Max BPR')
+##        alphap1max = Variable('\\alpha_{+1_{max}}', '-', '1 Plus Max BPR')
         alphamax = Variable('\\alpha_{max}', '-', 'Max BPR')
 
 class Compressor(Model):
@@ -880,6 +892,8 @@ class ThrustPerformance(Model):
         #constraints
         constraints = []
 
+        print F8/(alpha * mCore) + state['V'] <= u8
+
         with SignomialsEnabled():
 
             #exhaust and thrust constraints
@@ -925,8 +939,8 @@ class ThrustPerformance(Model):
                 #TSFC
                 TSFC == 1/Isp,
 
-                self.engine['\\alpha_{max}'] >= alpha,
-                self.engine['\\alpha_{+1_{max}}'] >= self.engine['alphap1'],
+##                self.engine['\\alpha_{max}'] >= alpha,
+##                self.engine['\\alpha_{+1_{max}}'] >= self.engine['alphap1'],
                 ])
 
         return constraints
@@ -1088,12 +1102,16 @@ class TestState(Model):
         constraints = []
 
         constraints.extend([
+            #INVESTIGATE RHO
             rho == .38*units('kg/m^3'),
+            
             V == M * a,
             a  == (gamma * R * T_atm)**.5,
-            a == 297 * units('m/s'),
+##            a == 297 * units('m/s'),
             T_atm == 218*units('K'),
-            p_atm == 60000*units('Pa'),
+            
+##            p_atm == 60000*units('Pa'),
+            
             M == .8,
             ])
 
@@ -1154,8 +1172,10 @@ class TestMission(Model):
             engine.engineP['F_{spec}'][0] == 5496.4 * 4.4 * units('N'),
             engine.engineP['F_{spec}'][1] == 5961.9*4.4 * units('N'),
 
-            engine['T_{t_{4spec}}'] [0]== 1400*units('K'),
-            engine['T_{t_{4spec}}'][1] == 1400*units('K'),
+#CHECK THE TT4SPEC
+
+##            engine['T_{t_{4spec}}'] [0]== 1400*units('K'),
+##            engine['T_{t_{4spec}}'][1] == 1400*units('K'),
 
             engine.state['P_{atm}'][0] == 23.84*units('kPa'),    #36K feet
             engine.state['M'][0] == M0,
@@ -1181,8 +1201,9 @@ class TestMission(Model):
 
         return climb, cruise
 
+
 if __name__ == "__main__":
-    engine = Engine(0, True, 4)
+    engine = Engine(0, True, 2)
     mission = TestMission(engine)
 
     M4a = .1025
@@ -1205,15 +1226,15 @@ if __name__ == "__main__":
             '\pi_{hc_D}': hpc,
             '\pi_{lc_D}': lpc,
 
-            '\\alpha_{OD}': 5.105,
+##            '\\alpha_{OD}': 5.105,
 
 ##            'M_{4a}': M4a,
             'hold_{4a}': 1+.5*(1.313-1)*M4a**2,#sol('hold_{4a}'),
             'r_{uc}': .01,
-            '\\alpha_c': .1,
+            '\\alpha_c': .19036,
             'T_{t_f}': 435,
 
-            'M_{takeoff}': .9,
+            'M_{takeoff}': .9556,
 
             'G_f': 1,
 
@@ -1223,10 +1244,11 @@ if __name__ == "__main__":
             'Cp_t2': 1184,
             'Cp_c': 1216,
            }
-
+    print sum(engine.engineP.thrustP['TSFC'])
     m = Model(sum(engine.engineP.thrustP['TSFC']) * (engine['W_{engine}'] * units('1/hr/N'))**.00001, [engine, mission], substitutions)
-
-##    m.substitutions.update(subs)
+##    for posy in m.sp().gp().posynomials:
+##            print posy.str_without(["models"])
+    m.substitutions.update(substitutions)
 ##    m.localsolve(solver='mosek', verbosity = 4)
     ts = TestState()
     bounds, sol = ts.determine_unbounded_variables(m)

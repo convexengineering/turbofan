@@ -201,7 +201,7 @@ class Engine(Model):
 
 ##                pihcmax >= self.engineP['\pi_{hc}']
                 ]
-
+ 
             thrust = [
                 self.engineP['P_{t_8}'] == self.engineP['P_{t_7}'], #B.179
                 self.engineP['T_{t_8}'] == self.engineP['T_{t_7}'], #B.180
@@ -315,10 +315,12 @@ class Engine(Model):
                     ]
 
         if cooling == True:
-            constraints = [weight, fmix, fnomix, shaftpower, hptexit, fanmap, lpcmap, hpcmap, thrust, res1, res2, res3, res4, res5, massflux, fanarea, HPCarea, onDest, res7list]
+            constraints = [weight, fmix, shaftpower, hptexit, fanmap, lpcmap, hpcmap, thrust, res1, res2, res3, res4, res5, massflux, fanarea, HPCarea, onDest, res7list]
 
         if cooling == False:
-            constraints = [weight, fnomix, fnomix, shaftpower, hptexit, fanmap, lpcmap, hpcmap, thrust, res1, res2, res3, res4, res5, massflux, fanarea, HPCarea, onDest, res7list]
+            constraints = [weight, fmix, shaftpower, hptexit, fanmap, lpcmap, hpcmap, thrust, res1, res2, res3, res4, res5, massflux, fanarea, HPCarea, onDest, res7list]
+
+        #NEED TO ACCOUNT FOR THE NO MIXING CASE
         
         return models, constraints
 
@@ -576,7 +578,7 @@ class CombustorPerformance(Model):
                 SignomialEquality(fp1,f+1),
 
                 #investigate doing this with a substitution
-                M4a == .1025,
+##                M4a == .1025,
                 ])
                      
             #mixing constraints
@@ -927,7 +929,7 @@ class ThrustPerformance(Model):
 
                 #overall thrust values
                 TCS([F8/(alpha * mCore) + state['V'] <= u8]),  #B.188
-
+                
                 #SIGNOMIAL
                 TCS([F <= F6 + F8]),
 ##                SignomialEquality(F, F6 + F8),
@@ -1081,10 +1083,10 @@ class TestState(Model):
     """
     def setup(self):
         #define variables
-        p_atm = Variable("P_{atm}", "Pa", "air pressure")
+        p_atm = Variable("P_{atm}", "kPa", "air pressure")
         R_atm = Variable("R_{atm}", "J/mol/K", "air specific heating value")
         TH = 5.257386998354459 #(g*M_atm/R_atm/L_atm).value
-        rho = Variable('\\rho', 'kg/m^3', 'Density of air')
+##        rho = Variable('\\rho', 'kg/m^3', 'Density of air')
         T_atm = Variable("T_{atm}", "K", "air temperature")
   
 
@@ -1103,15 +1105,12 @@ class TestState(Model):
 
         constraints.extend([
             #INVESTIGATE RHO
-            rho == .38*units('kg/m^3'),
+##            rho == .38*units('kg/m^3'),
             
             V == M * a,
             a  == (gamma * R * T_atm)**.5,
-##            a == 297 * units('m/s'),
             T_atm == 218*units('K'),
-            
-##            p_atm == 60000*units('Pa'),
-            
+
             M == .8,
             ])
 
@@ -1226,7 +1225,7 @@ if __name__ == "__main__":
             '\pi_{hc_D}': hpc,
             '\pi_{lc_D}': lpc,
 
-##            '\\alpha_{OD}': 5.105,
+            '\\alpha_{OD}': 5.105,
 
 ##            'M_{4a}': M4a,
             'hold_{4a}': 1+.5*(1.313-1)*M4a**2,#sol('hold_{4a}'),

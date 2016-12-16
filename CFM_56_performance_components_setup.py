@@ -1001,7 +1001,6 @@ class SizingPerformance(Model):
         T2 = Variable('T_2', 'K', 'Air Static Temperature at Fan Face')
         P2 = Variable('P_2', 'kPa', 'Air Static Pressure at Fan Face')
         u2 = Variable('u_2', 'm/s', 'Air Speed at Fan Face')
-        T2 = Variable('T_{2}', 'K', 'Static Temperature at the Fan Inlet (2)')
         h2 = Variable('h_{2}', 'J/kg', 'Static Enthalpy at the Fan Inlet (2)')
         M2 = Variable('M_2', '-', 'Fan Face/LPC Face Axial Mach Number')
 
@@ -1238,7 +1237,7 @@ if __name__ == "__main__":
 ##    for posy in m.sp().gp().posynomials:
 ##            print posy.str_without(["models"])
     m.substitutions.update(substitutions)
-##    m.localsolve(solver='mosek', verbosity = 4)
+    m.localsolve(solver='mosek', verbosity = 4)
     ts = TestState()
-    bounds, sol = ts.determine_unbounded_variables(m)
+##    bounds, sol = ts.determine_unbounded_variables(m)
 

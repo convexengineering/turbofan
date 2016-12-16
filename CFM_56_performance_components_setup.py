@@ -90,7 +90,7 @@ class Engine(Model):
             #-------------------Specified Thrust or Tt4-----------------------
             #variables for the thrust constraint
             Fspec = Variable('F_{spec}', 'N', 'Specified Total Thrust')
-            Tt4spec = Variable('T_{t_{4spec}}', 'K', 'Specified Combustor Exit (Station 4) Stagnation Temperature')
+##            Tt4spec = Variable('T_{t_{4spec}}', 'K', 'Specified Combustor Exit (Station 4) Stagnation Temperature')
 
         models = [self.compressor , self. combustor, self. turbine, self. thrust, self.fanmap, self.lpcmap, self.hpcmap, self.sizing, self.state, self.engineP]
 
@@ -256,10 +256,10 @@ class Engine(Model):
 
             massflux = [
                 #compute core mass flux
-                self.constants['M_{takeoff}'] * self.engineP['m_{core}'] == self.engineP['\rho_5'] * self.sizing['A_5'] * self.engineP['u_5']/(self.engineP['fp1']),
+                self.constants['M_{takeoff}'] * self.engineP['m_{core}'] == self.engineP['\\rho_5'] * self.sizing['A_5'] * self.engineP['u_5']/(self.engineP['fp1']),
 
                 #compute fan mas flow
-                self.engineP['m_{fan}'] == self.engineP['\rho_7']*self.sizing['A_7']*self.engineP['u_7'],
+                self.engineP['m_{fan}'] == self.engineP['\\rho_7']*self.sizing['A_7']*self.engineP['u_7'],
 
                 self.engineP['m_{total}'] >= self.engineP['m_{fan}'] + self.engineP['m_{core}'],
                 ]
@@ -269,14 +269,14 @@ class Engine(Model):
                 #fan area
                 self.engineP['P_2'] == self.engineP['P_{t_2}']*(self.compressor['hold_{2}'])**(-3.512),
                 self.engineP['T_2'] == self.engineP['T_{t_2}'] * self.compressor['hold_{2}']**-1,
-                self.sizing['A_2'] == self.engineP['m_{fan}']/(self.engineP['\rho_2']*self.engineP['u_2']),     #B.198
+                self.sizing['A_2'] == self.engineP['m_{fan}']/(self.engineP['\\rho_2']*self.engineP['u_2']),     #B.198
                 ]
 
             HPCarea = [
                 #HPC area
                 self.engineP['P_{2.5}'] == self.engineP['P_{t_{2.5}}']*(self.compressor['hold_{2.5}'])**(-3.824857),
                 self.engineP['T_{2.5}'] == self.engineP['T_{t_{2.5}}'] * self.compressor['hold_{2.5}']**-1,
-                self.sizing['A_{2.5}'] == self.engineP['m_{core}']/(self.engineP['\rho_2.5']*self.engineP['u_{2.5}']),     #B.203
+                self.sizing['A_{2.5}'] == self.engineP['m_{core}']/(self.engineP['\\rho_2.5']*self.engineP['u_{2.5}']),     #B.203
                 ]
 
             onDest = [
@@ -578,7 +578,7 @@ class CombustorPerformance(Model):
                 SignomialEquality(fp1,f+1),
 
                 #investigate doing this with a substitution
-##                M4a == .1025,
+                M4a == .1025,
                 ])
                      
             #mixing constraints
@@ -686,7 +686,7 @@ class FanMap(Model):
     def setup(self):
         #define new variables
         #------------------Fan map variables----------------
-        mFanD = Variable('m_{fan_D}', 'kg/s', 'Fan On-Design Mass Flow')
+##        mFanD = Variable('m_{fan_D}', 'kg/s', 'Fan On-Design Mass Flow')
         mFanBarD = Variable('\\bar{m}_{fan_{D}}', 'kg/s', 'Fan On-Design Corrected Mass Flow')
         piFanD = Variable('\pi_{f_D}', '-', 'On-Design Pressure Ratio')
 
@@ -710,9 +710,6 @@ class FanMapPerformance(Model):
         mf = Variable('m_{f}', 'kg/s', 'Fan Corrected Mass Flow')
         mtildf = Variable('m_{tild_f}', '-', 'Fan Normalized Mass Flow')
         
-        #pressure ratio variables
-        ptildf = Variable('p_{tildf}', '-', 'Fan Normalized Pressure Ratio')
-
         #----------------------Compressor Speeds--------------------
         #Speed Variables...by setting the design speed to be 1 since only ratios are
         #imporant I was able to drop out all the other speeds
@@ -758,9 +755,6 @@ class LPCMapPerformance(Model):
         #Mass Flow Variables
         mlc = Variable('m_{lc}', 'kg/s', 'LPC Corrected Mass Flow')
         mtildlc = Variable('m_{tild_lc}', '-', 'LPC Normalized Mass Flow')
-
-        #pressure ratio variables
-        ptildlc = Variable('p_{tild_lc}', '-', 'LPC Normalized Pressure Ratio')
 
         #----------------------Compressor Speeds--------------------
         #Speed Variables...by setting the design speed to be 1 since only ratios are
@@ -808,9 +802,6 @@ class HPCMapPerformance(Model):
         #Mass Flow Variables
         mhc = Variable('m_{hc}', 'kg/s', 'HPC Corrected Mass Flow')
         mtildhc = Variable('m_{tild_hc}', '-', 'HPC Normalized Mass Flow')
-  
-        #pressure ratio variables
-        ptildhc = Variable('p_{tild_lc}', '-', 'LPC Normalized Pressure Ratio')
 
         #----------------------Compressor Speeds--------------------
         #Speed Variables...by setting the design speed to be 1 since only ratios are
@@ -876,7 +867,6 @@ class ThrustPerformance(Model):
         Fsp = Variable('F_{sp}', '-', 'Specific Net Thrust')
         Isp = Variable('I_{sp}', 's', 'Specific Impulse')
         TSFC = Variable('TSFC', '1/hr', 'Thrust Specific Fuel Consumption')
-        Fspec = Variable('F_{spec}', 'N', 'Specified Total Thrust')
 
         #exhaust speeds
         u6 = Variable('u_6', 'm/s', 'Core Exhaust Velocity')
@@ -1007,7 +997,7 @@ class SizingPerformance(Model):
         mtot = Variable('m_{total}', 'kg/s', 'Total Engine Mass Flux')
         
         #-------------------fan face variables---------------------
-        rho2 = Variable('\rho_2', 'kg/m^3', 'Air Static Density at Fan Face')
+        rho2 = Variable('\\rho_2', 'kg/m^3', 'Air Static Density at Fan Face')
         T2 = Variable('T_2', 'K', 'Air Static Temperature at Fan Face')
         P2 = Variable('P_2', 'kPa', 'Air Static Pressure at Fan Face')
         u2 = Variable('u_2', 'm/s', 'Air Speed at Fan Face')
@@ -1016,7 +1006,7 @@ class SizingPerformance(Model):
         M2 = Variable('M_2', '-', 'Fan Face/LPC Face Axial Mach Number')
 
         #------------------HPC face variables---------------------
-        rho25 = Variable('\rho_2.5', 'kg/m^3', 'Static Air Density at HPC Face')
+        rho25 = Variable('\\rho_2.5', 'kg/m^3', 'Static Air Density at HPC Face')
         T25 = Variable('T_{2.5}', 'K', 'Static Air Temperature at HPC Face')
         P25 = Variable('P_{2.5}', 'kPa', 'Static Air Pressure at HPC Face')
         u25 = Variable('u_{2.5}', 'm/s', 'Air Speed at HPC Face')
@@ -1028,14 +1018,14 @@ class SizingPerformance(Model):
         T7 = Variable('T_{7}', 'K', 'Static Temperature at the Fan Nozzle Exit (7)')
         u7 = Variable('u_7', 'm/s', 'Station 7 Exhaust Velocity')
         M7 = Variable('M_7', '-', 'Station 7 Mach Number')
-        rho7 = Variable('\rho_7', 'kg/m^3', 'Air Static Density at Fam Exhaust Exit (7)')
+        rho7 = Variable('\\rho_7', 'kg/m^3', 'Air Static Density at Fam Exhaust Exit (7)')
 
         #core exhaust states
         P5 = Variable('P_{5}', 'kPa', 'Core Exhaust Static Pressure (5)')
         T5 = Variable('T_{5}', 'K', 'Static Temperature at the Turbine Nozzle Exit (5)')
         M5 = Variable('M_5', '-', 'Station 5 Mach Number')
         u5 = Variable('u_5', 'm/s', 'Station 5 Exhaust Velocity')
-        rho5 = Variable('\rho_5', 'kg/m^3', 'Air Static Density at Core Exhaust Exit (5)')
+        rho5 = Variable('\\rho_5', 'kg/m^3', 'Air Static Density at Core Exhaust Exit (5)')
 
         #dummy vairables for pint purposes
         dum = Variable("dum", 781, 'J/kg/K')
@@ -1084,18 +1074,18 @@ class TestState(Model):
     def setup(self):
         #define variables
         p_atm = Variable("P_{atm}", "kPa", "air pressure")
-        R_atm = Variable("R_{atm}", "J/mol/K", "air specific heating value")
+##        R_atm = Variable("R_{atm}", "J/mol/K", "air specific heating value")
         TH = 5.257386998354459 #(g*M_atm/R_atm/L_atm).value
-##        rho = Variable('\\rho', 'kg/m^3', 'Density of air')
+##        rho = Variable('\\\rho', 'kg/m^3', 'Density of air')
         T_atm = Variable("T_{atm}", "K", "air temperature")
   
 
-        mu  = Variable('\\mu', 'kg/(m*s)', 'Dynamic viscosity')
+##        mu  = Variable('\\mu', 'kg/(m*s)', 'Dynamic viscosity')
 
         V = Variable('V', 'kts', 'Aircraft Flight Speed')
         a = Variable('a', 'm/s', 'Speed of Sound')
-        h = Variable('h', 'm', 'Segment Altitude [meters]')
-        hft = Variable('hft', 'feet', 'Segment Altitude [feet]')
+##        h = Variable('h', 'm', 'Segment Altitude [meters]')
+##        hft = Variable('hft', 'feet', 'Segment Altitude [feet]')
         R = Variable('R', 287, 'J/kg/K', 'Air Specific Heat')
         gamma = Variable('\\gamma', 1.4, '-', 'Air Specific Heat Ratio')
         M = Variable('M', '-', 'Mach Number')
@@ -1137,7 +1127,7 @@ class TestState(Model):
                                       eps=1e-30, lower=None, upper=None, **kwargs):
         "Returns labeled dictionary of unbounded variables."
         m = self.bound_all_variables(model, eps, lower, upper)
-        sol = m.localsolve(solver='mosek', verbosity=4, **kwargs)
+        sol = m.localsolve(solver='mosek', verbosity=4, iteration_limit = 100, **kwargs)
         solhold = sol
         lam = sol["sensitivities"]["la"][1:]
         out = defaultdict(list)
@@ -1168,8 +1158,8 @@ class TestMission(Model):
         M0 = .8
 
         climb = [
-            engine.engineP['F_{spec}'][0] == 5496.4 * 4.4 * units('N'),
-            engine.engineP['F_{spec}'][1] == 5961.9*4.4 * units('N'),
+            engine['F_{spec}'][0] == 5496.4 * 4.4 * units('N'),
+            engine['F_{spec}'][1] == 5961.9 *4.4 * units('N'),
 
 #CHECK THE TT4SPEC
 

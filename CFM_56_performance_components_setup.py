@@ -903,7 +903,7 @@ class ThrustPerformance(Model):
                 alpha == mFan / mCore,
                 hold == alphap1,
                 SignomialEquality(hold, alpha + 1),
-##                alpha <= 5.105,
+                alpha <= 5.105,
 
                 #overall thrust values
                 TCS([F8/(alpha * mCore) + state['V'] <= u8]),  #B.188

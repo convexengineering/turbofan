@@ -85,13 +85,13 @@ class Engine(Model):
         self.constants = EngineConstants()
 
         with Vectorize(N):
-            self.state= TestState()
-            self.engineP = self.dynamic(self.state, res7)
             #-------------------Specified Thrust or Tt4-----------------------
             #variables for the thrust constraint
             Fspec = Variable('F_{spec}', 'N', 'Specified Total Thrust')
 ##            Tt4spec = Variable('T_{t_{4spec}}', 'K', 'Specified Combustor Exit (Station 4) Stagnation Temperature')
-
+            self.state= TestState()
+            self.engineP = self.dynamic(self.state, res7)
+            
         models = [self.compressor , self. combustor, self. turbine, self. thrust, self.fanmap, self.lpcmap, self.hpcmap, self.sizing, self.state, self.engineP]
 
         #declare variables
@@ -108,22 +108,11 @@ class Engine(Model):
         #make the constraints
         constraints = []
 
-##        self.engineP['m_{total}']
-##        self.constants['alphap1']
-##        self.engineP['m_{core}']
-##        self.engineP['m_{core}']
-##        self.engineP['\pi_f']
-##        self.engineP['\pi_{lc}']
-##        self.engineP['\pi_{hc}']
-##        self.engineP['\\alpha']
-##        self.sizing['dum2']
-
-
         with SignomialsEnabled():
 
             weight = [
 ##                W_engine >= ((mtotmax/(self.constants['\\alpha_{+1_{max}}']*mCoremax)*mCoremax)*.0984)*(1684.5+17.7*(pifmax*pilcmax*pihcmax)/30+1662.2*(self.constants['\\alpha_{max}']/5)**1.2)*units('m/s'),
-                W_engine >= ((self.engineP['m_{total}']/(self.constants['alphap1']*self.engineP['m_{core}'])*self.engineP['m_{core}'])*.0984)*(1684.5+17.7*(self.engineP['\pi_f']*self.engineP['\pi_{lc}']*self.engineP['\pi_{hc}'])/30+1662.2*(self.engineP['\\alpha']/5)**1.2)*self.engineP['dum2'],
+                W_engine >= ((self.engineP['m_{total}']/(self.engineP['alphap1']*self.engineP['m_{core}'])*self.engineP['m_{core}'])*.0984)*(1684.5+17.7*(self.engineP['\pi_f']*self.engineP['\pi_{lc}']*self.engineP['\pi_{hc}'])/30+1662.2*(self.engineP['\\alpha']/5)**1.2)*self.engineP['dum2'],
 
 ##                mtotmax >= self.engineP['m_{total}'],
 ##                mCoremax >= self.engineP['m_{core}'],
@@ -155,7 +144,7 @@ class Engine(Model):
                 #LPT shaft power balance
                 #SIGNOMIAL  
                 SignomialEquality(self.constants['M_{takeoff}']*self.turbine['\eta_{LPshaft}']*(1+self.engineP['f'])*
-                (self.engineP['h_{t_{4.9}}'] - self.engineP['h_{t_{4.5}}']),-((self.engineP['h_{t_{2.5}}']-self.engineP['h_{t_{1.8}}'])+self.constants['alphap1']*(self.engineP['h_{t_2.1}'] - self.engineP['h_{t_2}']))),    #B.165
+                (self.engineP['h_{t_{4.9}}'] - self.engineP['h_{t_{4.5}}']),-((self.engineP['h_{t_{2.5}}']-self.engineP['h_{t_{1.8}}'])+self.engineP['alphap1']*(self.engineP['h_{t_2.1}'] - self.engineP['h_{t_2}']))),    #B.165
                 ]
 
             hptexit = [
@@ -212,7 +201,7 @@ class Engine(Model):
                 TCS([self.engineP['F_6']/(self.constants['M_{takeoff}']*self.engineP['m_{core}']) + (self.engineP['f']+1)*self.state['V'] <= (self.engineP['fp1'])*self.engineP['u_6']]),
 
                 #ISP
-                self.engineP['I_{sp}'] == self.engineP['F_{sp}']*self.state['a']*(self.constants['alphap1'])/(self.engineP['f']*self.constants['g']),  #B.192
+                self.engineP['I_{sp}'] == self.engineP['F_{sp}']*self.state['a']*(self.engineP['alphap1'])/(self.engineP['f']*self.constants['g']),  #B.192
                 ]
 
             res1 = [
@@ -370,7 +359,7 @@ class EngineConstants(Model):
         Mtakeoff = Variable('M_{takeoff}', '-', '1 Minus Percent mass flow loss for de-ice, pressurization, etc.')
 
         #------------------By-Pass Ratio (BPR)----------------------------
-        alphap1 = Variable('alphap1', '-', '1 plus BPR')
+##        alphap1 = Variable('alphap1', '-', '1 plus BPR')
 ##        alphap1max = Variable('\\alpha_{+1_{max}}', '-', '1 Plus Max BPR')
         alphamax = Variable('\\alpha_{max}', '-', 'Max BPR')
 
@@ -878,13 +867,12 @@ class ThrustPerformance(Model):
 
         #------------------By-Pass Ratio (BPR)----------------------------
         alpha = Variable('\\alpha', '-', 'By Pass Ratio')
+        alphap1 = Variable('alphap1', '-', '1 plus BPR')
 
         hold = Variable('hold', '-', 'unecessary hold var')
 
         #constraints
         constraints = []
-
-        print F8/(alpha * mCore) + state['V'] <= u8
 
         with SignomialsEnabled():
 
@@ -913,7 +901,7 @@ class ThrustPerformance(Model):
 
                 #constrain the new BPR
                 alpha == mFan / mCore,
-                hold == self.engine['alphap1'],
+                hold == alphap1,
                 SignomialEquality(hold, alpha + 1),
 ##                alpha <= 5.105,
 
@@ -924,7 +912,7 @@ class ThrustPerformance(Model):
                 TCS([F <= F6 + F8]),
 ##                SignomialEquality(F, F6 + F8),
 
-                Fsp == F/((self.engine['alphap1'])*mCore*state['a']),   #B.191
+                Fsp == F/((alphap1)*mCore*state['a']),   #B.191
 
                 F >= .1*units('N'),
 
@@ -1284,4 +1272,10 @@ if __name__ == "__main__":
     sol = m.localsolve(solver='mosek', verbosity = 4)
     ts = TestState()
 ##    bounds, sol = ts.determine_unbounded_variables(m)
+
+    
+    tocerror = 100*(mag(sol('TSFC')[1]) - .6941)/.6941
+    cruiseerror = 100*(mag(sol('TSFC')[0]) - .6793)/.6793
+
+    print tocerror, cruiseerror
 

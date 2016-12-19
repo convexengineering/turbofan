@@ -1188,7 +1188,51 @@ class TestMission(Model):
             ]
 
         return climb, cruise
+def test():
+    engine = Engine(0, True, 2)
+    mission = TestMission(engine)
 
+    M4a = .1025
+    fan = 1.685
+    lpc  = 1.935
+    hpc = 9.369
+ 
+    substitutions = {
+            '\\pi_{tn}': .98,
+            '\pi_{b}': .94,
+            '\pi_{d}': .98,
+            '\pi_{fn}': .98,
+            'T_{ref}': 288.15,
+            'P_{ref}': 101.325,
+            '\eta_{HPshaft}': .97,
+            '\eta_{LPshaft}': .97,
+            'eta_{B}': .9827,
+
+            '\pi_{f_D}': fan,
+            '\pi_{hc_D}': hpc,
+            '\pi_{lc_D}': lpc,
+
+            '\\alpha_{OD}': 5.105,
+
+##            'M_{4a}': M4a,
+            'hold_{4a}': 1+.5*(1.313-1)*M4a**2,#sol('hold_{4a}'),
+            'r_{uc}': .01,
+            '\\alpha_c': .19036,
+            'T_{t_f}': 435,
+
+            'M_{takeoff}': .9556,
+
+            'G_f': 1,
+
+            'h_f': 40.8,
+
+            'Cp_t1': 1280,
+            'Cp_t2': 1184,
+            'Cp_c': 1216,
+           }
+    m = Model(sum(engine.engineP.thrustP['TSFC']) * (engine['W_{engine}'] * units('1/hr/N'))**.00001, [engine, mission], substitutions)
+    m.substitutions.update(substitutions)
+    sol = m.localsolve(solver='mosek', verbosity = 4)
 
 if __name__ == "__main__":
     engine = Engine(0, True, 2)

@@ -653,7 +653,66 @@ class Mission(Model):
                 out["value near upper bound"].append(varkey)
         return out, solhold
 
+def test():
+ #build required submodels
+    ac = Aircraft()
 
+    M4a = .1025
+    fan = 1.685
+    lpc  = 1.935
+    hpc = 9.369
+ 
+        
+    substitutions = {      
+##            'V_{stall}': 120,
+            'ReqRng': 500, #('sweep', np.linspace(500,2000,4)),
+            'CruiseAlt': 30000, #('sweep', np.linspace(20000,40000,4)),
+            'numeng': 1,
+##            'W_{Load_max}': 6664,
+            'W_{pax}': 91 * 9.81,
+            'n_{pax}': 150,
+            'pax_{area}': 1,
+##            'C_{D_{fuse}}': .005, #assumes flat plate turbulent flow, from wikipedia
+            'e': .9,
+            'b_{max}': 35,
+
+            #engine subs
+            '\\pi_{tn}': .98,
+            '\pi_{b}': .94,
+            '\pi_{d}': .98,
+            '\pi_{fn}': .98,
+            'T_{ref}': 288.15,
+            'P_{ref}': 101.325,
+            '\eta_{HPshaft}': .97,
+            '\eta_{LPshaft}': .97,
+            'eta_{B}': .9827,
+
+            '\pi_{f_D}': fan,
+            '\pi_{hc_D}': hpc,
+            '\pi_{lc_D}': lpc,
+
+            '\\alpha_{OD}': 5.105,
+
+##            'M_{4a}': M4a,
+            'hold_{4a}': 1+.5*(1.313-1)*M4a**2,#sol('hold_{4a}'),
+            'r_{uc}': .01,
+            '\\alpha_c': .19036,
+            'T_{t_f}': 435,
+
+            'M_{takeoff}': .9556,
+
+            'G_f': 1,
+
+            'h_f': 40.8,
+
+            'Cp_t1': 1280,
+            'Cp_t2': 1184,
+            'Cp_c': 1216,
+            }
+           
+    mission = Mission(ac)
+    m = Model(mission['W_{f_{total}}'], mission, substitutions)
+    sol = m.localsolve(solver='mosek', verbosity = 4)
 
 
 if __name__ == '__main__':

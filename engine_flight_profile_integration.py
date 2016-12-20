@@ -583,7 +583,7 @@ class Mission(Model):
 
             #constraint on drag and thrust
             ac['numeng']*ac.engine['F_{spec}'][0] >= climb['D'][0] + climb['W_{avg}'][0] * climb['\\theta'][0],
-            ac['numeng']*ac.engine['F_{spec}'][2] >= climb['D'][1] + climb['W_{avg}'][1] * climb['\\theta'][1],
+            ac['numeng']*ac.engine['F_{spec}'][1] >= climb['D'][1] + climb['W_{avg}'][1] * climb['\\theta'][1],
 
             #climb rate constraints
             TCS([climb['excessP'][0] + climb.state['V'][0] * climb['D'][0] <=  climb.state['V'][0] * ac['numeng'] * ac.engine['F_{spec}'][0]]),
@@ -727,7 +727,7 @@ if __name__ == '__main__':
         
     substitutions = {      
 ##            'V_{stall}': 120,
-            'ReqRng': 500, #('sweep', np.linspace(500,2000,4)),
+            'ReqRng': 2000, #('sweep', np.linspace(500,2000,4)),
             'CruiseAlt': 30000, #('sweep', np.linspace(20000,40000,4)),
             'numeng': 1,
 ##            'W_{Load_max}': 6664,

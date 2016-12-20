@@ -280,6 +280,18 @@ class Engine(Model):
 
             onDest = [
                 #estimate relevant on design values
+##                self.sizing['m_{htD}'] <= 1.25*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1400.0/288)**.5)/(1527/101.325),
+##                self.sizing['m_{htD}'] >= .75*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1400.0/288)**.5)/(1527/101.325),
+##                self.sizing['m_{ltD}'] <= 1.25*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1038.8/288)**.5)/(589.2/101.325),
+##                self.sizing['m_{ltD}'] >= .75*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1038.8/288)**.5)/(589.2/101.325),
+##                self.lpcmap['m_{lc_D}'] >= .75*self.sizing['m_{coreD}']*((292.57/288)**.5)/(84.25/101.325),
+##                self.lpcmap['m_{lc_D}'] <= 1.25*self.sizing['m_{coreD}'] *((292.57/288)**.5)/(84.25/101.325),
+##                self.hpcmap['m_{hc_D}'] >= .75*self.sizing['m_{coreD}'] *((362.47/288)**.5)/(163.02/101.325),
+##                self.hpcmap['m_{hc_D}'] <= 1.25*self.sizing['m_{coreD}'] *((362.47/288)**.5)/(163.02/101.325),
+##                self.fanmap['\\bar{m}_{fan_{D}}'] >= .75 * self.sizing['\\alpha_{OD}'] * self.sizing['m_{coreD}'] *((250.0/288)**.5)/(50/101.325),
+##                self.fanmap['\\bar{m}_{fan_{D}}'] <= 1.25 * self.sizing['\\alpha_{OD}'] * self.sizing['m_{coreD}']* ((250.0/288)**.5)/(50/101.325),
+
+                #estimate relevant on design values
                 self.sizing['m_{htD}'] <= 1.3*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1400.0/288)**.5)/(1527/101.325),
                 self.sizing['m_{htD}'] >= .7*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1400.0/288)**.5)/(1527/101.325),
                 self.sizing['m_{ltD}'] <= 1.3*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1038.8/288)**.5)/(589.2/101.325),
@@ -290,6 +302,7 @@ class Engine(Model):
                 self.hpcmap['m_{hc_D}'] <= 1.3*self.sizing['m_{coreD}'] *((362.47/288)**.5)/(163.02/101.325),
                 self.fanmap['\\bar{m}_{fan_{D}}'] >= .7 * self.sizing['\\alpha_{OD}'] * self.sizing['m_{coreD}'] *((250.0/288)**.5)/(50/101.325),
                 self.fanmap['\\bar{m}_{fan_{D}}'] <= 1.3 * self.sizing['\\alpha_{OD}'] * self.sizing['m_{coreD}']* ((250.0/288)**.5)/(50/101.325),
+
                 ]
 
         if res7 == 0:
@@ -1264,7 +1277,7 @@ if __name__ == "__main__":
         '\pi_{fn}': .98,
         'T_{ref}': 288.15,
         'P_{ref}': 101.325,
-        '\eta_{HPshaft}': .97,
+        '\eta_{HPshaft}': .98,
         '\eta_{LPshaft}': .97,
         'eta_{B}': .9970,
 

@@ -1225,9 +1225,9 @@ if __name__ == "__main__":
             '\pi_{fn}': .98,
             'T_{ref}': 288.15,
             'P_{ref}': 101.325,
-            '\eta_{HPshaft}': .98,
-            '\eta_{LPshaft}': .98,
-            'eta_{B}': 1,
+            '\eta_{HPshaft}': .97,
+            '\eta_{LPshaft}': .97,
+            'eta_{B}': .9827,
 
             '\pi_{f_D}': fan,
             '\pi_{hc_D}': hpc,
@@ -1267,9 +1267,9 @@ if __name__ == "__main__":
 
     print rotationerror, tocerror, cruiseerror
 
-    print 100*(mag(sol('A_2').to('feet^2'))-19.16)/19.16
-    print 100*(mag(sol('A_7').to('feet^2'))-9.285)/9.285
-    print 100*(mag(sol('A_5').to('feet^2'))-2.928)/2.928
+    print 100*(mag(sol('A_2').to('m^2'))-1.6026)/1.6026
+    print 100*(mag(sol('A_7').to('m^2'))-.7423)/.7423
+    print 100*(mag(sol('A_5').to('m^2'))-.2262)/.2262
 
 
     Pt0 = 50

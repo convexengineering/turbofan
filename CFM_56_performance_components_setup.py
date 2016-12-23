@@ -1258,14 +1258,14 @@ if __name__ == "__main__":
 
             'G_f': 1,
 
-            'h_f': 40.8,
+            'h_f': 43.003,
 
             'Cp_t1': 1280,
             'Cp_t2': 1184,
             'Cp_c': 1216,
            }
     print sum(engine.engineP.thrustP['TSFC'])
-    m = Model(sum(engine.engineP.thrustP['TSFC']) * (engine['W_{engine}'] * units('1/hr/N'))**.00001, [engine, mission], substitutions)
+    m = Model((10*engine.engineP.thrustP['TSFC'][0]+engine.engineP.thrustP['TSFC'][1]) * (engine['W_{engine}'] * units('1/hr/N'))**.00001, [engine, mission], substitutions)
 ##    for posy in m.sp().gp().posynomials:
 ##            print posy.str_without(["models"])
     m.substitutions.update(substitutions)

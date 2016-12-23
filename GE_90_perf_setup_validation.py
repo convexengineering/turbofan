@@ -1159,8 +1159,8 @@ class TestMission(Model):
 
         climb = [
 ##            engine['F_{spec}'][2] == 78399.1*4.4* units('N'),
-            engine['F_{spec}'][1] == 19600.4*4.4 * units('N'),
-            engine['F_{spec}'][0] == 16408.4 * 4.4 * units('N'),
+            engine['F_{spec}'][1] == 19600.4*units('lbf'),
+            engine['F_{spec}'][0] == 16408.4  * units('lbf'),
 #CHECK THE TT4SPEC
 
 ##            engine['T_{t_{4spec}}'] [0]== 1400*units('K'),
@@ -1284,7 +1284,7 @@ if __name__ == "__main__":
         '\pi_{hc_D}': 20.033,
         '\pi_{lc_D}': 1.26,
 
-        '\\alpha_{OD}': 8.7877,
+##        '\\alpha_{OD}': 8.7877,
 
 ##        'M_{4a}': M4a,
         'hold_{4a}': 1+.5*(1.313-1)*M4a**2,#sol('hold_{4a}'),

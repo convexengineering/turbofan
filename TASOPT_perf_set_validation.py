@@ -1256,7 +1256,7 @@ if __name__ == "__main__":
 ##    for posy in m.sp().gp().posynomials:
 ##            print posy.str_without(["models"])
     m.substitutions.update(substitutions)
-    sol = m.localsolve(solver='mosek', verbosity = 4)
+    sol = m.localsolve(solver='mosek', verbosity = 1)
 ##    ts = TestState()
 ##    bounds, sol = ts.determine_unbounded_variables(m)
 

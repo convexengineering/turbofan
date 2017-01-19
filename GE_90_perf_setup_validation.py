@@ -1306,7 +1306,7 @@ if __name__ == "__main__":
     m = Model((10*engine.engineP.thrustP['TSFC'][0]+engine.engineP.thrustP['TSFC'][1]) * (engine['W_{engine}'] * units('1/hr/N'))**.00001, [engine, mission], substitutions)
 
     m.substitutions.update(substitutions)
-    sol = m.localsolve(solver='mosek', verbosity = 4)
+    sol = m.localsolve(solver='mosek', verbosity = 1)
 ##    ts = TestState()
 ##    bounds, sol = ts.determine_unbounded_variables(m)
 

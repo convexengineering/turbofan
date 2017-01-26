@@ -507,10 +507,8 @@ class Mission(Model):
         M0 = .8
 
         engineclimb = [
-            ac.engine.engineP['M_2'][0] == climb['M'][0],
-            ac.engine.engineP['M_2'][1] == climb['M'][1],
-            ac.engine.engineP['M_{2.5}'][0] == M25,
-            ac.engine.engineP['M_{2.5}'][1] == M25,
+            ac.engine.engineP['M_2'][:Nclimb] == climb['M'],
+            ac.engine.engineP['M_{2.5}'] == M25,
             ac.engine.compressor['hold_{2}'] == 1+.5*(1.398-1)*M2**2,
             ac.engine.compressor['hold_{2.5}'] == 1+.5*(1.354-1)*M25**2,
             ac.engine.compressor['c1'] == 1+.5*(.401)*M0**2,
@@ -529,10 +527,7 @@ class Mission(Model):
         M0 = .8
 
         enginecruise = [
-            ac.engine.engineP['M_2'][2] == cruise['M'][0],
-            ac.engine.engineP['M_2'][3] == cruise['M'][1],
-            ac.engine.engineP['M_{2.5}'][2] == M25,
-            ac.engine.engineP['M_{2.5}'][3] == M25,
+            ac.engine.engineP['M_2'][Nclimb:] == cruise['M'],
 
             #steady level flight constraint on D 
             cruise['D'] == ac['numeng'] * ac.engine['F_{spec}'][Nclimb:],
@@ -791,7 +786,7 @@ if __name__ == '__main__':
         'a': 1e3*units('m/s'),
     }
            
-    mission = Mission(4, 2)
+    mission = Mission(2, 2)
     m = Model(mission['W_{f_{total}}'], mission, substitutions, x0=x0)
     sol = m.localsolve(solver='mosek', verbosity = 4)
 ##    bounds, sol = mission.determine_unbounded_variables(m)

@@ -26,11 +26,11 @@ Inputs
 
 class Aircraft(Model):
     "Aircraft class"
-    def  setup(self, **kwargs):
+    def  setup(self, Nclimb, Ncruise, **kwargs):
         #create submodels
         self.fuse = Fuselage()
         self.wing = Wing()
-        self.engine = Engine(0, True, 4)
+        self.engine = Engine(0, True, Nclimb+Ncruise)
 
         #variable definitions
         numeng = Variable('numeng', '-', 'Number of Engines')
@@ -423,11 +423,10 @@ class Mission(Model):
     """
     mission class, links together all subclasses
     """
-    def setup(self, ac, substitutions = None, **kwargs):
-        #define the number of each flight segment
-        Nclimb = 2
-        Ncruise = 2
-
+    def setup(self, Nclimb, Ncruise, substitutions = None, **kwargs):
+        #build the submodel
+        ac = Aircraft(Nclimb, Ncruise)
+        
         #Vectorize
         with Vectorize(Nclimb):
             climb = ClimbSegment(ac)
@@ -442,8 +441,11 @@ class Mission(Model):
         W_total = Variable('W_{total}', 'N', 'Total Aircraft Weight')
         CruiseAlt = Variable('CruiseAlt', 'ft', 'Cruise Altitude [feet]')
         ReqRng = Variable('ReqRng', 'nautical_miles', 'Required Cruise Range')
+        W_dry = Variable('W_{dry}', 'N', 'Aircraft Dry Weight')
 
         RCmin = Variable('RC_{min}', 'ft/min', 'Minimum allowed climb rate')
+
+        dhfthold = Variable('dhfthold', 'ft', 'Hold Variable')
 
         h = climb['h']
         hftClimb = climb['hft']
@@ -455,7 +457,8 @@ class Mission(Model):
 
         constraints.extend([
             #weight constraints
-            TCS([ac['W_{e}'] + ac['W_{payload}'] + W_ftotal + ac['numeng'] * ac['W_{engine}'] + ac['W_{wing}'] <= W_total]),
+            TCS([ac['W_{e}'] + ac['W_{payload}'] + ac['numeng'] * ac['W_{engine}'] + ac['W_{wing}'] <= W_dry]),
+            TCS([W_dry + W_ftotal <= W_total]),
 
             climb['W_{start}'][0] == W_total,
             climb['W_{end}'][-1] == cruise['W_{start}'][0],
@@ -468,7 +471,7 @@ class Mission(Model):
             climb['W_{start}'][1:] == climb['W_{end}'][:-1],
             cruise['W_{start}'][1:] == cruise['W_{end}'][:-1],
 
-            TCS([ac['W_{e}'] + ac['W_{payload}'] + ac['numeng'] * ac['W_{engine}'] + ac['W_{wing}'] <= cruise['W_{end}'][-1]]),
+            TCS([W_dry <= cruise['W_{end}'][-1]]),
 
             TCS([W_ftotal >=  W_fclimb + W_fcruise]),
             TCS([W_fclimb >= sum(climb['W_{burn}'])]),
@@ -481,24 +484,17 @@ class Mission(Model):
             hftClimb[-1] <= hftCruise,
 
             #compute the dh
-            dhft == hftCruise/Nclimb,
+            dhfthold == hftCruise[0]/Nclimb,
 
-            #constrain the thrust
-##            climb['thrust'] <= 2 * max(cruise['thrust']),
+            dhft == dhfthold,
 
             #set the range for each cruise segment, doesn't take credit for climb
             #down range disatnce covered
             cruise.cruiseP['Rng'] == ReqRng/(Ncruise),
 
-            #set the TSFC
-##            climb['TSFC'] == .7*units('1/hr'),
-##            cruise['TSFC'] == .5*units('1/hr'),
-
             #compute fuel burn from TSFC
-            cruise['W_{burn}'][0] == ac['numeng']*ac.engine['TSFC'][2] * cruise['thr'] * ac.engine['F'][2],
-            cruise['W_{burn}'][1] == ac['numeng']*ac.engine['TSFC'][3] * cruise['thr'] * ac.engine['F'][3],              
-            climb['W_{burn}'][0] == ac['numeng']*ac.engine['TSFC'][0] * climb['thr'] * ac.engine['F'][0],
-            climb['W_{burn}'][1] == ac['numeng']*ac.engine['TSFC'][1] * climb['thr'] * ac.engine['F'][1],
+            cruise['W_{burn}'] == ac['numeng']*ac.engine['TSFC'][Nclimb:] * cruise['thr'] * ac.engine['F'][Nclimb:],              
+            climb['W_{burn}'] == ac['numeng']*ac.engine['TSFC'][:Nclimb] * climb['thr'] * ac.engine['F'][:Nclimb],
 
             #min climb rate constraint
             climb['RC'][0] >= RCmin,
@@ -511,27 +507,19 @@ class Mission(Model):
         M0 = .8
 
         engineclimb = [
-#CHECK THE TT4SPEC
-
-##            engine['T_{t_{4spec}}'] [0]== 1400*units('K'),
-##            engine['T_{t_{4spec}}'][1] == 1400*units('K'),
-
             ac.engine.engineP['M_2'][0] == climb['M'][0],
             ac.engine.engineP['M_2'][1] == climb['M'][1],
-##            ac.engine.engineP['M_2'][0] == M2,
-##            ac.engine.engineP['M_2'][1] == M2,
             ac.engine.engineP['M_{2.5}'][0] == M25,
+            ac.engine.engineP['M_{2.5}'][1] == M25,
             ac.engine.compressor['hold_{2}'] == 1+.5*(1.398-1)*M2**2,
             ac.engine.compressor['hold_{2.5}'] == 1+.5*(1.354-1)*M25**2,
             ac.engine.compressor['c1'] == 1+.5*(.401)*M0**2,
 
             #constraint on drag and thrust
-            ac['numeng']*ac.engine['F_{spec}'][0] >= climb['D'][0] + climb['W_{avg}'][0] * climb['\\theta'][0],
-            ac['numeng']*ac.engine['F_{spec}'][1] >= climb['D'][1] + climb['W_{avg}'][1] * climb['\\theta'][1],
+            ac['numeng']*ac.engine['F_{spec}'][:Nclimb] >= climb['D'] + climb['W_{avg}'] * climb['\\theta'],
 
             #climb rate constraints
-            TCS([climb['excessP'][0] + climb.state['V'][0] * climb['D'][0] <=  climb.state['V'][0] * ac['numeng'] * ac.engine['F_{spec}'][0]]),
-            TCS([climb['excessP'][1] + climb.state['V'][1] * climb['D'][1] <=  climb.state['V'][1] * ac['numeng'] * ac.engine['F_{spec}'][1]]),
+            TCS([climb['excessP'] + climb.state['V'] * climb['D'] <=  climb.state['V'] * ac['numeng'] * ac.engine['F_{spec}'][:Nclimb]]),
             ]
 
         M2 = .8
@@ -547,18 +535,15 @@ class Mission(Model):
             ac.engine.engineP['M_{2.5}'][3] == M25,
 
             #steady level flight constraint on D 
-            cruise['D'][0] == ac['numeng'] * ac.engine['F_{spec}'][2],
-            cruise['D'][1] == ac['numeng'] * ac.engine['F_{spec}'][3],
+            cruise['D'] == ac['numeng'] * ac.engine['F_{spec}'][Nclimb:],
 
             #breguet range eqn
-            TCS([cruise['z_{bre}'][0] >= (ac.engine['TSFC'][2] * cruise['thr'][0]*
-            cruise['D'][0]) / cruise['W_{avg}'][0]]),
-            TCS([cruise['z_{bre}'][1] >= (ac.engine['TSFC'][3] * cruise['thr'][1]*
-            cruise['D'][1]) / cruise['W_{avg}'][1]]),
+            TCS([cruise['z_{bre}'] >= (ac.engine['TSFC'][Nclimb:] * cruise['thr']*
+            cruise['D']) / cruise['W_{avg}']]),
             ]
         
-        # Model.setup(self, W_ftotal + s*units('N'), constraints + ac + climb + cruise, subs)
         return constraints + ac + climb + cruise + enginecruise + engineclimb
+    
     def bound_all_variables(self, model, eps=1e-30, lower=None, upper=None):
         "Returns model with additional constraints bounding all free variables"
         lb = lower if lower else eps
@@ -658,15 +643,12 @@ def test():
             'RC_{min}': 1000,
             }
            
-    mission = Mission(ac)
+    mission = Mission(4, 4)
     m = Model(mission['W_{f_{total}}'], mission, substitutions)
     sol = m.localsolve(solver='mosek', verbosity = 4)
 
 
 if __name__ == '__main__':
-    #build required submodels
-    ac = Aircraft()
-
     M4a = .1025
     fan = 1.685
     lpc  = 1.935
@@ -674,15 +656,11 @@ if __name__ == '__main__':
  
         
     substitutions = {      
-##            'V_{stall}': 120,
             'ReqRng': 2000, #('sweep', np.linspace(500,2000,4)),
-##            'CruiseAlt': 30000, #('sweep', np.linspace(20000,40000,4)),
             'numeng': 1,
-##            'W_{Load_max}': 6664,
             'W_{pax}': 91 * 9.81,
             'n_{pax}': 150,
             'pax_{area}': 1,
-##            'C_{D_{fuse}}': .005, #assumes flat plate turbulent flow, from wikipedia
             'e': .9,
             'b_{max}': 35,
 
@@ -703,7 +681,6 @@ if __name__ == '__main__':
 
             '\\alpha_{OD}': 5.105,
 
-##            'M_{4a}': M4a,
             'hold_{4a}': 1+.5*(1.313-1)*M4a**2,#sol('hold_{4a}'),
             'r_{uc}': .01,
             '\\alpha_c': .19036,
@@ -810,21 +787,17 @@ if __name__ == '__main__':
         'a': 1e3*units('m/s'),
     }
            
-    mission = Mission(ac)
+    mission = Mission(4, 2)
     m = Model(mission['W_{f_{total}}'], mission, substitutions, x0=x0)
     sol = m.localsolve(solver='mosek', verbosity = 4)
 ##    bounds, sol = mission.determine_unbounded_variables(m)
 
     substitutions = {
-##            'V_{stall}': 120,
             'ReqRng': ('sweep', np.linspace(1000,3000,15)),
-##            'CruiseAlt': 30000,#('sweep', np.linspace(30000,41000,2)),
             'numeng': 1,
-##            'W_{Load_max}': 6664,
             'W_{pax}': 91 * 9.81,
             'n_{pax}': 150,
             'pax_{area}': 1,
-##            'C_{D_{fuse}}': .005, #assumes flat plate turbulent flow, from wikipedia
             'e': .9,
             'b_{max}': 35,
 
@@ -845,8 +818,7 @@ if __name__ == '__main__':
 
             '\\alpha_{OD}': 5.105,
 
-##            'M_{4a}': M4a,
-            'hold_{4a}': 1+.5*(1.313-1)*M4a**2,#sol('hold_{4a}'),
+            'hold_{4a}': 1+.5*(1.313-1)*M4a**2,
             'r_{uc}': .01,
             '\\alpha_c': .19036,
             'T_{t_f}': 435,
@@ -864,7 +836,7 @@ if __name__ == '__main__':
             'RC_{min}': 1000,
             }
     
-    mission = Mission(ac)
+    mission = Mission(2, 2)
     m = Model(mission['W_{f_{total}}'], mission, substitutions, x0=x0)
 ##    solRsweep = m.localsolve(solver='mosek', verbosity = 1, skipsweepfailures=True)
 ##
@@ -1017,19 +989,16 @@ if __name__ == '__main__':
 ##    plt.show()
 
     substitutions = {      
-##            'V_{stall}': 120,
-            'ReqRng': 2000,#('sweep', np.linspace(500,2000,4)),
+            'ReqRng': 2000,
             'CruiseAlt': ('sweep', np.linspace(30000,40000,20)),
             'numeng': 1,
-##            'W_{Load_max}': 6664,
             'W_{pax}': 91 * 9.81,
             'n_{pax}': 150,
             'pax_{area}': 1,
-##            'C_{D_{fuse}}': .005, #assumes flat plate turbulent flow, from wikipedia
             'e': .9,
             'b_{max}': 35,
 
-                        #engine subs
+            #engine subs
             '\\pi_{tn}': .98,
             '\pi_{b}': .94,
             '\pi_{d}': .98,
@@ -1046,8 +1015,7 @@ if __name__ == '__main__':
 
             '\\alpha_{OD}': 5.105,
 
-##            'M_{4a}': M4a,
-            'hold_{4a}': 1+.5*(1.313-1)*M4a**2,#sol('hold_{4a}'),
+            'hold_{4a}': 1+.5*(1.313-1)*M4a**2,
             'r_{uc}': .01,
             '\\alpha_c': .19036,
             'T_{t_f}': 435,
@@ -1065,7 +1033,7 @@ if __name__ == '__main__':
             'RC_{min}': 1000,
             }
            
-    mmission = Mission(ac)
+    mmission = Mission(2, 2)
     m = Model(mission['W_{f_{total}}'], mission, substitutions)
 ##    solAltsweep = m.localsolve(solver='mosek', verbosity = 4, skipsweepfailures=True)
 
@@ -1174,15 +1142,11 @@ if __name__ == '__main__':
 
 
     substitutions = {
-##            'V_{stall}': 120,
-            'ReqRng': 2000,#
-##            'CruiseAlt': 30000,#('sweep', np.linspace(30000,41000,2)),
+            'ReqRng': 2000,
             'numeng': 1,
-##            'W_{Load_max}': 6664,
             'W_{pax}': 91 * 9.81,
             'n_{pax}': 150,
             'pax_{area}': 1,
-##            'C_{D_{fuse}}': .005, #assumes flat plate turbulent flow, from wikipedia
             'e': .9,
             'b_{max}': 35,
 
@@ -1203,8 +1167,7 @@ if __name__ == '__main__':
 
             '\\alpha_{OD}': 5.105,
 
-##            'M_{4a}': M4a,
-            'hold_{4a}': 1+.5*(1.313-1)*M4a**2,#sol('hold_{4a}'),
+            'hold_{4a}': 1+.5*(1.313-1)*M4a**2,
             'r_{uc}': .01,
             '\\alpha_c': .19036,
             'T_{t_f}': 435,
@@ -1222,7 +1185,7 @@ if __name__ == '__main__':
             'RC_{min}': ('sweep', np.linspace(1000,8000,45)),
             }
     
-    mission = Mission(ac)
+    mission = Mission(2, 2)
     m = Model(mission['W_{f_{total}}'], mission, substitutions)
 ##    solRCsweep = m.localsolve(solver='mosek', verbosity = 1, skipsweepfailures=True)
 ##

@@ -26,11 +26,11 @@ Inputs
 
 class Aircraft(Model):
     "Aircraft class"
-    def  setup(self, Nclimb, Ncruise, **kwargs):
+    def  setup(self, Nclimb, Ncruise, enginestate, **kwargs):
         #create submodels
         self.fuse = Fuselage()
         self.wing = Wing()
-        self.engine = Engine(0, True, Nclimb+Ncruise)
+        self.engine = Engine(0, True, Nclimb+Ncruise, enginestate)
 
         #variable definitions
         numeng = Variable('numeng', '-', 'Number of Engines')
@@ -191,6 +191,27 @@ class ClimbSegment(Model):
         self.climbP = aircraft.climb_dynamic(self.state)
 
         return self.state, self.climbP
+
+class StateLinking(Model):
+    """
+    link all the state model variables
+    """
+    def setup(self, climbstate, cruisestate, enginestate, Nclimb, Ncruise):
+        statevarkeys = ['p_{sl}', 'T_{sl}', 'L_{atm}', 'M_{atm}', 'P_{atm}', 'R_{atm}',
+                        '\\rho', 'T_{atm}', '\\mu', 'T_s', 'C_1', 'h', 'hft', 'V', 'a', 'R', '\\gamma', 'M']
+        constraints = []
+        for i in range(len(statevarkeys)):
+            varkey = statevarkeys[i]
+            for i in range(Nclimb):
+                constraints.extend([
+                    climbstate[varkey][i] == enginestate[varkey][i]
+                    ])
+            for i in range(Ncruise):
+                constraints.extend([
+                    cruisestate[varkey][i] == enginestate[varkey][i+Nclimb]
+                    ])           
+        
+        return constraints
 
 class FlightState(Model):
     """
@@ -424,8 +445,11 @@ class Mission(Model):
     mission class, links together all subclasses
     """
     def setup(self, Nclimb, Ncruise, substitutions = None, **kwargs):
-        #build the submodel
-        ac = Aircraft(Nclimb, Ncruise)
+       # vectorize
+        with Vectorize(Nclimb + Ncruise):
+            enginestate = FlightState()
+
+        ac = Aircraft(Nclimb, Ncruise, enginestate)
         
         #Vectorize
         with Vectorize(Nclimb):
@@ -433,6 +457,8 @@ class Mission(Model):
 
         with Vectorize(Ncruise):
             cruise = CruiseSegment(ac)
+
+        statelinking = StateLinking(climb.state, cruise.state, enginestate, Nclimb, Ncruise)
 
         #declare new variables
         W_ftotal = Variable('W_{f_{total}}', 'N', 'Total Fuel Weight')
@@ -537,7 +563,7 @@ class Mission(Model):
             cruise['D']) / cruise['W_{avg}']]),
             ]
         
-        return constraints + ac + climb + cruise + enginecruise + engineclimb
+        return constraints + ac + climb + cruise + enginecruise + engineclimb + enginestate + statelinking
     
     def bound_all_variables(self, model, eps=1e-30, lower=None, upper=None):
         "Returns model with additional constraints bounding all free variables"

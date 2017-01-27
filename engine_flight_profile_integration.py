@@ -75,6 +75,7 @@ class AircraftP(Model):
         WLoad = Variable('W_{Load}', 'N/m^2', 'Wing Loading')
         t = Variable('tmin', 'min', 'Segment Flight Time in Minutes')
         thours = Variable('thr', 'hour', 'Segment Flight Time in Hours')
+        CD = Variable('C_{D}', '-', 'Overall Drag Coefficient')
 
         constraints = []
 
@@ -89,6 +90,9 @@ class AircraftP(Model):
 
             #compute the drag
             TCS([D >= self.wingP['D_{wing}'] + self.fuseP['D_{fuse}']]),
+            
+            #compute the drag coefficient
+            CD == D/(.5*state.atm['\\rho']*state['V']**2*self.aircraft['S']),
 
             #constraint CL and compute the wing loading
             W_avg == .5*self.wingP['C_{L}']*self.aircraft['S']*state.atm['\\rho']*state['V']**2,      
@@ -337,6 +341,7 @@ class Wing(Model):
 
             #compute wing span and aspect ratio, subject to a span constraint
             AR == (span**2)/S,
+            AR <= 10,
             #AR == 9,
 
             span <= span_max,
@@ -436,7 +441,6 @@ class FuselagePerformance(Model):
             ])
 
         return constraints
-    
 
 class Mission(Model):
     """
@@ -520,15 +524,17 @@ class Mission(Model):
             cruise['W_{burn}'] == ac['numeng']*ac.engine['TSFC'][Nclimb:] * cruise['thr'] * ac.engine['F'][Nclimb:],              
             climb['W_{burn}'] == ac['numeng']*ac.engine['TSFC'][:Nclimb] * climb['thr'] * ac.engine['F'][:Nclimb],
 
-##            climb['V'] >= 300*units('knots'),
-##            cruise['V'] >= 500*units('knots'),
+##            climb['V'] >= 200*units('knots'),
+##            cruise['V'] >= 200*units('knots'),
+
+##            sum(cruise['thr']) <= ReqRng/(100*units('knots')),
 
             CruiseAlt >= 30000*units('ft'),
 ##            CruiseAlt >= 40000*units('ft'),
-            cruise['M'] >= .7,
+##            cruise['M'] >= .5,
 
-##            #min climb rate constraint
-##            climb['RC'][0] >= RCmin,
+            #min climb rate constraint
+            climb['RC'] >= RCmin,
             ])
 
 ##        with SignomialsEnabled():
@@ -539,12 +545,11 @@ class Mission(Model):
         M2 = .8
         M25 = .6
         M4a = .1025
-        Mexit = 1
         M0 = .8
 
         engineclimb = [
             ac.engine.engineP['M_2'][:Nclimb] == climb['M'],
-            ac.engine.engineP['M_{2.5}'] == M25,
+            ac.engine.engineP['M_{2.5}'][:Nclimb] == M25,
             ac.engine.compressor['hold_{2}'] == 1+.5*(1.398-1)*M2**2,
             ac.engine.compressor['hold_{2.5}'] == 1+.5*(1.354-1)*M25**2,
             ac.engine.compressor['c1'] == 1+.5*(.401)*M0**2,
@@ -556,15 +561,12 @@ class Mission(Model):
             TCS([climb['excessP'] + climb.state['V'] * climb['D'] <=  climb.state['V'] * ac['numeng'] * ac.engine['F_{spec}'][:Nclimb]]),
             ]
 
-        M2 = .8
         M25 = .6
-        M4a = .1025
-        Mexit = 1
-        M0 = .8
 
         enginecruise = [
             ac.engine.engineP['M_2'][Nclimb:] == cruise['M'],
-
+            ac.engine.engineP['M_{2.5}'][Nclimb:] == M25,
+            
             #steady level flight constraint on D 
             cruise['D'] == ac['numeng'] * ac.engine['F_{spec}'][Nclimb:],
 
@@ -671,7 +673,7 @@ def test():
             'Cp_t2': 1184,
             'Cp_c': 1216,
 
-            'RC_{min}': 1000,
+            'RC_{min}': 3000,
             }
            
     mission = Mission(4, 4)
@@ -691,14 +693,14 @@ if __name__ == '__main__':
  
         
     substitutions = {      
-            'ReqRng': 1800, #('sweep', np.linspace(500,2000,4)),
+            'ReqRng': 1000, #('sweep', np.linspace(500,2000,4)),
 ##            'CruiseAlt': 30000,
             'numeng': 2,
             'W_{pax}': 91 * 9.81,
             'n_{pax}': 150,
             'pax_{area}': 1,
             'e': .9,
-            'b_{max}': 35,
+            'b_{max}': 60,
 
             #engine subs
             '\\pi_{tn}': .98,
@@ -732,7 +734,7 @@ if __name__ == '__main__':
             'Cp_t2': 1184,
             'Cp_c': 1216,
 
-            'RC_{min}': 1000,
+            'RC_{min}': 4000,
             }
 
     #dict of initial guesses
@@ -823,20 +825,20 @@ if __name__ == '__main__':
         'a': 1e3*units('m/s'),
     }
            
-    mission = Mission(4, 4)
-    m = Model(mission['W_{f_{total}}'], mission, substitutions, x0=x0)
+    mission = Mission(2, 2)
+    m = Model(mission['W_{f_{total}}'], mission, substitutions)
     sol = m.localsolve(solver='mosek', verbosity = 4)
 ##    bounds, sol = mission.determine_unbounded_variables(m)
 
     if plotR == True:
         substitutions = {
-                'ReqRng': ('sweep', np.linspace(1000,3000,15)),
-                'numeng': 1,
+                'ReqRng': ('sweep', np.linspace(1000,3000,45)),
+                'numeng': 2,
                 'W_{pax}': 91 * 9.81,
                 'n_{pax}': 150,
                 'pax_{area}': 1,
                 'e': .9,
-                'b_{max}': 35,
+                'b_{max}': 60,
 
                 #engine subs
                 '\\pi_{tn}': .98,
@@ -864,7 +866,7 @@ if __name__ == '__main__':
 
                 'G_f': 1,
 
-                'h_f': 43.03,
+                'h_f': 43.003,
 
                 'Cp_t1': 1280,
                 'Cp_t2': 1184,
@@ -897,6 +899,9 @@ if __name__ == '__main__':
         f8 = []
         totsfc = []
         cruisetsfc = []
+        maxm = []
+        maxF = []
+        cruiseF = []
         
         i=0
         while i < len(solRsweep('RC')):
@@ -906,12 +911,36 @@ if __name__ == '__main__':
             f8.append(mag(solRsweep('F_8')[i][0]))
             totsfc.append(mag(solRsweep('TSFC')[i][0]))
             cruisetsfc.append(mag(solRsweep('TSFC')[i][2]))
+            maxm.append(max(mag(solRsweep('m_{total}')[i])))
+            maxF.append(max(mag(solRsweep('F')[i])))
+            cruiseF.append(mag(solRsweep('F')[i][2]))
             i+=1
+
+        plt.plot(solRsweep('ReqRng'), cruiseF, '-r', linewidth=2.0)
+        plt.xlabel('Mission Range [nm]')
+        plt.ylabel('Initial Cruise Thrust [N]')
+        plt.title('Initial Cruise Thrust vs Range')
+        plt.savefig('engine_Rsweeps/max_m_range.pdf')
+        plt.show()
+
+        plt.plot(solRsweep('ReqRng'), maxm, '-r', linewidth=2.0)
+        plt.xlabel('Mission Range [nm]')
+        plt.ylabel('Max Engine Mass Flow [kg/s]')
+        plt.title('Max Engine Mass Flow vs Range')
+        plt.savefig('engine_Rsweeps/max_m_range.pdf')
+        plt.show()
+
+        plt.plot(solRsweep('ReqRng'), maxm, '-r', linewidth=2.0)
+        plt.xlabel('Mission Range [nm]')
+        plt.ylabel('Max Engine Thrust [N]')
+        plt.title('Max Engine Thrust vs Range')
+        plt.savefig('engine_Rsweeps/max_F_range.pdf')
+        plt.show()
 
         plt.plot(solRsweep('ReqRng'), totsfc, '-r', linewidth=2.0)
         plt.plot(solRsweep('ReqRng'), cruisetsfc, '-g', linewidth=2.0)
         plt.legend(['Initial Climb', 'Initial Cruise'], loc=2)
-        plt.ylim((.625,.65))
+        plt.ylim((.4,.55))
         plt.xlabel('Mission Range [nm]')
         plt.ylabel('TSFC [1/hr]')
         plt.title('TSFC vs Range')
@@ -952,6 +981,7 @@ if __name__ == '__main__':
         plt.xlabel('Mission Range [nm]')
         plt.ylabel('Initial Thrust [N]')
         plt.title('Initial Thrust vs Range')
+        plt.ylim((5000,17000))
         plt.savefig('engine_Rsweeps/initial_F8_range.pdf')
         plt.show()
 
@@ -966,6 +996,7 @@ if __name__ == '__main__':
         plt.xlabel('Mission Range [nm]')
         plt.ylabel('Fan Area [m^$2$]')
         plt.title('Fan Area vs Range')
+        plt.ylim((.5,.7))
         plt.savefig('engine_Rsweeps/fan_area_range.pdf')
         plt.show()
 
@@ -1062,7 +1093,7 @@ if __name__ == '__main__':
 
                 'G_f': 1,
 
-                'h_f': 43.03,
+                'h_f': 43.003,
 
                 'Cp_t1': 1280,
                 'Cp_t2': 1184,
@@ -1181,12 +1212,12 @@ if __name__ == '__main__':
     if plotRC == True:
         substitutions = {
                 'ReqRng': 2000,
-                'numeng': 1,
+                'numeng': 2,
                 'W_{pax}': 91 * 9.81,
                 'n_{pax}': 150,
                 'pax_{area}': 1,
                 'e': .9,
-                'b_{max}': 35,
+                'b_{max}': 60,
 
                 #engine subs
                 '\\pi_{tn}': .98,
@@ -1214,13 +1245,13 @@ if __name__ == '__main__':
 
                 'G_f': 1,
 
-                'h_f': 43.03,
+                'h_f': 43.003,
 
                 'Cp_t1': 1280,
                 'Cp_t2': 1184,
                 'Cp_c': 1216,
 
-                'RC_{min}': ('sweep', np.linspace(1000,8000,45)),
+                'RC_{min}': ('sweep', np.linspace(1000,8000,5)),
                 }
         
         mission = Mission(2, 2)

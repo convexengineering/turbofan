@@ -261,11 +261,9 @@ class Altitude(Model):
             ])
 
         return constraints
-            
 
 class Atmosphere(Model):
     def setup(self, alt, **kwargs):
-        g = Variable('g', 'm/s^2', 'Gravitational acceleration')
         p_sl = Variable("p_{sl}", 101325, "Pa", "Pressure at sea level")
         T_sl = Variable("T_{sl}", 288.15, "K", "Temperature at sea level")
         L_atm = Variable("L_{atm}", .0065, "K/m", "Temperature lapse rate")
@@ -505,7 +503,7 @@ class Mission(Model):
 
             #altitude constraints
             hftCruise == CruiseAlt,
-            TCS([hftClimb[1:Ncruise] >= hftClimb[:Ncruise-1] + dhft]),
+            TCS([hftClimb[1:Nclimb] >= hftClimb[:Nclimb-1] + dhft[:Nclimb-1]]),
             TCS([hftClimb[0] >= dhft[0]]),
             hftClimb[-1] <= hftCruise,
 
@@ -517,14 +515,26 @@ class Mission(Model):
             #set the range for each cruise segment, doesn't take credit for climb
             #down range disatnce covered
             cruise.cruiseP['Rng'] == ReqRng/(Ncruise),
-
+            
             #compute fuel burn from TSFC
             cruise['W_{burn}'] == ac['numeng']*ac.engine['TSFC'][Nclimb:] * cruise['thr'] * ac.engine['F'][Nclimb:],              
             climb['W_{burn}'] == ac['numeng']*ac.engine['TSFC'][:Nclimb] * climb['thr'] * ac.engine['F'][:Nclimb],
 
-            #min climb rate constraint
-            climb['RC'][0] >= RCmin,
+##            climb['V'] >= 300*units('knots'),
+##            cruise['V'] >= 500*units('knots'),
+
+            CruiseAlt >= 30000*units('ft'),
+##            CruiseAlt >= 40000*units('ft'),
+            cruise['M'] >= .7,
+
+##            #min climb rate constraint
+##            climb['RC'][0] >= RCmin,
             ])
+
+##        with SignomialsEnabled():
+##            constraints.extend([
+##                sum(cruise.cruiseP['Rng']) + sum(climb['RngClimb']) >= ReqRng,
+##                ])
 
         M2 = .8
         M25 = .6
@@ -618,7 +628,7 @@ def test():
     substitutions = {      
 ##            'V_{stall}': 120,
             'ReqRng': 1500, #('sweep', np.linspace(500,2000,4)),
-            'CruiseAlt': 30000, #('sweep', np.linspace(20000,40000,4)),
+##            'CruiseAlt': 30000, #('sweep', np.linspace(20000,40000,4)),
             'numeng': 1,
 ##            'W_{Load_max}': 6664,
             'W_{pax}': 91 * 9.81,
@@ -655,7 +665,7 @@ def test():
 
             'G_f': 1,
 
-            'h_f': 40.8,
+            'h_f': 43.003,
 
             'Cp_t1': 1280,
             'Cp_t2': 1184,
@@ -681,8 +691,9 @@ if __name__ == '__main__':
  
         
     substitutions = {      
-            'ReqRng': 2000, #('sweep', np.linspace(500,2000,4)),
-            'numeng': 1,
+            'ReqRng': 1800, #('sweep', np.linspace(500,2000,4)),
+##            'CruiseAlt': 30000,
+            'numeng': 2,
             'W_{pax}': 91 * 9.81,
             'n_{pax}': 150,
             'pax_{area}': 1,
@@ -715,7 +726,7 @@ if __name__ == '__main__':
 
             'G_f': 1,
 
-            'h_f': 43.03,
+            'h_f': 43.003,
 
             'Cp_t1': 1280,
             'Cp_t2': 1184,
@@ -808,11 +819,11 @@ if __name__ == '__main__':
         'u_5': 1e3*units('m/s'),
         'P_{atm}': 1e2*units('kPa'),
         'T_{atm}': 1e3*units('K'),
-        'V': 1e3*units('knot'),
+        'V': 3e3*units('knot'),
         'a': 1e3*units('m/s'),
     }
            
-    mission = Mission(2, 2)
+    mission = Mission(4, 4)
     m = Model(mission['W_{f_{total}}'], mission, substitutions, x0=x0)
     sol = m.localsolve(solver='mosek', verbosity = 4)
 ##    bounds, sol = mission.determine_unbounded_variables(m)
@@ -864,7 +875,7 @@ if __name__ == '__main__':
         
         mission = Mission(2, 2)
         m = Model(mission['W_{f_{total}}'], mission, substitutions, x0=x0)
-        solRsweep = m.localsolve(solver='mosek', verbosity = 1, skipsweepfailures=True)
+        solRsweep = m.localsolve(solver='mosek', verbosity = 4, skipsweepfailures=True)
 
         plt.plot(solRsweep('ReqRng'), solRsweep('W_{f_{total}}'), '-r', linewidth=2.0)
         plt.xlabel('Mission Range [nm]')

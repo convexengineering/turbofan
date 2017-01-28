@@ -678,12 +678,12 @@ def test():
            
     mission = Mission(4, 4)
     m = Model(mission['W_{f_{total}}'], mission, substitutions)
-    sol = m.localsolve(solver='mosek', verbosity = 4)
+##    sol = m.localsolve(solver='mosek', verbosity = 4)
 
 
 if __name__ == '__main__':
     plotRC = False
-    plotR = False
+    plotR = True
     plotAlt = False
     
     M4a = .1025
@@ -734,7 +734,7 @@ if __name__ == '__main__':
             'Cp_t2': 1184,
             'Cp_c': 1216,
 
-            'RC_{min}': 4000,
+            'RC_{min}': 5000,
             }
 
     #dict of initial guesses
@@ -892,6 +892,13 @@ if __name__ == '__main__':
         plt.title('Cruise Altitude vs Range')
         plt.savefig('engine_Rsweeps/cruise_altitude_range.pdf')
         plt.show()
+
+        plt.plot(solRsweep('ReqRng'), solRsweep('A_2'), '-r', linewidth=2.0)
+        plt.xlabel('Mission Range [nm]')
+        plt.ylabel('Fan Area [m^$2$]')
+        plt.title('Fan Area vs Range')
+        plt.savefig('engine_Rsweeps/fan_area_R.pdf')
+        plt.show()
         
         irc = []
         f = []
@@ -930,7 +937,7 @@ if __name__ == '__main__':
         plt.savefig('engine_Rsweeps/max_m_range.pdf')
         plt.show()
 
-        plt.plot(solRsweep('ReqRng'), maxm, '-r', linewidth=2.0)
+        plt.plot(solRsweep('ReqRng'), maxF, '-r', linewidth=2.0)
         plt.xlabel('Mission Range [nm]')
         plt.ylabel('Max Engine Thrust [N]')
         plt.title('Max Engine Thrust vs Range')
@@ -940,7 +947,7 @@ if __name__ == '__main__':
         plt.plot(solRsweep('ReqRng'), totsfc, '-r', linewidth=2.0)
         plt.plot(solRsweep('ReqRng'), cruisetsfc, '-g', linewidth=2.0)
         plt.legend(['Initial Climb', 'Initial Cruise'], loc=2)
-        plt.ylim((.4,.55))
+##        plt.ylim((.4,.55))
         plt.xlabel('Mission Range [nm]')
         plt.ylabel('TSFC [1/hr]')
         plt.title('TSFC vs Range')
@@ -981,7 +988,7 @@ if __name__ == '__main__':
         plt.xlabel('Mission Range [nm]')
         plt.ylabel('Initial Thrust [N]')
         plt.title('Initial Thrust vs Range')
-        plt.ylim((5000,17000))
+        plt.ylim((4000,17000))
         plt.savefig('engine_Rsweeps/initial_F8_range.pdf')
         plt.show()
 
@@ -1054,6 +1061,13 @@ if __name__ == '__main__':
         plt.xlabel('Mission Range [nm]')
         plt.title('Sensitivity to $\\alpha_c$ vs Range')
         plt.savefig('engine_Rsweeps/alphac_sens_range.pdf')
+        plt.show()
+
+        plt.plot(solRsweep('ReqRng'), solRsweep('\pi_{f_D}'), '-r', linewidth=2.0)
+        plt.ylabel('$\pi_{f_D}$')
+        plt.xlabel('Mission Range [nm]')
+        plt.title('Fan Design Pressure Ratio vs Initial Rate of Climb')
+        plt.savefig('engine_Rsweeps/pifD_R.pdf')
         plt.show()
 
     if plotAlt == True:
@@ -1211,7 +1225,7 @@ if __name__ == '__main__':
 
     if plotRC == True:
         substitutions = {
-                'ReqRng': 2000,
+                'ReqRng': 1000,
                 'numeng': 2,
                 'W_{pax}': 91 * 9.81,
                 'n_{pax}': 150,
@@ -1251,12 +1265,12 @@ if __name__ == '__main__':
                 'Cp_t2': 1184,
                 'Cp_c': 1216,
 
-                'RC_{min}': ('sweep', np.linspace(1000,8000,5)),
+                'RC_{min}': ('sweep', np.linspace(1000,7000,60)),
                 }
         
         mission = Mission(2, 2)
-        m = Model(mission['W_{f_{total}}'], mission, substitutions)
-        solRCsweep = m.localsolve(solver='mosek', verbosity = 1, skipsweepfailures=True)
+        m = Model(mission['W_{f_{total}}'], mission, substitutions, x0=x0)
+        solRCsweep = m.localsolve(solver='mosek', verbosity = 2, skipsweepfailures=True)
 
         i = 0
 
@@ -1265,6 +1279,9 @@ if __name__ == '__main__':
         f8 = []
         crtsfc = []
         itsfc = []
+        maxm = []
+        maxF = []
+        cruiseF = []
 
         while i < len(solRCsweep('RC')):
             f.append(mag(solRCsweep('F')[i][0]))
@@ -1272,7 +1289,31 @@ if __name__ == '__main__':
             f8.append(mag(solRCsweep('F_8')[i][0]))
             crtsfc.append(mag(solRCsweep('TSFC')[i][2]))
             itsfc.append(mag(solRCsweep('TSFC')[i][0]))
+            maxm.append(max(mag(solRCsweep('m_{total}')[i])))
+            maxF.append(max(mag(solRCsweep('F')[i])))
+            cruiseF.append(mag(solRCsweep('F')[i][2]))
             i+=1
+
+        plt.plot(solRCsweep('RC_{min}'), cruiseF, '-r', linewidth=2.0)
+        plt.xlabel('Minimum Initial Rate of Climb [ft/min]')
+        plt.ylabel('Initial Cruise Thrust [N]')
+        plt.title('Initial Cruise Thrust vs Range')
+        plt.savefig('engine_RCsweeps/max_m_range.pdf')
+        plt.show()
+
+        plt.plot(solRCsweep('RC_{min}'), maxm, '-r', linewidth=2.0)
+        plt.xlabel('Minimum Initial Rate of Climb [ft/min]')
+        plt.ylabel('Max Engine Mass Flow [kg/s]')
+        plt.title('Max Engine Mass Flow vs Range')
+        plt.savefig('engine_RCsweeps/max_m_range.pdf')
+        plt.show()
+
+        plt.plot(solRCsweep('RC_{min}'), maxF, '-r', linewidth=2.0)
+        plt.xlabel('Minimum Initial Rate of Climb [ft/min]')
+        plt.ylabel('Max Engine Thrust [N]')
+        plt.title('Max Engine Thrust vs Range')
+        plt.savefig('engine_RCsweeps/max_F_range.pdf')
+        plt.show()
 
         plt.plot(solRCsweep('RC_{min}'), solRCsweep('CruiseAlt'), '-r', linewidth=2.0)
         plt.ylabel('Cruise Altitude [ft]')
@@ -1335,6 +1376,13 @@ if __name__ == '__main__':
         plt.ylabel('Fan Area [m^$2$]')
         plt.title('Fan Area vs Initial Rate of Climb')
         plt.savefig('engine_RCsweeps/fan_area_RC.pdf')
+        plt.show()
+
+        plt.plot(solRCsweep('RC_{min}'), solRCsweep('\pi_{f_D}'), '-r', linewidth=2.0)
+        plt.ylabel('$\pi_{f_D}$')
+        plt.xlabel('Minimum Initial Rate of Climb [ft/min]')
+        plt.title('Fan Design Pressure Ratio vs Initial Rate of Climb')
+        plt.savefig('engine_RCsweeps/pifD_RC.pdf')
         plt.show()
 
         plt.plot(solRCsweep('RC_{min}'), solRCsweep['sensitivities']['constants']['M_{takeoff}'], '-r', linewidth=2.0)

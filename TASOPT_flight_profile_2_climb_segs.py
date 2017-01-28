@@ -27,11 +27,11 @@ Inputs
 
 class Aircraft(Model):
     "Aircraft class"
-    def  setup(self, Nclimb, Ncruise, **kwargs):
+    def  setup(self, Nclimb, Ncruise, enginestate, **kwargs):
         #create submodels
         self.fuse = Fuselage()
         self.wing = Wing()
-        self.engine = Engine(0, True, Nclimb+Ncruise)
+        self.engine = Engine(0, True, Nclimb+Ncruise, enginestate)
 
         #variable definitions
         numeng = Variable('numeng', '-', 'Number of Engines')
@@ -202,6 +202,31 @@ class ClimbSegment(Model):
 
         return self.state, self.climbP
 
+class StateLinking(Model):
+    """
+    link all the state model variables
+    """
+    def setup(self, climbstate1, climbstate2, cruisestate, enginestate, Nclimb1, Nclimb2, Ncruise):
+        statevarkeys = ['p_{sl}', 'T_{sl}', 'L_{atm}', 'M_{atm}', 'P_{atm}', 'R_{atm}',
+                        '\\rho', 'T_{atm}', '\\mu', 'T_s', 'C_1', 'h', 'hft', 'V', 'a', 'R', '\\gamma', 'M']
+        constraints = []
+        for i in range(len(statevarkeys)):
+            varkey = statevarkeys[i]
+            for i in range(Nclimb1):
+                constraints.extend([
+                    climbstate1[varkey][i] == enginestate[varkey][i]
+                    ])
+            for i in range(Nclimb2):
+                constraints.extend([
+                    climbstate2[varkey][i] == enginestate[varkey][i + Nclimb1]
+                    ])
+            for i in range(Ncruise):
+                constraints.extend([
+                    cruisestate[varkey][i] == enginestate[varkey][i + Nclimb1 + Nclimb2]
+                    ])           
+        
+        return constraints
+
 class FlightState(Model):
     """
     creates atm model for each flight segment, has variables
@@ -253,7 +278,6 @@ class Altitude(Model):
             
 class Atmosphere(Model):
     def setup(self, alt, **kwargs):
-##        g = Variable('g', 'm/s^2', 'Gravitational acceleration')
         p_sl = Variable("p_{sl}", 101325, "Pa", "Pressure at sea level")
         T_sl = Variable("T_{sl}", 288.15, "K", "Temperature at sea level")
         L_atm = Variable("L_{atm}", .0065, "K/m", "Temperature lapse rate")
@@ -327,6 +351,7 @@ class Wing(Model):
 
             #compute wing span and aspect ratio, subject to a span constraint
             AR == (span**2)/S,
+            AR <= 10,
             #AR == 9,
 
             span <= span_max,
@@ -433,8 +458,12 @@ class Mission(Model):
     mission class, links together all subclasses
     """
     def setup(self, Nclimb1, Nclimb2, Ncruise, substitutions = None, **kwargs):
+        # vectorize
+        with Vectorize(Nclimb1  +Nclimb2 + Ncruise):
+            enginestate = FlightState()
+            
         #build the submodel
-        ac = Aircraft(Nclimb1 + Nclimb2, Ncruise)
+        ac = Aircraft(Nclimb1 + Nclimb2, Ncruise, enginestate)
 
         #Vectorize
         with Vectorize(Nclimb1):
@@ -447,6 +476,8 @@ class Mission(Model):
         with Vectorize(Ncruise):
             cruise = CruiseSegment(ac)
 
+        statelinking = StateLinking(climb1.state, climb2.state, cruise.state, enginestate, Nclimb1, Nclimb2, Ncruise)
+
         #declare new variables
         W_ftotal = Variable('W_{f_{total}}', 'N', 'Total Fuel Weight')
         W_fclimb1 = Variable('W_{f_{climb1}}', 'N', 'Fuel Weight Burned in Climb 1')
@@ -458,6 +489,10 @@ class Mission(Model):
         W_dry = Variable('W_{dry}', 'N', 'Aircraft Dry Weight')
 
         RCmin = Variable('RC_{min}', 'ft/min', 'Minimum allowed climb rate')
+
+        dhftholdcl1 = Variable('dhftholdcl1', 'ft', 'Climb 1 Hold Variable')
+        dhftholdcl2 = Variable('dhftholdcl2', 'ft', 'Climb 2 Hold Variable')
+        dhftholdcr = Variable('dhftholdcr', 'ft', 'Cruise Hold Variable')
 
         h1 = climb1['h']
         hftClimb1 = climb1['hft']
@@ -499,18 +534,22 @@ class Mission(Model):
                 #altitude constraints
                 hftCruise[0] == CruiseAlt,
 ##                TCS([hftCruise[1:Ncruise] >= hftCruise[:Ncruise-1] + dhftcr]),
-                SignomialEquality(hftCruise[1:Ncruise], hftCruise[:Ncruise-1] + dhftcr),
-                TCS([hftClimb2[1:Nclimb2] >= hftClimb2[:Nclimb2-1] + dhftcl2]),
-                TCS([hftClimb2[0] >= dhftcl2[0] + 10000*units('ft')]),
+                SignomialEquality(hftCruise[1:Ncruise], hftCruise[:Ncruise-1] + dhftholdcr),
+                TCS([hftClimb2[1:Nclimb2] >= hftClimb2[:Nclimb2-1] + dhftholdcl2]),
+                TCS([hftClimb2[0] <= dhftholdcl2 + 10000*units('ft')]),
                 hftClimb2[-1] == hftCruise,
-                TCS([hftClimb1[1:Nclimb1] >= hftClimb1[:Nclimb1-1] + dhftcl1]),
+                TCS([hftClimb1[1:Nclimb1] >= hftClimb1[:Nclimb1-1] + dhftholdcl1]),
                 TCS([hftClimb1[0] == dhftcl1[0]]),
                 hftClimb1[-1] == 10000*units('ft'),
 
                 #compute the dh2
-                dhftcl2 <= (hftCruise-10000*units('ft'))/Nclimb2,
+                dhftholdcl2 <= (hftCruise-10000*units('ft'))/Nclimb2,
+                dhftholdcl2 == dhftcl2,
                 #compute the dh1
-                dhftcl1 == 10000*units('ft')/Nclimb1,
+                dhftholdcl1 == 10000*units('ft')/Nclimb1,
+                dhftholdcl1 == dhftcl1,
+
+                dhftcr == dhftholdcr,
                 
                 sum(cruise['RngCruise']) + sum(climb2['RngClimb']) + sum(climb1['RngClimb']) >= ReqRng,
 
@@ -520,7 +559,9 @@ class Mission(Model):
                 climb2['W_{burn}'] == ac['numeng']*ac.engine['TSFC'][Nclimb1:Nclimb1 + Nclimb2] * climb2['thr'] * ac.engine['F'][Nclimb1:Nclimb1 + Nclimb2],
 
                 #min climb rate constraint
-                climb1['RC'][0] >= RCmin,
+##                climb1['RC'][0] >= RCmin,
+
+##                climb1['V'] <= 250*units('knots'),
                 ])
 
         M2 = .8
@@ -568,7 +609,7 @@ class Mission(Model):
         enginecruise = [
             ac.engine.engineP['M_2'][Nclimb1 + Nclimb2:] == cruise['M'],
 
-            cruise['M'] == .8,
+##            cruise['M'] >= .7,
 
            #constraint on drag and thrust
             ac['numeng'] * ac.engine['F_{spec}'][Nclimb1 + Nclimb2:] >= cruise['D'] + cruise['W_{avg}'] * cruise['\\theta'],
@@ -577,7 +618,7 @@ class Mission(Model):
             TCS([cruise['excessP'] + cruise.state['V'] * cruise['D'] <=  cruise.state['V'] * ac['numeng'] * ac.engine['F_{spec}'][Nclimb1 + Nclimb2:]]),
             ]
 
-        return constraints + ac + climb1 + climb2 + cruise + enginecruise + engineclimb1 + engineclimb2
+        return constraints + ac + climb1 + climb2 + cruise + enginecruise + engineclimb1 + engineclimb2 + enginestate + statelinking
     
     def bound_all_variables(self, model, eps=1e-30, lower=None, upper=None):
         "Returns model with additional constraints bounding all free variables"
@@ -636,7 +677,7 @@ if __name__ == '__main__':
             'n_{pax}': 150,
             'pax_{area}': 1,
             'e': .9,
-            'b_{max}': 35,
+            'b_{max}': 60,
 
             #engine subs
             '\\pi_{tn}': .98,
@@ -664,13 +705,13 @@ if __name__ == '__main__':
 
             'G_f': 1,
 
-            'h_f': 43.03,
+            'h_f': 43.003,
 
             'Cp_t1': 1280,
             'Cp_t2': 1184,
             'Cp_c': 1216,
 
-            'RC_{min}': 1000,
+            'RC_{min}': 500,
             }
 
     #dict of initial guesses
@@ -761,8 +802,8 @@ if __name__ == '__main__':
         'a': 1e3*units('m/s'),
     }
            
-    mission = Mission(2, 2, 2)
-    m = Model(mission['W_{f_{total}}'], mission, substitutions)
+    mission = Mission(2, 2, 3)
+    m = Model(mission['W_{f_{total}}'], mission, substitutions, x0=x0)
     sol = m.localsolve(solver='mosek', verbosity = 4)
 ##    bounds, sol = mission.determine_unbounded_variables(m)
 

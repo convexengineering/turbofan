@@ -27,11 +27,11 @@ Inputs
 
 class Aircraft(Model):
     "Aircraft class"
-    def  setup(self, Nclimb, Ncruise, **kwargs):
+    def  setup(self, Nclimb, Ncruise, enginestate, **kwargs):
         #create submodels
         self.fuse = Fuselage()
         self.wing = Wing()
-        self.engine = Engine(0, True, Nclimb+Ncruise)
+        self.engine = Engine(0, True, Nclimb+Ncruise, enginestate)
 
         #variable definitions
         numeng = Variable('numeng', '-', 'Number of Engines')
@@ -202,6 +202,27 @@ class ClimbSegment(Model):
 
         return self.state, self.climbP
 
+class StateLinking(Model):
+    """
+    link all the state model variables
+    """
+    def setup(self, climbstate, cruisestate, enginestate, Nclimb, Ncruise):
+        statevarkeys = ['p_{sl}', 'T_{sl}', 'L_{atm}', 'M_{atm}', 'P_{atm}', 'R_{atm}',
+                        '\\rho', 'T_{atm}', '\\mu', 'T_s', 'C_1', 'h', 'hft', 'V', 'a', 'R', '\\gamma', 'M']
+        constraints = []
+        for i in range(len(statevarkeys)):
+            varkey = statevarkeys[i]
+            for i in range(Nclimb):
+                constraints.extend([
+                    climbstate[varkey][i] == enginestate[varkey][i]
+                    ])
+            for i in range(Ncruise):
+                constraints.extend([
+                    cruisestate[varkey][i] == enginestate[varkey][i+Nclimb]
+                    ])           
+        
+        return constraints
+
 class FlightState(Model):
     """
     creates atm model for each flight segment, has variables
@@ -327,6 +348,7 @@ class Wing(Model):
 
             #compute wing span and aspect ratio, subject to a span constraint
             AR == (span**2)/S,
+            AR <= 10,
             #AR == 9,
 
             span <= span_max,
@@ -433,8 +455,12 @@ class Mission(Model):
     mission class, links together all subclasses
     """
     def setup(self, Nclimb, Ncruise, substitutions = None, **kwargs):
+       # vectorize
+        with Vectorize(Nclimb + Ncruise):
+            enginestate = FlightState()
+    
         #build the submodel
-        ac = Aircraft(Nclimb, Ncruise)
+        ac = Aircraft(Nclimb, Ncruise, enginestate)
 
         #Vectorize
         with Vectorize(Nclimb):
@@ -442,6 +468,8 @@ class Mission(Model):
 
         with Vectorize(Ncruise):
             cruise = CruiseSegment(ac)
+
+        statelinking = StateLinking(climb.state, cruise.state, enginestate, Nclimb, Ncruise)
 
         #declare new variables
         W_ftotal = Variable('W_{f_{total}}', 'N', 'Total Fuel Weight')
@@ -451,6 +479,9 @@ class Mission(Model):
         CruiseAlt = Variable('CruiseAlt', 'ft', 'Cruise Altitude [feet]')
         ReqRng = Variable('ReqRng', 'nautical_miles', 'Required Cruise Range')
         W_dry = Variable('W_{dry}', 'N', 'Aircraft Dry Weight')
+
+        dhftholdcl = Variable('dhftholdcl', 'ft', 'Climb Hold Variable')
+        dhftholdcr = Variable('dhftholdcr', 'ft', 'Cruise Hold Variable')
 
         RCmin = Variable('RC_{min}', 'ft/min', 'Minimum allowed climb rate')
 
@@ -489,13 +520,17 @@ class Mission(Model):
                 #altitude constraints
                 hftCruise[0] == CruiseAlt,
 ##                TCS([hftCruise[1:Ncruise] >= hftCruise[:Ncruise-1] + dhftcr]),
-                SignomialEquality(hftCruise[1:Ncruise], hftCruise[:Ncruise-1] + dhftcr),
-                TCS([hftClimb[1:Nclimb] >= hftClimb[:Nclimb-1] + dhftcl]),
+                SignomialEquality(hftCruise[1:Ncruise], hftCruise[:Ncruise-1] + dhftholdcr),
+                TCS([hftClimb[1:Nclimb] >= hftClimb[:Nclimb-1] + dhftholdcl]),
                 TCS([hftClimb[0] >= dhftcl[0]]),
                 hftClimb[-1] <= hftCruise,
 
                 #compute the dh
-                dhftcl == hftCruise/Nclimb,
+                dhftholdcl == hftCruise[0]/Nclimb,
+
+                dhftcl == dhftholdcl,
+
+                dhftcr == dhftholdcr,
                 
                 sum(cruise['RngCruise']) + sum(climb['RngClimb']) >= ReqRng,
 
@@ -504,7 +539,7 @@ class Mission(Model):
                 climb['W_{burn}'] == ac['numeng']*ac.engine['TSFC'][:Nclimb] * climb['thr'] * ac.engine['F'][:Nclimb],
 
                 #min climb rate constraint
-                climb['RC'][0] >= RCmin,
+##                climb['RC'][0] >= RCmin,
                 ])
 
         M2 = .8
@@ -536,7 +571,8 @@ class Mission(Model):
         enginecruise = [
             ac.engine.engineP['M_2'][Nclimb:] == cruise['M'],
 
-            cruise['M'] == .8,
+##            cruise['M'] == .8,
+            cruise['M'] >= .76,
 
             ac.engine.engineP['M_{2.5}'][2] == M25,
             ac.engine.engineP['M_{2.5}'][3] == M25,
@@ -548,7 +584,7 @@ class Mission(Model):
             TCS([cruise['excessP'] + cruise.state['V'] * cruise['D'] <=  cruise.state['V'] * ac['numeng'] * ac.engine['F_{spec}'][Nclimb:]]),
             ]
 
-        return constraints + ac + climb + cruise + enginecruise + engineclimb
+        return constraints + ac + climb + cruise + enginecruise + engineclimb + enginestate + statelinking
     
     def bound_all_variables(self, model, eps=1e-30, lower=None, upper=None):
         "Returns model with additional constraints bounding all free variables"
@@ -603,12 +639,12 @@ if __name__ == '__main__':
         
     substitutions = {      
             'ReqRng': 2000, #('sweep', np.linspace(500,2000,4)),
-            'numeng': 1,
+            'numeng': 2,
             'W_{pax}': 91 * 9.81,
             'n_{pax}': 150,
             'pax_{area}': 1,
             'e': .9,
-            'b_{max}': 35,
+            'b_{max}': 60,
 
             #engine subs
             '\\pi_{tn}': .98,
@@ -636,13 +672,13 @@ if __name__ == '__main__':
 
             'G_f': 1,
 
-            'h_f': 43.03,
+            'h_f': 43.003,
 
             'Cp_t1': 1280,
             'Cp_t2': 1184,
             'Cp_c': 1216,
 
-            'RC_{min}': 1000,
+            'RC_{min}': 500,
             }
 
     #dict of initial guesses
@@ -733,7 +769,7 @@ if __name__ == '__main__':
         'a': 1e3*units('m/s'),
     }
            
-    mission = Mission(2, 2)
+    mission = Mission(4, 4)
     m = Model(mission['W_{f_{total}}'], mission, substitutions, x0=x0)
     sol = m.localsolve(solver='mosek', verbosity = 4)
 ##    bounds, sol = mission.determine_unbounded_variables(m)

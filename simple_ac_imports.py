@@ -35,6 +35,12 @@ class Aircraft(Model):
         creates an aircraft cruise performance model, given a state
         """
         return CruiseP(self, state)
+    
+    def cruise_climb_dynamic(self, state):
+        """
+        creates an aircraft cruise performance model, given a state
+        """
+        return CruiseClimbP(self, state)
 
 class AircraftP(Model):
     """
@@ -161,6 +167,42 @@ class CruiseP(Model):
 
         return constraints, self.aircraftP
 
+class CruiseClimbP(Model):
+    """
+    Climb constraints
+    """
+    def setup(self, aircraft, state, **kwargs):
+        #submodels
+        self.aircraft = aircraft
+        self.aircraftP = AircraftP(aircraft, state)
+        self.wingP = self.aircraftP.wingP
+        self.fuseP = self.aircraftP.fuseP
+                                  
+        #variable definitions
+        theta = Variable('\\theta', '-', 'Aircraft Climb Angle')
+        excessP = Variable('excessP', 'W', 'Excess Power During Climb')
+        RC = Variable('RC', 'feet/min', 'Rate of Climb/Decent')
+        dhft = Variable('dhft', 'feet', 'Change in Altitude Per Climb Segment [feet]')
+        RngCruise = Variable('RngCruise', 'nautical_miles', 'Down Range Covered in Each Cruise Segment')
+
+        #constraints
+        constraints = []
+        
+        constraints.extend([ 
+            RC == excessP/self.aircraftP['W_{avg}'],
+            
+            #make the small angle approximation and compute theta
+            theta * state['V']  == RC,
+           
+            dhft == self.aircraftP['tmin'] * RC,
+        
+            #makes a small angle assumption during climb
+            RngCruise == self.aircraftP['thr']*state['V'],
+            ])
+
+        return constraints, self.aircraftP
+
+
 class CruiseSegment(Model):
     """
     Combines a flight state and aircrat to form a cruise flight segment
@@ -168,6 +210,16 @@ class CruiseSegment(Model):
     def setup(self, aircraft, **kwargs):
         self.state = FlightState()
         self.cruiseP = aircraft.cruise_dynamic(self.state)
+
+        return self.state, self.cruiseP
+
+class CruiseClimbSegment(Model):
+    """
+    Combines a flight state and aircrat to form a cruise flight segment
+    """
+    def setup(self, aircraft, **kwargs):
+        self.state = FlightState()
+        self.cruiseP = aircraft.cruise_climb_dynamic(self.state)
 
         return self.state, self.cruiseP
     

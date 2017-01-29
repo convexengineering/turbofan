@@ -11,11 +11,14 @@ from CFM_56_performance_components_setup import Engine
 
 class Aircraft(Model):
     "Aircraft class"
-    def  setup(self, Nclimb, Ncruise, enginestate, **kwargs):
+    def  setup(self, Nclimb, Ncruise, enginestate, Nfleet=0, **kwargs):
         #create submodels
         self.fuse = Fuselage()
         self.wing = Wing()
-        self.engine = Engine(0, True, Nclimb+Ncruise, enginestate)
+        if Nfleet != 0:
+            self.engine = Engine(0, True, Nclimb+Ncruise, enginestate, Nfleet)
+        else:
+           self.engine = Engine(0, True, Nclimb+Ncruise, enginestate)            
 
         #variable definitions
         numeng = Variable('numeng', '-', 'Number of Engines')

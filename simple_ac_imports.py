@@ -356,14 +356,14 @@ class Wing(Model):
         constraints.extend([
             #wing weight constraint
             #based off of a raymer weight and 737 data from TASOPT output file
-            (S/(dum1))**.65 == W_wing/(dum2),
+            (S/(dum1))**.65 * (AR/10.1)**.5 == W_wing/(dum2),
 
             #compute wing span and aspect ratio, subject to a span constraint
             AR == (span**2)/S,
-            AR <= 10,
+##            AR <= 10,
             #AR == 9,
 
-            span <= span_max,
+##            span <= span_max,
 
             #compute K for the aircraft
             K == (pi * e * AR)**-1,

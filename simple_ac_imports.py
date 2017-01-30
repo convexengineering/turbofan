@@ -360,7 +360,7 @@ class Wing(Model):
 
             #compute wing span and aspect ratio, subject to a span constraint
             AR == (span**2)/S,
-##            AR <= 10,
+            AR <= 10,
             #AR == 9,
 
 ##            span <= span_max,

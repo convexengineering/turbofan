@@ -81,8 +81,6 @@ class FleetMission(Model):
             ReqRng = Variable('ReqRng', 'nautical_miles', 'Required Cruise Range')
             W_dry = Variable('W_{dry}', 'N', 'Aircraft Dry Weight')
 
-##            RCmin = Variable('RC_{min}', 'ft/min', 'Minimum allowed climb rate')
-
             dhfthold = Variable('dhfthold', 'ft', 'Hold Variable')
 
         W_ffleet = Variable('W_{f_{fleet}}', 'N', 'Total Fleet Fuel Burn')
@@ -137,14 +135,15 @@ class FleetMission(Model):
             climb['W_{burn}'] == ac['numeng']*ac.engine['TSFC'][:Nclimb] * climb['thr'] * ac.engine['F'][:Nclimb],
 
             #compute the fleet fuel burn
-            W_ffleet >= sum(W_ftotal),
-
+##            W_ffleet >= sum(W_ftotal),
+            W_ffleet >= .375*W_ftotal[0] + .375*W_ftotal[1] + .125*W_ftotal[2] + .125*W_ftotal[3],
+            
             CruiseAlt >= 30000*units('ft'),
 
 ##            cruise['M'] >= .5,
 
             #min climb rate constraint
-##            climb['RC'] >= RCmin,
+            climb['RC'] >= 500*units('ft/min'),
             ])
 
 ##        with SignomialsEnabled():
@@ -241,8 +240,6 @@ if __name__ == '__main__':
             'Cp_t1': 1280,
             'Cp_t2': 1184,
             'Cp_c': 1216,
-
-##            'RC_{min}': 5000,
             }
 
     #dict of initial guesses

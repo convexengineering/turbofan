@@ -199,19 +199,20 @@ class Engine(Model):
             #component area sizing
             fanarea = [
                 #fan area
-                self.engineP['P_2'] == self.engineP['P_{t_2}']*(self.compressor['hold_{2}'])**(-3.512),
-                self.engineP['T_2'] == self.engineP['T_{t_2}'] * self.compressor['hold_{2}']**-1,
+                self.engineP['P_2'] == self.engineP['P_{t_2}']*(self.engineP['hold_{2}'])**(-3.512),
+                self.engineP['T_2'] == self.engineP['T_{t_2}'] * self.engineP['hold_{2}']**-1,
                 self.sizing['A_2'] == self.engineP['m_{fan}']/(self.engineP['\\rho_2']*self.engineP['u_2']),     #B.198
                 ]
 
             HPCarea = [
                 #HPC area
-                self.engineP['P_{2.5}'] == self.engineP['P_{t_{2.5}}']*(self.compressor['hold_{2.5}'])**(-3.824857),
-                self.engineP['T_{2.5}'] == self.engineP['T_{t_{2.5}}'] * self.compressor['hold_{2.5}']**-1,
+                self.engineP['P_{2.5}'] == self.engineP['P_{t_{2.5}}']*(self.engineP['hold_{2.5}'])**(-3.824857),
+                self.engineP['T_{2.5}'] == self.engineP['T_{t_{2.5}}'] * self.engineP['hold_{2.5}']**-1,
                 self.sizing['A_{2.5}'] == self.engineP['m_{core}']/(self.engineP['\\rho_2.5']*self.engineP['u_{2.5}']),     #B.203
                 ]
 
             if eng == 0:
+                """CFM56 vals"""
                 onDest = [
                     #estimate relevant on design values
                     self.sizing['m_{htD}'] <= 1.3*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1400.0/288)**.5)/(1527/101.325),
@@ -226,17 +227,8 @@ class Engine(Model):
                     self.fanmap['\\bar{m}_{fan_{D}}'] <= 1.3 * self.sizing['\\alpha_{OD}'] * self.sizing['m_{coreD}']* ((250.0/288)**.5)/(50/101.325),
                     ]
             if eng == 1:
+                """TASOPT vals"""
                 onDest = [
-##                    self.sizing['m_{htD}'] <= 1.2*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1400.0/288)**.5)/(1498/101.325),
-##                    self.sizing['m_{htD}'] >= .8*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}']*((1400.0/288)**.5)/(1498/101.325),
-##                    self.sizing['m_{ltD}'] <= 1.2*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1144.8/288)**.5)/(788.5/101.325),
-##                    self.sizing['m_{ltD}'] >= .8*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}']*((1144.8/288)**.5)/(788.5/101.325),
-##                    self.lpcmap['m_{lc_D}'] >= .8*self.sizing['m_{coreD}']*((294.5/288)**.5)/(84.25/101.325),
-##                    self.lpcmap['m_{lc_D}'] <= 1.2*self.sizing['m_{coreD}'] *((294.5/288)**.5)/(84.25/101.325),
-##                    self.hpcmap['m_{hc_D}'] >= .8*self.sizing['m_{coreD}'] *((482.7/288)**.5)/(399.682/101.325),
-##                    self.hpcmap['m_{hc_D}'] <= 1.2*self.sizing['m_{coreD}'] *((482.7/288)**.5)/(399.682/101.325),
-##                    self.fanmap['\\bar{m}_{fan_{D}}'] >= .8 * self.sizing['\\alpha_{OD}'] * self.sizing['m_{coreD}'] *((250.0/288)**.5)/(50/101.325),
-##                    self.fanmap['\\bar{m}_{fan_{D}}'] <= 1.2 * self.sizing['\\alpha_{OD}'] * self.sizing['m_{coreD}']* ((250.0/288)**.5)/(50/101.325),
                     self.sizing['m_{htD}'] <= 1.3*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1400.0/288)**.5)/(1498/101.325),
                     self.sizing['m_{htD}'] >= .7*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}']*((1400.0/288)**.5)/(1498/101.325),
                     self.sizing['m_{ltD}'] <= 1.3*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1144.8/288)**.5)/(788.5/101.325),
@@ -248,6 +240,21 @@ class Engine(Model):
                     self.fanmap['\\bar{m}_{fan_{D}}'] >= .7 * self.sizing['\\alpha_{OD}'] * self.sizing['m_{coreD}'] *((250.0/288)**.5)/(50/101.325),
                     self.fanmap['\\bar{m}_{fan_{D}}'] <= 1.3 * self.sizing['\\alpha_{OD}'] * self.sizing['m_{coreD}']* ((250.0/288)**.5)/(50/101.325),
                     ]
+            if eng == 2:
+                """GE90 vals"""
+                onDest = [
+                    #estimate relevant on design values
+                    self.sizing['m_{htD}'] <= 1.3*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1400.0/288)**.5)/(1527/101.325),
+                    self.sizing['m_{htD}'] >= .7*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1400.0/288)**.5)/(1527/101.325),
+                    self.sizing['m_{ltD}'] <= 1.3*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1038.8/288)**.5)/(589.2/101.325),
+                    self.sizing['m_{ltD}'] >= .7*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1038.8/288)**.5)/(589.2/101.325),
+                    self.lpcmap['m_{lc_D}'] >= .7*self.sizing['m_{coreD}']*((292.57/288)**.5)/(84.25/101.325),
+                    self.lpcmap['m_{lc_D}'] <= 1.3*self.sizing['m_{coreD}'] *((292.57/288)**.5)/(84.25/101.325),
+                    self.hpcmap['m_{hc_D}'] >= .7*self.sizing['m_{coreD}'] *((362.47/288)**.5)/(163.02/101.325),
+                    self.hpcmap['m_{hc_D}'] <= 1.3*self.sizing['m_{coreD}'] *((362.47/288)**.5)/(163.02/101.325),
+                    self.fanmap['\\bar{m}_{fan_{D}}'] >= .7 * self.sizing['\\alpha_{OD}'] * self.sizing['m_{coreD}'] *((250.0/288)**.5)/(50/101.325),
+                    self.fanmap['\\bar{m}_{fan_{D}}'] <= 1.3 * self.sizing['\\alpha_{OD}'] * self.sizing['m_{coreD}']* ((250.0/288)**.5)/(50/101.325),
+                ]
 
         if res7 == 0:
             res7list = [
@@ -390,6 +397,66 @@ class Engine(Model):
             sta6gamma = 1.387
             turbexexp = (sta6gamma - 1) / sta6gamma
 
+        if eng == 2:
+            if goption == 1:
+                fgamma = 1.401
+                lpcgamma = 1.398
+                hpcgamma = 1.354
+                ccgamma = 1.313    #gamma value of air @ 1400 K
+                lptgamma = 1.354
+                hptgamma = 1.318
+            if goption == 0:
+                fgamma = 1.401
+                lpcgamma = 1.398
+                hpcgamma = 1.354
+                ccgamma = 1.313    #gamma value of air @ 1400 K
+                lptgamma = 1.3060
+                hptgamma = 1.2987
+
+            #Fan
+            faneta = .9153
+            fgamma = 1.4
+
+            fexp1 = (fgamma - 1)/(faneta * fgamma)
+
+            #LPC
+            lpcgamma = 1.398
+            LPCeta = .9037
+
+            lpcexp1 = (lpcgamma - 1)/(LPCeta * lpcgamma)
+
+            #HPC
+            HPCeta = .9247
+            hpcgamma = 1.354
+
+            hpcexp1 = (hpcgamma - 1)/(HPCeta * hpcgamma)
+
+            #combustor cooling exponents
+            ccgamma = 1.313    #gamma value of air @ 1400 K
+
+            ccexp1 = ccgamma/(1 - ccgamma)
+            ccexp2 = -ccgamma/(1 - ccgamma)
+
+            #Turbines
+            #LPT
+            lptgamma = 1.354
+            LPTeta = .9228
+            lptexp1 = lptgamma * LPTeta / (lptgamma - 1)
+
+            #HPT
+            hptgamma = 1.318
+            HPTeta = .9121
+            hptexp1 = hptgamma * HPTeta / (hptgamma - 1)
+
+            #Exhaust and Thrust
+            #station 8, fan exit
+            sta8gamma = 1.4
+            fanexexp = (sta8gamma - 1)/ sta8gamma
+
+            #station 6, turbine exit
+            sta6gamma = 1.387
+            turbexexp = (sta6gamma - 1) / sta6gamma
+
 class EnginePerformance(Model):
     """
     Engine performance model
@@ -441,10 +508,6 @@ class Compressor(Model):
         #fan, LPC, HPC
         Cp1 = Variable('Cp_{1}', 1008, 'J/kg/K', "Cp Value for Air at 350K")#gamma = 1.398
         Cp2 = Variable('Cp_{2}', 1099, 'J/kg/K', "Cp Value for Air at 800K") #gamma = 1.354
-
-        hold25 = Variable('hold_{2.5}', '-', '1+(gamma-1)/2 * M_2.5**2')
-        hold2 = Variable('hold_{2}', '-', '1+(gamma-1)/2 * M_2**2')
-        c1 = Variable('c1', '-', 'Constant in Stagnation Eqn')
 
         #-------------------------diffuser pressure ratios--------------------------
         pid = Variable('\pi_{d}', '-', 'Diffuser Pressure Ratio')
@@ -508,10 +571,14 @@ class CompressorPerformance(Model):
         pilc = Variable('\pi_{lc}', '-', 'LPC Pressure Ratio')
         pihc = Variable('\pi_{hc}', '-', 'HPC Pressure Ratio')
 
+        hold25 = Variable('hold_{2.5}', '-', '1+(gamma-1)/2 * M_2.5**2')
+        hold2 = Variable('hold_{2}', '-', '1+(gamma-1)/2 * M_2**2')
+        c1 = Variable('c1', '-', 'Constant in Stagnation Eqn')
+
         diffuser = [
             #free stream stagnation values
-            Pt0 == state["P_{atm}"] / (self.comp['c1'] ** -3.5), #https://www.grc.nasa.gov/www/k-12/airplane/isentrop.html
-            Tt0 == state["T_{atm}"] / (self.comp['c1']) ** (-1),             #https://www.grc.nasa.gov/www/k-12/airplane/isentrop.html
+            Pt0 == state["P_{atm}"] / (c1 ** -3.5), #https://www.grc.nasa.gov/www/k-12/airplane/isentrop.html
+            Tt0 == state["T_{atm}"] / (c1) ** (-1),             #https://www.grc.nasa.gov/www/k-12/airplane/isentrop.html
             ht0 == self.comp['Cp_{air}'] * Tt0,
 
             #diffuser exit stagnation values (station 1.8)
@@ -1167,9 +1234,9 @@ class TestMissionCFM(Model):
             engine.state['M'][0] == M0,
             engine.engineP['M_2'][0] == M2,
             engine.engineP['M_{2.5}'][0] == M25,
-            engine.compressor['hold_{2}'] == 1+.5*(1.398-1)*M2**2,
-            engine.compressor['hold_{2.5}'] == 1+.5*(1.354-1)*M25**2,
-            engine.compressor['c1'] == 1+.5*(.401)*M0**2,
+            engine.engineP['hold_{2}'] == 1+.5*(1.398-1)*M2**2,
+            engine.engineP['hold_{2.5}'] == 1+.5*(1.354-1)*M25**2,
+            engine.engineP['c1'] == 1+.5*(.401)*M0**2,
             ]
 
         M2 = .8
@@ -1208,9 +1275,9 @@ class TestMissionTASOPT(Model):
             engine.state['M'][1] == M0,
             engine.engineP['M_2'][1] == M2,
             engine.engineP['M_{2.5}'][1] == M25,
-            engine.compressor['hold_{2}'] == 1+.5*(1.398-1)*M2**2,
-            engine.compressor['hold_{2.5}'] == 1+.5*(1.354-1)*M25**2,
-            engine.compressor['c1'] == 1+.5*(.401)*M0**2,
+            engine.engineP['hold_{2}'] == 1+.5*(1.398-1)*M2**2,
+            engine.engineP['hold_{2.5}'] == 1+.5*(1.354-1)*M25**2,
+            engine.engineP['c1'] == 1+.5*(.401)*M0**2,
             ]
 
         M2 = .8
@@ -1234,7 +1301,7 @@ class TestMissionTASOPT(Model):
         M0 = .223
 
         rotation = [
-            engine.state['P_{atm}'][0] == 101.325*units('kPa'),    #36K feet
+            engine.state['P_{atm}'][0] == 101.325*units('kPa'),
             engine.state["T_{atm}"][0] == 291*units('K'),
             engine.state['M'][0] == M0,
             engine.engineP['M_2'][0] == M2,
@@ -1242,6 +1309,56 @@ class TestMissionTASOPT(Model):
             ]
 
         return rotation, toclimb, cruise
+
+class TestMissionGE90(Model):
+    """
+    place holder of a mission calss
+    """
+    def setup(self, engine):
+        M2 = .85
+        M25 = .45
+        M4a = .1025
+        Mexit = 1
+        M0 = .85
+
+        climb = [
+            engine['F_{spec}'][1] == 19600.4*units('lbf'),
+            engine['F_{spec}'][0] == 16408.4  * units('lbf'),
+
+            engine.state['P_{atm}'][1] == 23.84*units('kPa'),    #36K feet
+            engine.state["T_{atm}"][1] == 218*units('K'),
+            engine.state['M'][1] == M0,
+            engine.engineP['M_2'][1] == M2,
+            engine.engineP['M_{2.5}'][1] == M25,
+            engine.engineP['hold_{2}'][1] == 1+.5*(1.398-1)*M2**2,
+            engine.engineP['hold_{2.5}'][1] == 1+.5*(1.354-1)*M25**2,
+            engine.engineP['c1'][1] == 1+.5*(.401)*M0**2,
+            ]
+
+        M0 = .8
+        M2 = .8
+        M25 = .45
+        M4a = .1025
+        Mexit = 1
+
+        cruise = [
+            engine.state['P_{atm}'][0] == 23.84*units('kPa'),    #36K feet
+            engine.state["T_{atm}"][0] == 218*units('K'),
+            engine.state['M'][0] == M0,
+            engine.engineP['M_2'][0] == M2,
+            engine.engineP['M_{2.5}'][0] == M25,
+            engine.engineP['hold_{2}'][0] == 1+.5*(1.398-1)*M2**2,
+            engine.engineP['hold_{2.5}'][0] == 1+.5*(1.354-1)*M25**2,
+            engine.engineP['c1'][0] == 1+.5*(.401)*M0**2,
+            ]
+
+        M2 = .25
+        M25 = .6
+        M4a = .1025
+        Mexit = 1
+        M0 = .25
+
+        return climb, cruise
 
 if __name__ == "__main__":
     """
@@ -1251,7 +1368,7 @@ if __name__ == "__main__":
     """
     eng = 1
     
-    if eng == 0:
+    if eng == 0 or eng == 2:
         N = 2
     if eng == 1:
         N = 3
@@ -1263,8 +1380,12 @@ if __name__ == "__main__":
 
     if eng == 0:
         mission = TestMissionCFM(engine)
+        
     if eng == 1:
         mission = TestMissionTASOPT(engine)
+
+    if eng == 2:
+        mission = TestMissionGE90(engine)
 
     if eng == 0:
         M4a = .1025
@@ -1327,7 +1448,6 @@ if __name__ == "__main__":
                 '\pi_{hc_D}': hpc,
                 '\pi_{lc_D}': lpc,
                 '\\alpha_{max}': 5.1362,
-##                '\\alpha_{OD}': 2.6,
 
                 'hold_{4a}': 1+.5*(1.313-1)*M4a**2,
                 'r_{uc}': .5,
@@ -1346,7 +1466,43 @@ if __name__ == "__main__":
                }
 
     if eng == 2:
-        None
+        M4a = .1025
+        fan = 1.58
+        lpc  = 1.26
+        hpc = 20.033
+        
+        substitutions = {
+            '\pi_{tn}': .98,
+            '\pi_{b}': .94,
+            '\pi_{d}': .98,
+            '\pi_{fn}': .98,
+            'T_{ref}': 288.15,
+            'P_{ref}': 101.325,
+            '\eta_{HPshaft}': .98,
+            '\eta_{LPshaft}': .98,
+            'eta_{B}': .9970,
+
+            '\pi_{f_D}': 1.58,
+            '\pi_{hc_D}': 20.033,
+            '\pi_{lc_D}': 1.26,
+
+            '\\alpha_{max}': 8.7877,
+
+            'hold_{4a}': 1+.5*(1.313-1)*M4a**2,#sol('hold_{4a}'),
+            'r_{uc}': .1,
+            '\\alpha_c': .14,
+            'T_{t_f}': 435,
+
+            'M_{takeoff}': .955,
+
+            'G_f': 1,
+
+            'h_f': 43.003,
+
+            'Cp_t1': 1280,
+            'Cp_t2': 1184,
+            'Cp_c': 1216,
+            }
 
     #dict of initial guesses
     x0 = {
@@ -1436,7 +1592,7 @@ if __name__ == "__main__":
         'a': 1e3*units('m/s'),
     }
 
-    if eng == 0:
+    if eng == 0 or eng == 2:
         m = Model((10*engine.engineP.thrustP['TSFC'][0]+engine.engineP.thrustP['TSFC'][1]) * (engine['W_{engine}'] * units('1/hr/N'))**.00001, [engine, mission], substitutions, x0=x0)
     if eng == 1:
         m = Model((10*engine.engineP.thrustP['TSFC'][2]+engine.engineP.thrustP['TSFC'][1]+engine.engineP.thrustP['TSFC'][0]) * (engine['W_{engine}'] * units('1/hr/N'))**.00001, [engine, mission], substitutions, x0=x0)

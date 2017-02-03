@@ -211,19 +211,43 @@ class Engine(Model):
                 self.sizing['A_{2.5}'] == self.engineP['m_{core}']/(self.engineP['\\rho_2.5']*self.engineP['u_{2.5}']),     #B.203
                 ]
 
-            onDest = [
-                #estimate relevant on design values
-                self.sizing['m_{htD}'] <= 1.3*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1400.0/288)**.5)/(1527/101.325),
-                self.sizing['m_{htD}'] >= .7*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1400.0/288)**.5)/(1527/101.325),
-                self.sizing['m_{ltD}'] <= 1.3*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1038.8/288)**.5)/(589.2/101.325),
-                self.sizing['m_{ltD}'] >= .7*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1038.8/288)**.5)/(589.2/101.325),
-                self.lpcmap['m_{lc_D}'] >= .7*self.sizing['m_{coreD}']*((292.57/288)**.5)/(84.25/101.325),
-                self.lpcmap['m_{lc_D}'] <= 1.3*self.sizing['m_{coreD}'] *((292.57/288)**.5)/(84.25/101.325),
-                self.hpcmap['m_{hc_D}'] >= .7*self.sizing['m_{coreD}'] *((362.47/288)**.5)/(163.02/101.325),
-                self.hpcmap['m_{hc_D}'] <= 1.3*self.sizing['m_{coreD}'] *((362.47/288)**.5)/(163.02/101.325),
-                self.fanmap['\\bar{m}_{fan_{D}}'] >= .7 * self.sizing['\\alpha_{OD}'] * self.sizing['m_{coreD}'] *((250.0/288)**.5)/(50/101.325),
-                self.fanmap['\\bar{m}_{fan_{D}}'] <= 1.3 * self.sizing['\\alpha_{OD}'] * self.sizing['m_{coreD}']* ((250.0/288)**.5)/(50/101.325),
-                ]
+            if eng == 0:
+                onDest = [
+                    #estimate relevant on design values
+                    self.sizing['m_{htD}'] <= 1.3*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1400.0/288)**.5)/(1527/101.325),
+                    self.sizing['m_{htD}'] >= .7*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1400.0/288)**.5)/(1527/101.325),
+                    self.sizing['m_{ltD}'] <= 1.3*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1038.8/288)**.5)/(589.2/101.325),
+                    self.sizing['m_{ltD}'] >= .7*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1038.8/288)**.5)/(589.2/101.325),
+                    self.lpcmap['m_{lc_D}'] >= .7*self.sizing['m_{coreD}']*((292.57/288)**.5)/(84.25/101.325),
+                    self.lpcmap['m_{lc_D}'] <= 1.3*self.sizing['m_{coreD}'] *((292.57/288)**.5)/(84.25/101.325),
+                    self.hpcmap['m_{hc_D}'] >= .7*self.sizing['m_{coreD}'] *((362.47/288)**.5)/(163.02/101.325),
+                    self.hpcmap['m_{hc_D}'] <= 1.3*self.sizing['m_{coreD}'] *((362.47/288)**.5)/(163.02/101.325),
+                    self.fanmap['\\bar{m}_{fan_{D}}'] >= .7 * self.sizing['\\alpha_{OD}'] * self.sizing['m_{coreD}'] *((250.0/288)**.5)/(50/101.325),
+                    self.fanmap['\\bar{m}_{fan_{D}}'] <= 1.3 * self.sizing['\\alpha_{OD}'] * self.sizing['m_{coreD}']* ((250.0/288)**.5)/(50/101.325),
+                    ]
+            if eng == 1:
+                onDest = [
+##                    self.sizing['m_{htD}'] <= 1.2*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1400.0/288)**.5)/(1498/101.325),
+##                    self.sizing['m_{htD}'] >= .8*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}']*((1400.0/288)**.5)/(1498/101.325),
+##                    self.sizing['m_{ltD}'] <= 1.2*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1144.8/288)**.5)/(788.5/101.325),
+##                    self.sizing['m_{ltD}'] >= .8*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}']*((1144.8/288)**.5)/(788.5/101.325),
+##                    self.lpcmap['m_{lc_D}'] >= .8*self.sizing['m_{coreD}']*((294.5/288)**.5)/(84.25/101.325),
+##                    self.lpcmap['m_{lc_D}'] <= 1.2*self.sizing['m_{coreD}'] *((294.5/288)**.5)/(84.25/101.325),
+##                    self.hpcmap['m_{hc_D}'] >= .8*self.sizing['m_{coreD}'] *((482.7/288)**.5)/(399.682/101.325),
+##                    self.hpcmap['m_{hc_D}'] <= 1.2*self.sizing['m_{coreD}'] *((482.7/288)**.5)/(399.682/101.325),
+##                    self.fanmap['\\bar{m}_{fan_{D}}'] >= .8 * self.sizing['\\alpha_{OD}'] * self.sizing['m_{coreD}'] *((250.0/288)**.5)/(50/101.325),
+##                    self.fanmap['\\bar{m}_{fan_{D}}'] <= 1.2 * self.sizing['\\alpha_{OD}'] * self.sizing['m_{coreD}']* ((250.0/288)**.5)/(50/101.325),
+                    self.sizing['m_{htD}'] <= 1.3*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1400.0/288)**.5)/(1498/101.325),
+                    self.sizing['m_{htD}'] >= .7*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}']*((1400.0/288)**.5)/(1498/101.325),
+                    self.sizing['m_{ltD}'] <= 1.3*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1144.8/288)**.5)/(788.5/101.325),
+                    self.sizing['m_{ltD}'] >= .7*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}']*((1144.8/288)**.5)/(788.5/101.325),
+                    self.lpcmap['m_{lc_D}'] >= .7*self.sizing['m_{coreD}']*((294.5/288)**.5)/(84.25/101.325),
+                    self.lpcmap['m_{lc_D}'] <= 1.3*self.sizing['m_{coreD}'] *((294.5/288)**.5)/(84.25/101.325),
+                    self.hpcmap['m_{hc_D}'] >= .7*self.sizing['m_{coreD}'] *((482.7/288)**.5)/(399.682/101.325),
+                    self.hpcmap['m_{hc_D}'] <= 1.3*self.sizing['m_{coreD}'] *((482.7/288)**.5)/(399.682/101.325),
+                    self.fanmap['\\bar{m}_{fan_{D}}'] >= .7 * self.sizing['\\alpha_{OD}'] * self.sizing['m_{coreD}'] *((250.0/288)**.5)/(50/101.325),
+                    self.fanmap['\\bar{m}_{fan_{D}}'] <= 1.3 * self.sizing['\\alpha_{OD}'] * self.sizing['m_{coreD}']* ((250.0/288)**.5)/(50/101.325),
+                    ]
 
         if res7 == 0:
             res7list = [
@@ -259,12 +283,14 @@ class Engine(Model):
         creates an instance of the engine performance model
         """
         return EnginePerformance(self, state, res7)
+
     def setvals(self, eng):
         global fgamma, lpcgamma, hpcgamma, ccgamma, lptgamma, hptgamma, faneta, fexp1, LPCeta, lpcexp1, \
                HPCeta, hpcexp1, ccexp1, ccexp2, LPTeta, lptexp1, HPTeta, hptexp1, sta8gamma, fanexexp, sta6gamma, turbexexp
         #goption sets the gamma value
         goption = 1
         if eng == 0:
+            """set CFM56 validation exponents"""
             if goption == 1:
                 fgamma = 1.401
                 lpcgamma = 1.398
@@ -302,6 +328,57 @@ class Engine(Model):
 
             #HPT
             HPTeta = .8731
+            hptexp1 = hptgamma * HPTeta / (hptgamma - 1)
+
+            #Exhaust and Thrust
+            #station 8, fan exit
+            sta8gamma = 1.4
+            fanexexp = (sta8gamma - 1)/ sta8gamma
+
+            #station 6, turbine exit
+            sta6gamma = 1.387
+            turbexexp = (sta6gamma - 1) / sta6gamma
+
+        if eng == 1:
+            """set TASOPT validation exponents"""
+            if goption == 1:
+                fgamma = 1.401
+                lpcgamma = 1.398
+                hpcgamma = 1.354
+                ccgamma = 1.313    #gamma value of air @ 1400 K
+                lptgamma = 1.354
+                hptgamma = 1.318
+            if goption == 0:
+                fgamma = 1.401
+                lpcgamma = 1.398
+                hpcgamma = 1.354
+                ccgamma = 1.313    #gamma value of air @ 1400 K
+                lptgamma = 1.3060
+                hptgamma = 1.2987
+
+            #Fan
+            faneta = .8948
+            fexp1 = (fgamma - 1)/(faneta * fgamma)
+
+            #LPC
+            LPCeta = .88
+            lpcexp1 = (lpcgamma - 1)/(LPCeta * lpcgamma)
+
+            #HPC
+            HPCeta = .87
+            hpcexp1 = (hpcgamma - 1)/(HPCeta * hpcgamma)
+
+            #combustor cooling exponents
+            ccexp1 = ccgamma/(1 - ccgamma)
+            ccexp2 = -ccgamma/(1 - ccgamma)
+
+            #Turbines
+            #LPT
+            LPTeta = .889
+            lptexp1 = lptgamma * LPTeta / (lptgamma - 1)
+
+            #HPT
+            HPTeta = .899
             hptexp1 = hptgamma * HPTeta / (hptgamma - 1)
 
             #Exhaust and Thrust
@@ -1064,14 +1141,11 @@ class TestState(Model):
         constraints.extend([           
             V == M * a,
             a  == (gamma * R * T_atm)**.5,
-            T_atm == 218*units('K'),
-
-            M == .8,
             ])
 
         return constraints
 
-class TestMission(Model):
+class TestMissionCFM(Model):
     """
     place holder of a mission calss
     """
@@ -1085,6 +1159,8 @@ class TestMission(Model):
         climb = [
             engine['F_{spec}'][0] == 5496.4 * 4.4 * units('N'),
             engine['F_{spec}'][1] == 5961.9 *4.4 * units('N'),
+
+            engine.state["T_{atm}"] == 218*units('K'),
 
 
             engine.state['P_{atm}'][0] == 23.84*units('kPa'),    #36K feet
@@ -1111,20 +1187,84 @@ class TestMission(Model):
 
         return climb, cruise
 
+class TestMissionTASOPT(Model):
+    """
+    place holder of a mission calss
+    """
+    def setup(self, engine):
+        M2 = .8025
+        M25 = .6
+        M4a = .1025
+        Mexit = 1
+        M0 = .8025
+
+        toclimb = [
+            engine['F_{spec}'][0] == 94.971 * units('kN'),
+            engine['F_{spec}'][1] == 30.109* units('kN'),
+            engine['F_{spec}'][2] == 22.182 * units('kN'),
+
+            engine.state['P_{atm}'][1] == 23.84*units('kPa'),    #36K feet
+            engine.state["T_{atm}"][1] == 218*units('K'),
+            engine.state['M'][1] == M0,
+            engine.engineP['M_2'][1] == M2,
+            engine.engineP['M_{2.5}'][1] == M25,
+            engine.compressor['hold_{2}'] == 1+.5*(1.398-1)*M2**2,
+            engine.compressor['hold_{2.5}'] == 1+.5*(1.354-1)*M25**2,
+            engine.compressor['c1'] == 1+.5*(.401)*M0**2,
+            ]
+
+        M2 = .8
+        M25 = .6
+        M4a = .1025
+        Mexit = 1
+        M0 = .8
+
+        cruise = [
+            engine.state['P_{atm}'][2] == 23.84*units('kPa'),    #36K feet
+            engine.state["T_{atm}"][2] == 218*units('K'),
+            engine.state['M'][2] == M0,
+            engine.engineP['M_2'][2] == M2,
+            engine.engineP['M_{2.5}'][2] == M25,
+            ]
+
+        M2 = .223
+        M25 = .6
+        M4a = .1025
+        Mexit = 1
+        M0 = .223
+
+        rotation = [
+            engine.state['P_{atm}'][0] == 101.325*units('kPa'),    #36K feet
+            engine.state["T_{atm}"][0] == 291*units('K'),
+            engine.state['M'][0] == M0,
+            engine.engineP['M_2'][0] == M2,
+            engine.engineP['M_{2.5}'][0] == M25,
+            ]
+
+        return rotation, toclimb, cruise
+
 if __name__ == "__main__":
     """
     eng = 0 is CFM56, set N = 2
-    eng = 1 is TASOPT, set N =
+    eng = 1 is TASOPT, set N = 3
     eng = 2 is GE90, set N = 
     """
-    eng = 0 
-
-    N = 2
+    eng = 1
+    
+    if eng == 0:
+        N = 2
+    if eng == 1:
+        N = 3
+        
     with Vectorize(N):
         state = TestState()
 
     engine = Engine(0, True, N, state, eng)
-    mission = TestMission(engine)
+
+    if eng == 0:
+        mission = TestMissionCFM(engine)
+    if eng == 1:
+        mission = TestMissionTASOPT(engine)
 
     if eng == 0:
         M4a = .1025
@@ -1186,10 +1326,10 @@ if __name__ == "__main__":
                 '\pi_{f_D}': fan,
                 '\pi_{hc_D}': hpc,
                 '\pi_{lc_D}': lpc,
+                '\\alpha_{max}': 5.1362,
+##                '\\alpha_{OD}': 2.6,
 
-    ##            '\\alpha_{OD}': 5.105,
-
-                'hold_{4a}': 1+.5*(1.313-1)*M4a**2,#sol('hold_{4a}'),
+                'hold_{4a}': 1+.5*(1.313-1)*M4a**2,
                 'r_{uc}': .5,
                 '\\alpha_c': .19036,
                 'T_{t_f}': 435,
@@ -1295,11 +1435,13 @@ if __name__ == "__main__":
         'V': 1e3*units('knot'),
         'a': 1e3*units('m/s'),
     }
-    
-    m = Model((10*engine.engineP.thrustP['TSFC'][0]+engine.engineP.thrustP['TSFC'][1]) * (engine['W_{engine}'] * units('1/hr/N'))**.00001, [engine, mission], substitutions, x0=x0)
+
+    if eng == 0:
+        m = Model((10*engine.engineP.thrustP['TSFC'][0]+engine.engineP.thrustP['TSFC'][1]) * (engine['W_{engine}'] * units('1/hr/N'))**.00001, [engine, mission], substitutions, x0=x0)
+    if eng == 1:
+        m = Model((10*engine.engineP.thrustP['TSFC'][2]+engine.engineP.thrustP['TSFC'][1]+engine.engineP.thrustP['TSFC'][0]) * (engine['W_{engine}'] * units('1/hr/N'))**.00001, [engine, mission], substitutions, x0=x0)
     m.substitutions.update(substitutions)
-    sol = m.localsolve(solver='mosek', verbosity = 1)
-    ts = TestState()
+    sol = m.localsolve(solver='mosek', verbosity = 4)
 
     if eng == 0:
         tocerror = 100*(mag(sol('TSFC')[1]) - .6941)/.6941

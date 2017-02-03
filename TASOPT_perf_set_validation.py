@@ -113,7 +113,7 @@ class Engine(Model):
 
             weight = [
 ##                W_engine >= ((mtotmax/(self.constants['\\alpha_{+1_{max}}']*mCoremax)*mCoremax)*.0984)*(1684.5+17.7*(pifmax*pilcmax*pihcmax)/30+1662.2*(self.constants['\\alpha_{max}']/5)**1.2)*units('m/s'),
-                W_engine >= ((self.engineP['m_{total}']/(self.engineP['alphap1']*self.engineP['m_{core}'])*self.engineP['m_{core}'])*.0984)*(1684.5+17.7*(self.engineP['\pi_f']*self.engineP['\pi_{lc}']*self.engineP['\pi_{hc}'])/30+1662.2*(self.engineP['\\alpha']/5)**1.2)*self.engineP['dum2'],
+                W_engine >= ((self.engineP['m_{total}']/(self.engineP['alphap1']*self.engineP['m_{core}'])*self.engineP['m_{core}'])*.220462)*(1684.5+17.7*(self.engineP['\pi_f']*self.engineP['\pi_{lc}']*self.engineP['\pi_{hc}'])/30+1662.2*(self.engineP['\\alpha']/5)**1.2)*self.engineP['dum2'],
 
 ##                mtotmax >= self.engineP['m_{total}'],
 ##                mCoremax >= self.engineP['m_{core}'],
@@ -1273,7 +1273,8 @@ if __name__ == "__main__":
     print 100*(mag(sol('A_2').to('m^2'))-1.6026)/1.6026
     print 100*(mag(sol('A_7').to('m^2'))-.7423)/.7423
     print 100*(mag(sol('A_5').to('m^2'))-.2262)/.2262
-
+    print "----weight---"
+    print 100*(mag(sol('W_{engine}').to('lbf'))-7870.7)/7870.7
 
     Pt0 = 50
     Tt0 = 250

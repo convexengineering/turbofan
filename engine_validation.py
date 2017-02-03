@@ -1366,7 +1366,7 @@ if __name__ == "__main__":
     eng = 1 is TASOPT, set N = 3
     eng = 2 is GE90, set N = 
     """
-    eng = 1
+    eng = 0
     
     if eng == 0 or eng == 2:
         N = 2
@@ -1625,4 +1625,3 @@ if __name__ == "__main__":
         weighterror =  100*(mag(sol('W_{engine}').to('lbf'))-17400)/17400
 
         print tocerror, cruiseerror, weighterror
-

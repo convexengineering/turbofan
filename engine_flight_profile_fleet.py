@@ -7,7 +7,6 @@ from gpkit.constraints.sigeq import SignomialEquality as SignomialEquality
 from gpkit.tools import te_exp_minus1
 from gpkit.constraints.tight import Tight as TCS
 import matplotlib.pyplot as plt
-from CFM_56_performance_components_setup import Engine
 from simple_ac_imports import Aircraft, CruiseSegment, ClimbSegment, FlightState
 
 """
@@ -52,13 +51,15 @@ class FleetMission(Model):
     mission class, links together all subclasses
     """
     def setup(self, Nclimb, Ncruise, Nfleet, substitutions = None, **kwargs):
+        eng = 0
+        
         #two level vectorization to make a fleet
         with Vectorize(Nfleet):
             # vectorize
             with Vectorize(Nclimb + Ncruise):
                 enginestate = FlightState()
 
-        ac = Aircraft(Nclimb, Ncruise, enginestate, Nfleet)
+        ac = Aircraft(Nclimb, Ncruise, enginestate, eng, Nfleet)
 
         #two level vectorization to make a fleet
         with Vectorize(Nfleet):
@@ -159,9 +160,9 @@ class FleetMission(Model):
         engineclimb = [
             ac.engine.engineP['M_2'][:Nclimb] == climb['M'],
             ac.engine.engineP['M_{2.5}'][:Nclimb] == M25,
-            ac.engine.compressor['hold_{2}'] == 1+.5*(1.398-1)*M2**2,
-            ac.engine.compressor['hold_{2.5}'] == 1+.5*(1.354-1)*M25**2,
-            ac.engine.compressor['c1'] == 1+.5*(.401)*M0**2,
+            ac.engine.engineP['hold_{2}'] == 1+.5*(1.398-1)*M2**2,
+            ac.engine.engineP['hold_{2.5}'] == 1+.5*(1.354-1)*M25**2,
+            ac.engine.engineP['c1'] == 1+.5*(.401)*M0**2,
 
             #constraint on drag and thrust
             ac['numeng']*ac.engine['F_{spec}'][:Nclimb] >= climb['D'] + climb['W_{avg}'] * climb['\\theta'],

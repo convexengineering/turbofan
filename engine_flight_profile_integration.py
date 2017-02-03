@@ -6,7 +6,6 @@ from gpkit.constraints.sigeq import SignomialEquality as SignomialEquality
 from gpkit.tools import te_exp_minus1
 from gpkit.constraints.tight import Tight as TCS
 import matplotlib.pyplot as plt
-from CFM_56_performance_components_setup import Engine
 from gpkit.small_scripts import mag
 from simple_ac_imports import Aircraft, CruiseSegment, ClimbSegment, FlightState
 
@@ -52,11 +51,13 @@ class Mission(Model):
     mission class, links together all subclasses
     """
     def setup(self, Nclimb, Ncruise, substitutions = None, **kwargs):
-       # vectorize
+        eng = 0
+        
+        # vectorize
         with Vectorize(Nclimb + Ncruise):
             enginestate = FlightState()
 
-        ac = Aircraft(Nclimb, Ncruise, enginestate)
+        ac = Aircraft(Nclimb, Ncruise, enginestate, eng)
         
         #Vectorize
         with Vectorize(Nclimb):
@@ -155,9 +156,9 @@ class Mission(Model):
         engineclimb = [
             ac.engine.engineP['M_2'][:Nclimb] == climb['M'],
             ac.engine.engineP['M_{2.5}'][:Nclimb] == M25,
-            ac.engine.compressor['hold_{2}'] == 1+.5*(1.398-1)*M2**2,
-            ac.engine.compressor['hold_{2.5}'] == 1+.5*(1.354-1)*M25**2,
-            ac.engine.compressor['c1'] == 1+.5*(.401)*M0**2,
+            ac.engine.engineP['hold_{2}'] == 1+.5*(1.398-1)*M2**2,
+            ac.engine.engineP['hold_{2.5}'] == 1+.5*(1.354-1)*M25**2,
+            ac.engine.engineP['c1'] == 1+.5*(.401)*M0**2,
 
             #constraint on drag and thrust
             ac['numeng']*ac.engine['F_{spec}'][:Nclimb] >= climb['D'] + climb['W_{avg}'] * climb['\\theta'],
@@ -181,46 +182,6 @@ class Mission(Model):
             ]
         
         return constraints + ac + climb + cruise + enginecruise + engineclimb + enginestate + statelinking
-    
-    def bound_all_variables(self, model, eps=1e-30, lower=None, upper=None):
-        "Returns model with additional constraints bounding all free variables"
-        lb = lower if lower else eps
-        ub = upper if upper else 1/eps
-        constraints = []
-        freevks = tuple(vk for vk in model.varkeys if "value" not in vk.descr)
-        for varkey in freevks:
-            units = varkey.descr.get("units", 1)
-            varub = Variable('varub', ub, units)
-            varlb = Variable('varls', lb, units)
-            constraints.append([varub >= Variable(**varkey.descr),
-                                Variable(**varkey.descr) >= varlb])
-        m = Model(model.cost, [constraints, model], model.substitutions)
-        m.bound_all = {"lb": lb, "ub": ub, "varkeys": freevks}
-        return m
-
-    # pylint: disable=too-many-locals
-    def determine_unbounded_variables(self, model, verbosity=4,
-                                      eps=1e-30, lower=None, upper=None, **kwargs):
-        "Returns labeled dictionary of unbounded variables."
-        m = self.bound_all_variables(model, eps, lower, upper)
-        sol = m.localsolve(solver='mosek', verbosity=4, iteration_limit = 100, **kwargs)
-        solhold = sol
-        lam = sol["sensitivities"]["la"][1:]
-        out = defaultdict(list)
-        for i, varkey in enumerate(m.bound_all["varkeys"]):
-            lam_gt, lam_lt = lam[2*i], lam[2*i+1]
-            if abs(lam_gt) >= 1e-7:  # arbitrary threshold
-                out["sensitive to upper bound"].append(varkey)
-            if abs(lam_lt) >= 1e-7:  # arbitrary threshold
-                out["sensitive to lower bound"].append(varkey)
-            value = mag(sol["variables"][varkey])
-            distance_below = np.log(value/m.bound_all["lb"])
-            distance_above = np.log(m.bound_all["ub"]/value)
-            if distance_below <= 3:  # arbitrary threshold
-                out["value near lower bound"].append(varkey)
-            elif distance_above <= 3:  # arbitrary threshold
-                out["value near upper bound"].append(varkey)
-        return out, solhold
 
 def test():
  #build required submodels

@@ -7,18 +7,18 @@ from gpkit.tools import te_exp_minus1
 from gpkit.constraints.tight import Tight as TCS
 from numpy import pi
 import numpy as np
-from CFM_56_performance_components_setup import Engine
+from engine_validation import Engine
 
 class Aircraft(Model):
     "Aircraft class"
-    def  setup(self, Nclimb, Ncruise, enginestate, Nfleet=0, **kwargs):
+    def  setup(self, Nclimb, Ncruise, enginestate, eng, Nfleet=0, **kwargs):
         #create submodels
         self.fuse = Fuselage()
         self.wing = Wing()
         if Nfleet != 0:
-            self.engine = Engine(0, True, Nclimb+Ncruise, enginestate, Nfleet)
+            self.engine = Engine(0, True, Nclimb+Ncruise, enginestate, eng, Nfleet)
         else:
-           self.engine = Engine(0, True, Nclimb+Ncruise, enginestate)            
+           self.engine = Engine(0, True, Nclimb+Ncruise, enginestate, eng)            
 
         #variable definitions
         numeng = Variable('numeng', '-', 'Number of Engines')

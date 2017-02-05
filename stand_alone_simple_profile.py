@@ -181,13 +181,6 @@ class CruiseP(Model):
                   te_exp_minus1(z_bre, nterm=3)]),
 
              #breguet range eqn
-             # old version -- possibly unneeded numeng
- #            TCS([z_bre >= (self.aircraft['numeng'] * self.engineP['TSFC'] * self.aircraftP['thr']*
- #                           self.aircraftP['D']) / self.aircraftP['W_{avg}']]),
-
-            # new version -- needs to be thought through carefully
-             # seems correct to me - I switched T to D below (steady level flight) but fogot
-             #about the Negn term
              TCS([z_bre >= (self.engineP['TSFC'] * self.aircraftP['thr']*
                             self.aircraftP['D']) / self.aircraftP['W_{avg}']]),
 
@@ -268,7 +261,6 @@ class Altitude(Model):
 
         return constraints
             
-
 class Atmosphere(Model):
     def setup(self, alt, **kwargs):
         g = Variable('g', 'm/s^2', 'Gravitational acceleration')
@@ -309,7 +301,6 @@ class Atmosphere(Model):
 
                 #constraint on mu
                 SignomialEquality((T_atm + T_s) * mu, C_1 * T_atm**1.5),
-##                TCS([(T_atm + T_s) * mu >= C_1 * T_atm**1.5])
                 ]
 
         #like to use a local subs here in the future
@@ -573,15 +564,12 @@ if __name__ == '__main__':
     ac = Aircraft()
         
     substitutions = {      
-##            'V_{stall}': 120,
-            'ReqRng': 500, #('sweep', np.linspace(500,2000,4)),
-            'CruiseAlt': 30000, #('sweep', np.linspace(20000,40000,4)),
+            'ReqRng': 500,
+            'CruiseAlt': 30000,
             'numeng': 1,
-##            'W_{Load_max}': 6664,
             'W_{pax}': 91 * 9.81,
             'n_{pax}': 150,
             'pax_{area}': 1,
-##            'C_{D_{fuse}}': .005, #assumes flat plate turbulent flow, from wikipedia
             'e': .9,
             'b_{max}': 35,
             }
@@ -591,15 +579,12 @@ if __name__ == '__main__':
     sol = m.localsolve(solver='mosek', verbosity = 4)
 
     substitutions = {
-##            'V_{stall}': 120,
             'ReqRng': ('sweep', np.linspace(500,3000,8)),
-            'CruiseAlt': 30000, #('sweep', np.linspace(20000,40000,4)),
+            'CruiseAlt': 30000,
             'numeng': 1,
-##            'W_{Load_max}': 6664,
             'W_{pax}': 91 * 9.81,
             'n_{pax}': 150,
             'pax_{area}': 1,
-##            'C_{D_{fuse}}': .005, #assumes flat plate turbulent flow, from wikipedia
             'e': .9,
             'b_{max}': 35,
             }
@@ -614,15 +599,12 @@ if __name__ == '__main__':
 ##    plt.show()
 
     substitutions = {      
-##            'V_{stall}': 120,
-            'ReqRng': 2000,#('sweep', np.linspace(500,2000,4)),
+            'ReqRng': 2000,
             'CruiseAlt': ('sweep', np.linspace(20000,40000,8)),
             'numeng': 1,
-##            'W_{Load_max}': 6664,
             'W_{pax}': 91 * 9.81,
             'n_{pax}': 150,
             'pax_{area}': 1,
-##            'C_{D_{fuse}}': .005, #assumes flat plate turbulent flow, from wikipedia
             'e': .9,
             'b_{max}': 35,
             }

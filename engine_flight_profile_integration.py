@@ -130,23 +130,11 @@ class Mission(Model):
             cruise['W_{burn}'] == ac['numeng']*ac.engine['TSFC'][Nclimb:] * cruise['thr'] * ac.engine['F'][Nclimb:],              
             climb['W_{burn}'] == ac['numeng']*ac.engine['TSFC'][:Nclimb] * climb['thr'] * ac.engine['F'][:Nclimb],
 
-##            climb['V'] >= 200*units('knots'),
-##            cruise['V'] >= 200*units('knots'),
-
-##            sum(cruise['thr']) <= ReqRng/(100*units('knots')),
-
             CruiseAlt >= 30000*units('ft'),
-##            CruiseAlt >= 40000*units('ft'),
-##            cruise['M'] >= .5,
-
+            
             #min climb rate constraint
             climb['RC'] >= RCmin,
             ])
-
-##        with SignomialsEnabled():
-##            constraints.extend([
-##                sum(cruise.cruiseP['Rng']) + sum(climb['RngClimb']) >= ReqRng,
-##                ])
 
         M2 = .8
         M25 = .6
@@ -183,70 +171,6 @@ class Mission(Model):
         
         return constraints + ac + climb + cruise + enginecruise + engineclimb + enginestate + statelinking
 
-def test():
- #build required submodels
-    ac = Aircraft()
-
-    M4a = .1025
-    fan = 1.685
-    lpc  = 1.935
-    hpc = 9.369
- 
-        
-    substitutions = {      
-##            'V_{stall}': 120,
-            'ReqRng': 1500, #('sweep', np.linspace(500,2000,4)),
-##            'CruiseAlt': 30000, #('sweep', np.linspace(20000,40000,4)),
-            'numeng': 1,
-##            'W_{Load_max}': 6664,
-            'W_{pax}': 91 * 9.81,
-            'n_{pax}': 150,
-            'pax_{area}': 1,
-##            'C_{D_{fuse}}': .005, #assumes flat plate turbulent flow, from wikipedia
-            'e': .9,
-            'b_{max}': 35,
-
-            #engine subs
-            '\\pi_{tn}': .98,
-            '\pi_{b}': .94,
-            '\pi_{d}': .98,
-            '\pi_{fn}': .98,
-            'T_{ref}': 288.15,
-            'P_{ref}': 101.325,
-            '\eta_{HPshaft}': .97,
-            '\eta_{LPshaft}': .97,
-            'eta_{B}': .9827,
-
-            '\pi_{f_D}': fan,
-            '\pi_{hc_D}': hpc,
-            '\pi_{lc_D}': lpc,
-
-            '\\alpha_{OD}': 5.105,
-
-##            'M_{4a}': M4a,
-            'hold_{4a}': 1+.5*(1.313-1)*M4a**2,#sol('hold_{4a}'),
-            'r_{uc}': .01,
-            '\\alpha_c': .19036,
-            'T_{t_f}': 435,
-
-            'M_{takeoff}': .9556,
-
-            'G_f': 1,
-
-            'h_f': 43.003,
-
-            'Cp_t1': 1280,
-            'Cp_t2': 1184,
-            'Cp_c': 1216,
-
-            'RC_{min}': 3000,
-            }
-           
-    mission = Mission(4, 4)
-    m = Model(mission['W_{f_{total}}'], mission, substitutions)
-##    sol = m.localsolve(solver='mosek', verbosity = 4)
-
-
 if __name__ == '__main__':
     plotRC = False
     plotR = False
@@ -256,11 +180,9 @@ if __name__ == '__main__':
     fan = 1.685
     lpc  = 1.935
     hpc = 9.369
- 
         
     substitutions = {      
-            'ReqRng': 2000, #('sweep', np.linspace(500,2000,4)),
-##            'CruiseAlt': 30000,
+            'ReqRng': 2000,
             'numeng': 2,
             'W_{pax}': 91 * 9.81,
             'n_{pax}': 150,
@@ -285,7 +207,7 @@ if __name__ == '__main__':
 
             '\\alpha_{OD}': 5.105,
 
-            'hold_{4a}': 1+.5*(1.313-1)*M4a**2,#sol('hold_{4a}'),
+            'hold_{4a}': 1+.5*(1.313-1)*M4a**2,
             'r_{uc}': .01,
             '\\alpha_c': .19036,
             'T_{t_f}': 435,
@@ -394,7 +316,6 @@ if __name__ == '__main__':
     mission = Mission(2, 2)
     m = Model(mission['W_{f_{total}}'], mission, substitutions)
     sol = m.localsolve(solver='mosek', verbosity = 4)
-##    bounds, sol = mission.determine_unbounded_variables(m)
 
     if plotR == True:
         substitutions = {
@@ -526,7 +447,7 @@ if __name__ == '__main__':
         plt.show()
 
         plt.plot(solRsweep('ReqRng'), totsfc, '-r', linewidth=2.0)
-        plt.plot(solRsweep('ReqRng'), cruisetsfc, '-g', linewidth=2.0)
+        plt.plot(solRsweep('ReqRng'), cruisetsfc, '-b', linewidth=2.0)
         plt.legend(['Initial Climb', 'Initial Cruise'], loc=4)
         plt.ylim((0,.5))
         plt.xlabel('Mission Range [nm]')
@@ -564,12 +485,12 @@ if __name__ == '__main__':
         plt.show()
 
         plt.plot(solRsweep('ReqRng'), f8, '-r', linewidth=2.0)
-        plt.plot(solRsweep('ReqRng'), f6, '-g', linewidth=2.0)
+        plt.plot(solRsweep('ReqRng'), f6, '-b', linewidth=2.0)
         plt.legend(['Initial Fan Thrust', 'Initial Core Thrust'], loc=2)
         plt.xlabel('Mission Range [nm]')
         plt.ylabel('Initial Thrust [N]')
         plt.title('Initial Thrust vs Range')
-        plt.ylim((2000,18000))
+        plt.ylim((0,18000))
         plt.savefig('engine_Rsweeps/initial_F8_F6_range.pdf')
         plt.show()
 
@@ -807,7 +728,7 @@ if __name__ == '__main__':
 
     if plotRC == True:
         substitutions = {
-                'ReqRng': 1000,
+                'ReqRng': 2000,
                 'numeng': 2,
                 'W_{pax}': 91 * 9.81,
                 'n_{pax}': 150,
@@ -847,7 +768,7 @@ if __name__ == '__main__':
                 'Cp_t2': 1184,
                 'Cp_c': 1216,
 
-                'RC_{min}': ('sweep', np.linspace(1000,7000,60)),
+                'RC_{min}': ('sweep', np.linspace(500,6500,60)),
                 }
         
         mission = Mission(2, 2)
@@ -880,6 +801,7 @@ if __name__ == '__main__':
         plt.xlabel('Minimum Initial Rate of Climb [ft/min]')
         plt.ylabel('Initial Cruise Thrust [N]')
         plt.title('Initial Cruise Thrust vs Range')
+        plt.xlim((500, 6500))
         plt.savefig('engine_RCsweeps/max_m_range.pdf')
         plt.show()
 
@@ -888,6 +810,7 @@ if __name__ == '__main__':
         plt.ylabel('Max Engine Mass Flow [kg/s]')
         plt.title('Max Engine Mass Flow vs Range')
         plt.ylim((0,.180))
+        plt.xlim((500, 6500))
         plt.savefig('engine_RCsweeps/max_m_range.pdf')
         plt.show()
 
@@ -895,6 +818,8 @@ if __name__ == '__main__':
         plt.xlabel('Minimum Initial Rate of Climb [ft/min]')
         plt.ylabel('Max Engine Thrust [N]')
         plt.title('Max Engine Thrust vs Range')
+        plt.xlim((500, 6500))
+        plt.ylim((0,55000))
         plt.savefig('engine_RCsweeps/max_F_range.pdf')
         plt.show()
 
@@ -902,6 +827,7 @@ if __name__ == '__main__':
         plt.ylabel('Cruise Altitude [ft]')
         plt.xlabel('Minimum Initial Rate of Climb [ft/min]')
         plt.title('Cruise Altitude vs Initial Rate of Climb')
+        plt.xlim((500, 6500))
         plt.savefig('engine_RCsweeps/cralt_RC.pdf')
         plt.show()
 
@@ -909,16 +835,18 @@ if __name__ == '__main__':
         plt.ylabel('Initial Climb TSFC [1/hr]')
         plt.xlabel('Minimum Initial Rate of Climb [ft/min]')
         plt.title('Initial Climb TSFC vs Initial Rate of Climb')
+        plt.xlim((500, 6500))
         plt.savefig('engine_RCsweeps/itsfc_RC.pdf')
         plt.ylim((0,.7))
         plt.show()
 
         plt.plot(solRCsweep('RC_{min}'), itsfc, '-r', linewidth=2.0)
-        plt.plot(solRCsweep('RC_{min}'), crtsfc, '-g', linewidth=2.0)
+        plt.plot(solRCsweep('RC_{min}'), crtsfc, '-b', linewidth=2.0)
         plt.legend(['Initial Climb', 'Initial Cruise'], loc=2)
         plt.ylabel('TSFC [1/hr]')
         plt.xlabel('Minimum Initial Rate of Climb [ft/min]')
         plt.title('Initial Climb and Cruise TSFC vs Initial Rate of Climb')
+        plt.xlim((500, 6500))
         plt.savefig('engine_RCsweeps/tsfc_RC.pdf')
         plt.ylim((0,.7))
         plt.show()
@@ -927,14 +855,16 @@ if __name__ == '__main__':
         plt.ylabel('Initial Cruise TSFC [1/hr]')
         plt.xlabel('Minimum Initial Rate of Climb [ft/min]')
         plt.title('Initial Cruise TSFC vs Initial Rate of Climb')
-        plt.savefig('engine_RCsweeps/crtsfc_RC.pdf')
+        plt.xlim((500, 6500))
         plt.ylim((0,.7))
+        plt.savefig('engine_RCsweeps/crtsfc_RC.pdf')
         plt.show()
 
         plt.plot(solRCsweep('RC_{min}'), f, '-r', linewidth=2.0)
         plt.xlabel('Minimum Initial Rate of Climb [ft/min]')
         plt.ylabel('Initial Thrsut [N]')
         plt.title('Initial Thrust vs Initial Rate of Climb')
+        plt.xlim((500, 6500))
         plt.savefig('engine_RCsweeps/intitial_thrust_RC.pdf')
         plt.show()
 
@@ -942,6 +872,7 @@ if __name__ == '__main__':
         plt.xlabel('Minimum Initial Rate of Climb [ft/min]')
         plt.ylabel('Initial Core Thrsut [N]')
         plt.title('Initial Core Thrust vs Initial Rate of Climb')
+        plt.xlim((500, 6500))
         plt.savefig('engine_RCsweeps/initial_F6_RC.pdf')
         plt.show()
 
@@ -949,15 +880,17 @@ if __name__ == '__main__':
         plt.xlabel('Minimum Initial Rate of Climb [ft/min]')
         plt.ylabel('Initial Fan Thrsut [N]')
         plt.title('Initial Fan Thrust vs Initial Rate of Climb')
+        plt.xlim((500, 6500))
         plt.savefig('engine_RCsweeps/initial_F8_RC.pdf')
         plt.show()
 
         plt.plot(solRCsweep('RC_{min}'), f8, '-r', linewidth=2.0)
-        plt.plot(solRCsweep('RC_{min}'), f6, '-g', linewidth=2.0)
+        plt.plot(solRCsweep('RC_{min}'), f6, '-b', linewidth=2.0)
         plt.legend(['Initial Fan Thrust', 'Initial Core Thrust'], loc=2)
         plt.xlabel('Minimum Initial Rate of Climb [ft/min]')
         plt.ylabel('Initial Fan Thrsut [N]')
         plt.title('Initial Fan and Core Thrust vs Initial Rate of Climb')
+        plt.xlim((500, 6500))
         plt.savefig('engine_RCsweeps/initial_F8_F6_RC.pdf')
         plt.show()
 
@@ -965,7 +898,8 @@ if __name__ == '__main__':
         plt.xlabel('Minimum Initial Rate of Climb [ft/min]')
         plt.ylabel('Total Fuel Burn [N]')
         plt.title('Fuel Burn vs Initial Rate of Climb')
-        plt.ylim((10000,40000))
+        plt.xlim((500, 6500))
+        plt.ylim((30000,90000))
         plt.savefig('engine_RCsweeps/fuel_RC.pdf')
         plt.show()
 
@@ -973,6 +907,7 @@ if __name__ == '__main__':
         plt.xlabel('Minimum Initial Rate of Climb [ft/min]')
         plt.ylabel('Engine Weight [N]')
         plt.title('Engine Weight vs Initial Rate of Climb')
+        plt.xlim((500, 6500))
         plt.savefig('engine_RCsweeps/weight_engine_RC.pdf')
         plt.show()
 
@@ -980,7 +915,8 @@ if __name__ == '__main__':
         plt.xlabel('Minimum Initial Rate of Climb [ft/min]')
         plt.ylabel('Fan Area [m^$2$]')
         plt.title('Fan Area vs Initial Rate of Climb')
-        plt.ylim((0, 1))
+        plt.ylim((0, 2))
+        plt.xlim((500, 6500))
         plt.savefig('engine_RCsweeps/fan_area_RC.pdf')
         plt.show()
 
@@ -988,6 +924,7 @@ if __name__ == '__main__':
         plt.ylabel('$\pi_{f_D}$')
         plt.xlabel('Minimum Initial Rate of Climb [ft/min]')
         plt.title('Fan Design Pressure Ratio vs Initial Rate of Climb')
+        plt.xlim((500, 6500))
         plt.savefig('engine_RCsweeps/pifD_RC.pdf')
         plt.show()
 
@@ -995,13 +932,16 @@ if __name__ == '__main__':
         plt.ylabel('Sensitivity to $M_{takeoff}$')
         plt.xlabel('Minimum Initial Rate of Climb [ft/min]')
         plt.title('Core Mass Flow Bleed vs Initial Rate of Climb')
+        plt.xlim((500, 6500))
         plt.savefig('engine_RCsweeps/m_takeoff_sens_RC.pdf')
         plt.show()
 
         plt.plot(solRCsweep('RC_{min}'), solRCsweep['sensitivities']['constants']['\pi_{f_D}'], '-r', linewidth=2.0)
         plt.ylabel('Sensitivity to $\pi_{f_D}$')
         plt.xlabel('Minimum Initial Rate of Climb [ft/min]')
+        plt.ylim((0, 1.4))
         plt.title('Fan Design Pressure Ratio Sensitivity vs Initial Rate of Climb')
+        plt.xlim((500, 6500))
         plt.savefig('engine_RCsweeps/pifD_sens_RC.pdf')
         plt.show()
 
@@ -1009,6 +949,7 @@ if __name__ == '__main__':
         plt.ylabel('Sensitivity to $\pi_{lc_D}$')
         plt.xlabel('Minimum Initial Rate of Climb [ft/min]')
         plt.title('LPC Design Pressure Ratio Sensitivity vs Initial Rate of Climb')
+        plt.xlim((500, 6500))
         plt.savefig('engine_RCsweeps/pilcD_sens_RC.pdf')
         plt.show()
 
@@ -1016,6 +957,7 @@ if __name__ == '__main__':
         plt.ylabel('Sensitivity to $\pi_{hc_D}$')
         plt.xlabel('Minimum Initial Rate of Climb [ft/min]')
         plt.title('HPC Design Pressure Ratio Sensitivity vs Initial Rate of Climb')
+        plt.xlim((500, 6500))
         plt.savefig('engine_RCsweeps/pihcD_sens_RC.pdf')
         plt.show()
 
@@ -1023,6 +965,7 @@ if __name__ == '__main__':
         plt.ylabel('Sensitivity to $T_{t_f}$')
         plt.xlabel('Minimum Initial Rate of Climb [ft/min]')
         plt.title('Input Fuel Temp Sensitivity vs Initial Rate of Climb')
+        plt.xlim((500, 6500))
         plt.savefig('engine_RCsweeps/Ttf_sens_alt.pdf')
         plt.show()
 
@@ -1030,6 +973,7 @@ if __name__ == '__main__':
         plt.ylabel('Sensitivity to $\\alpha_c$')
         plt.xlabel('Minimum Initial Rate of Climb [ft/min]')
         plt.title('Cooling Flow BPR Sensitivity vs Initial Rate of Climb')
+        plt.xlim((500, 6500))
         plt.savefig('engine_RCsweeps/alpha_c_sens_alt.pdf')
         plt.show()
 
@@ -1037,6 +981,7 @@ if __name__ == '__main__':
         plt.ylabel('Wing Span [m]')
         plt.xlabel('Minimum Initial Rate of Climb [ft/min]')
         plt.title('Wing Span vs Initial Rate of Climb')
+        plt.xlim((500, 6500))
         plt.savefig('engine_RCsweeps/b_RC.pdf')
         plt.show()
 
@@ -1044,5 +989,6 @@ if __name__ == '__main__':
         plt.ylabel('Wing Aspect Ratio')
         plt.xlabel('Minimum Initial Rate of Climb [ft/min]')
         plt.title('Wing Aspect Ratio vs Initial Rate of Climb')
+        plt.xlim((500, 6500))
         plt.savefig('engine_RCsweeps/AR_RC.pdf')
         plt.show()

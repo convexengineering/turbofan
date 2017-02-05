@@ -77,7 +77,6 @@ class AircraftP(Model):
             #speed must be greater than stall speed
             state['V'] >= Vstall,
 
-
             #Figure out how to delete
             Vstall == 120*units('kts'),
             WLoadmax == 6664 * units('N/m^2'),
@@ -361,9 +360,6 @@ class Wing(Model):
             #compute wing span and aspect ratio, subject to a span constraint
             AR == (span**2)/S,
             AR <= 10,
-            #AR == 9,
-
-##            span <= span_max,
 
             #compute K for the aircraft
             K == (pi * e * AR)**-1,

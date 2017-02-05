@@ -6,8 +6,6 @@ from gpkit.constraints.sigeq import SignomialEquality as SignomialEquality
 from gpkit.tools import te_exp_minus1
 from gpkit.constraints.tight import Tight as TCS
 import matplotlib.pyplot as plt
-from CFM_56_performance_components_setup import Engine
-from no_climb_engine import Engine as NoCEngine
 from gpkit.small_scripts import mag
 from collections import defaultdict
 from simple_ac_imports import Aircraft, CruiseSegment, ClimbSegment, FlightState
@@ -49,6 +47,7 @@ class Mission(Model):
     mission class, links together all subclasses
     """
     def setup(self, substitutions = None, **kwargs):
+        eng = 0 
         #define the number of each flight segment
         Ncruise = 2
         
@@ -56,7 +55,7 @@ class Mission(Model):
         with Vectorize(Ncruise):
             enginestate = FlightState()
 
-        ac = Aircraft(0, Ncruise, enginestate)
+        ac = Aircraft(0, Ncruise, enginestate, eng)
             
         #Vectorize
         with Vectorize(Ncruise):
@@ -107,7 +106,6 @@ class Mission(Model):
         M2 = .8
         M25 = .6
         M4a = .1025
-        Mexit = 1
         M0 = .8
 
         enginecruise = [
@@ -117,9 +115,9 @@ class Mission(Model):
             ac.engine.engineP['M_{2.5}'][1] == M25,
             ac.engine.engineP['M_{2.5}'][0] == M25,
 
-            ac.engine.compressor['hold_{2}'] == 1+.5*(1.398-1)*M2**2,
-            ac.engine.compressor['hold_{2.5}'] == 1+.5*(1.354-1)*M25**2,
-            ac.engine.compressor['c1'] == 1+.5*(.401)*M0**2,
+            ac.engine.engineP['hold_{2}'] == 1+.5*(1.398-1)*M2**2,
+            ac.engine.engineP['hold_{2.5}'] == 1+.5*(1.354-1)*M25**2,
+            ac.engine.engineP['c1'] == 1+.5*(.401)*M0**2,
 
 
             #steady level flight constraint on D 
@@ -140,7 +138,6 @@ if __name__ == '__main__':
     lpc  = 1.935
     hpc = 9.369
  
-        
     substitutions = {      
             'ReqRng': 2000, #('sweep', np.linspace(500,2000,4)),
             'numeng': 2,

@@ -1,4 +1,4 @@
-"""Simple commercial aircraft flight profile and aircraft model used in a fleet
+"""Simple commercial aircraft flight profile and aircraft model used in a multi-mission
 optimization example"""
 from numpy import pi
 import numpy as np
@@ -134,23 +134,17 @@ class FleetMission(Model):
             #compute fuel burn from TSFC
             cruise['W_{burn}'] == ac['numeng']*ac.engine['TSFC'][Nclimb:] * cruise['thr'] * ac.engine['F'][Nclimb:],              
             climb['W_{burn}'] == ac['numeng']*ac.engine['TSFC'][:Nclimb] * climb['thr'] * ac.engine['F'][:Nclimb],
-
-            #compute the fleet fuel burn
-##            W_ffleet >= sum(W_ftotal),
-            W_ffleet >= .375*W_ftotal[0] + .375*W_ftotal[1] + .125*W_ftotal[2] + .125*W_ftotal[3],
             
             CruiseAlt >= 30000*units('ft'),
-
-##            cruise['M'] >= .5,
 
             #min climb rate constraint
             climb['RC'] >= 500*units('ft/min'),
             ])
 
-##        with SignomialsEnabled():
-##            constraints.extend([
-##                sum(cruise.cruiseP['Rng']) + sum(climb['RngClimb']) >= ReqRng,
-##                ])
+        fleetfuel = [
+            #compute the fleet fuel burn
+            W_ffleet >= .375*W_ftotal[0] + .375*W_ftotal[1] + .125*W_ftotal[2] + .125*W_ftotal[3],
+            ]
 
         M2 = .8
         M25 = .6
@@ -192,7 +186,7 @@ class FleetMission(Model):
             ReqRng[3] == 2000*units('nautical_miles'),
             ]
         
-        return constraints + ac + climb + cruise + enginecruise + engineclimb + enginestate + statelinking + ranges
+        return constraints + ac + climb + cruise + enginecruise + engineclimb + enginestate + statelinking + ranges + fleetfuel
 
 
 if __name__ == '__main__':

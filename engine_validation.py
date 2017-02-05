@@ -11,17 +11,18 @@ from gpkit.small_scripts import mag
 class Engine(Model):
     """
     Tasopt engine model
+    ________
+    INPUTS
+    res 7 = 0 = Thrust constrained engine, 1 = burner exit temp/turbine entry temp constrained engine
+    cooling = True = cooling model, False = no cooling model
+    N = number of discrete flight segments
+    state = state model discretized into N segments
+    eng = 0, 1, or 2. 0 = CFM56 vals, 1 = TASOPT vals, 2 = GE90 vals
+    Nfleet - number of discrete missions in a fleet mission optimization problem, default is 0
     """
     def setup(self, res7, cooling, N, state, eng, Nfleet=0):
         """
         setup method for the engine model
-
-        Arguments
-        ---------
-        res7 - 0 = Thrust constrained engine, 1 = burner exit temp/turbine entry temp constrained engine
-        cooling - True = use cooling flow and mixing model, False = neglect cooling flow and mixing
-        N - the number of flight segments
-        eng - 0 = CFM56, 1 = TASOPT, 2 = GE90
         """
         self.setvals(eng)
         self.compressor = Compressor()
@@ -39,18 +40,24 @@ class Engine(Model):
             with Vectorize(Nfleet):
                 with Vectorize(N):
                     #-------------------Specified Thrust or Tt4-----------------------
-                    #variables for the thrust constraint
-                    Fspec = Variable('F_{spec}', 'N', 'Specified Total Thrust')
-##                    Tt4spec = Variable('T_{t_{4spec}}', 'K', 'Specified Combustor Exit (Station 4) Stagnation Temperature')
                     self.engineP = self.dynamic(self.state, res7)
+                    if res7 == 0:
+                        #variables for the thrust constraint
+                        Fspec = Variable('F_{spec}', 'N', 'Specified Total Thrust')
+                    if res7 == 1:
+                        Tt4spec = Variable('T_{t_{4spec}}', 'K', 'Specified Combustor Exit (Station 4) Stagnation Temperature')
+                    
 
         else:
             with Vectorize(N):
                 #-------------------Specified Thrust or Tt4-----------------------
-                #variables for the thrust constraint
-                Fspec = Variable('F_{spec}', 'N', 'Specified Total Thrust')
-##                Tt4spec = Variable('T_{t_{4spec}}', 'K', 'Specified Combustor Exit (Station 4) Stagnation Temperature')
                 self.engineP = self.dynamic(self.state, res7)
+                if res7 == 0:
+                    #variables for the thrust constraint
+                    Fspec = Variable('F_{spec}', 'N', 'Specified Total Thrust')
+                if res7 == 1:
+                    Tt4spec = Variable('T_{t_{4spec}}', 'K', 'Specified Combustor Exit (Station 4) Stagnation Temperature')
+                
             
         models = [self.compressor , self. combustor, self. turbine, self. thrust, self.fanmap, self.lpcmap, self.hpcmap, self.sizing, self.state, self.engineP]
 
@@ -281,7 +288,7 @@ class Engine(Model):
             constraints = [weight, fmix, shaftpower, hptexit, fanmap, lpcmap, hpcmap, thrust, res1, res2, res3, res4, res5, massflux, fanarea, HPCarea, onDest, res7list]
 
         if cooling == False:
-            constraints = [weight, fmix, shaftpower, hptexit, fanmap, lpcmap, hpcmap, thrust, res1, res2, res3, res4, res5, massflux, fanarea, HPCarea, onDest, res7list]
+            constraints = [weight, fnomix, shaftpower, hptexit, fanmap, lpcmap, hpcmap, thrust, res1, res2, res3, res4, res5, massflux, fanarea, HPCarea, onDest, res7list]
         
         return models, constraints
 
@@ -628,8 +635,6 @@ class Combustor(Model):
         Cpc = Variable('Cp_c', 1216, 'J/kg/K', "Cp Value for Fuel/Air Mix in Combustor") #1400K, gamma equals 1.312
         Cpfuel = Variable('Cp_{fuel}', 2010, 'J/kg/K', 'Specific Heat Capacity of Kerosene (~Jet Fuel)')
         hf = Variable('h_f', 43.003, 'MJ/kg', 'Heat of Combustion of Jet Fuel')     #http://hypeRbook.com/facts/2003/EvelynGofman.shtml...prob need a better source
-        #43.003
-        #40.8
 
         #-------------------------diffuser pressure ratios--------------------------
         pib = Variable('\pi_{b}', '-', 'Burner Pressure Ratio')
@@ -714,6 +719,7 @@ class CombustorPerformance(Model):
                     
                     #here we assume no pressure loss in mixing so P41=P4a
                     Pt41 == P4a*(Tt41/T41)**(ccexp1),
+                    
                     #compute station 4a quantities, assumes a gamma value of 1.313 (air @ 1400K)
                     u4a == M4a*((1.313*self.engine['R']*Tt4)**.5)/self.combustor['hold_{4a}'],
                     uc == self.combustor['r_{uc}']*u4a,
@@ -734,11 +740,9 @@ class Turbine(Model):
     """
     def setup(self):
         #define new variables
-         #turbines
-##        Cpt1 =Variable('Cp_t1', 1190, 'J/kg/K', "Cp Value for Combustion Products in HP Turbine") #1300K gamma = 1.318
-##        Cpt2 =Variable('Cp_t2', 1099, 'J/kg/K', "Cp Value for Combustion Products in LP Turbine") #800K gamma = 1.354
-        Cpt1 =Variable('Cp_t1', 1280, 'J/kg/K', "Cp Value for Combustion Products in HP Turbine") #1300K gamma = 1.318
-        Cpt2 =Variable('Cp_t2', 1184, 'J/kg/K', "Cp Value for Combustion Products in LP Turbine") #800K gamma = 1.354
+        #turbines
+        Cpt1 = Variable('Cp_t1', 1280, 'J/kg/K', "Cp Value for Combustion Products in HP Turbine") #1300K gamma = 1.318
+        Cpt2 = Variable('Cp_t2', 1184, 'J/kg/K', "Cp Value for Combustion Products in LP Turbine") #800K gamma = 1.354
 
         #-------------------------diffuser pressure ratios--------------------------
         pitn = Variable('\\pi_{tn}', '-', 'Turbine Nozzle Pressure Ratio')
@@ -1012,7 +1016,6 @@ class ThrustPerformance(Model):
         constraints = []
 
         with SignomialsEnabled():
-
             #exhaust and thrust constraints
             constraints.extend([
                 P8 == state["P_{atm}"],
@@ -1177,7 +1180,6 @@ class SizingPerformance(Model):
             u2 == M2*(self.compressor['Cp_{1}']*self.engine['R']*T2/(dum))**.5,  #B.197
 
             #HPC area
- 
             h25 == self.compressor['Cp_{2}'] * T25,
             rho25 == P25/(self.engine['R']*T25),
             u25 == M25*(self.compressor['Cp_{2}']*self.engine['R']*T25/(dum))**.5,   #B.202
@@ -1195,7 +1197,6 @@ class TestState(Model):
         TH = 5.257386998354459 
         T_atm = Variable("T_{atm}", "K", "air temperature")
   
-
         V = Variable('V', 'kts', 'Aircraft Flight Speed')
         a = Variable('a', 'm/s', 'Speed of Sound')
         R = Variable('R', 287, 'J/kg/K', 'Air Specific Heat')
@@ -1220,7 +1221,6 @@ class TestMissionCFM(Model):
         M2 = .8
         M25 = .6
         M4a = .1025
-        Mexit = 1
         M0 = .8
 
         climb = [
@@ -1242,7 +1242,6 @@ class TestMissionCFM(Model):
         M2 = .8
         M25 = .6
         M4a = .1025
-        Mexit = 1
         M0 = .8
 
         cruise = [
@@ -1262,7 +1261,6 @@ class TestMissionTASOPT(Model):
         M2 = .8025
         M25 = .6
         M4a = .1025
-        Mexit = 1
         M0 = .8025
 
         toclimb = [
@@ -1283,7 +1281,6 @@ class TestMissionTASOPT(Model):
         M2 = .8
         M25 = .6
         M4a = .1025
-        Mexit = 1
         M0 = .8
 
         cruise = [
@@ -1297,7 +1294,6 @@ class TestMissionTASOPT(Model):
         M2 = .223
         M25 = .6
         M4a = .1025
-        Mexit = 1
         M0 = .223
 
         rotation = [
@@ -1318,7 +1314,6 @@ class TestMissionGE90(Model):
         M2 = .85
         M25 = .45
         M4a = .1025
-        Mexit = 1
         M0 = .85
 
         climb = [
@@ -1339,7 +1334,6 @@ class TestMissionGE90(Model):
         M2 = .8
         M25 = .45
         M4a = .1025
-        Mexit = 1
 
         cruise = [
             engine.state['P_{atm}'][0] == 23.84*units('kPa'),    #36K feet
@@ -1351,12 +1345,6 @@ class TestMissionGE90(Model):
             engine.engineP['hold_{2.5}'][0] == 1+.5*(1.354-1)*M25**2,
             engine.engineP['c1'][0] == 1+.5*(.401)*M0**2,
             ]
-
-        M2 = .25
-        M25 = .6
-        M4a = .1025
-        Mexit = 1
-        M0 = .25
 
         return climb, cruise
 

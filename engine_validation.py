@@ -1445,7 +1445,9 @@ def test():
     with Vectorize(2):
         state = TestState()
 
-    engine = Engine(0, True, 2, state, eng)
+    engine = Engine(0, True, 2, state, 0)
+
+    mission = TestMissionCFM(engine)
 
     M4a = .1025
     fan = 1.685
@@ -1494,7 +1496,9 @@ def test():
     with Vectorize(3):
         state = TestState()
 
-    engine = Engine(0, True, 3, state, eng)
+    engine = Engine(0, True, 3, state, 1)
+
+    mission = TestMissionTASOPT(engine)
 
     M4a = .1025
     fan = 1.685
@@ -1541,7 +1545,9 @@ def test():
     with Vectorize(2):
         state = TestState()
 
-    engine = Engine(0, True, 2, state, eng)
+    engine = Engine(0, True, 2, state, 2)
+
+    mission = TestMissionGE90(engine)
 
     M4a = .1025
     fan = 1.58

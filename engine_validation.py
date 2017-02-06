@@ -1489,7 +1489,7 @@ def test():
            }
     m = Model((10*engine.engineP.thrustP['TSFC'][0]+engine.engineP.thrustP['TSFC'][1]) * (engine['W_{engine}'] * units('1/hr/N'))**.00001, [engine, mission], substitutions, x0=x0)
     m.substitutions.update(substitutions)
-    sol = m.localsolve(solver='mosek', verbosity = 0)
+    sol = m.localsolve(verbosity = 0)
     
     #test the TASOPT engine
 
@@ -1538,7 +1538,7 @@ def test():
            }
     m = Model((10*engine.engineP.thrustP['TSFC'][2]+engine.engineP.thrustP['TSFC'][1]+engine.engineP.thrustP['TSFC'][0]) * (engine['W_{engine}'] * units('1/hr/N'))**.00001, [engine, mission], substitutions, x0=x0)
     m.substitutions.update(substitutions)
-    sol = m.localsolve(solver='mosek', verbosity = 0)
+    sol = m.localsolve(verbosity = 0)
         
     #test the GE90 engine
 
@@ -1588,7 +1588,7 @@ def test():
         }
     m = Model((10*engine.engineP.thrustP['TSFC'][0]+engine.engineP.thrustP['TSFC'][1]) * (engine['W_{engine}'] * units('1/hr/N'))**.00001, [engine, mission], substitutions, x0=x0)
     m.substitutions.update(substitutions)
-    sol = m.localsolve(solver='mosek', verbosity = 0)
+    sol = m.localsolve(verbosity = 0)
 
 if __name__ == "__main__":
     """

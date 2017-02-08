@@ -788,22 +788,21 @@ class TurbinePerformance(Model):
         #make the constraints
         constraints = []
 
-        with SignomialsEnabled():
-            #turbine constraints
-            constraints.extend([
-                #HPT Exit states (station 4.5)
-                ht45 == self.turbine['Cp_t1'] * Tt45,
+        #turbine constraints
+        constraints.extend([
+            #HPT Exit states (station 4.5)
+            ht45 == self.turbine['Cp_t1'] * Tt45,
 
-                #LPT Exit States
-                Pt49 == pilpt * Pt45,
-                pilpt == (Tt49/Tt45)**(lptexp1),    #turbine efficiency is 0.9
-                ht49 == self.turbine['Cp_t2'] * Tt49,
+            #LPT Exit States
+            Pt49 == pilpt * Pt45,
+            pilpt == (Tt49/Tt45)**(lptexp1),    #turbine efficiency is 0.9
+            ht49 == self.turbine['Cp_t2'] * Tt49,
 
-                #turbine nozzle exit states
-                Pt5 == self.turbine['\\pi_{tn}'] * Pt49, #B.167
-                Tt5 == Tt49,    #B.168
-                ht5 == ht49     #B.169
-                ])
+            #turbine nozzle exit states
+            Pt5 == self.turbine['\\pi_{tn}'] * Pt49, #B.167
+            Tt5 == Tt49,    #B.168
+            ht5 == ht49     #B.169
+            ])
 
         return constraints
 

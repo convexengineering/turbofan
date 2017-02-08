@@ -1030,8 +1030,6 @@ class ThrustPerformance(Model):
 
                 u6 >= state['V'],
                 u8 >= state['V'],
-                F6 >= .01*units('N'),
-                F8 >= .01*units('N'),
 
                 #constrain the new BPR
                 alpha == mFan / mCore,
@@ -1047,8 +1045,6 @@ class ThrustPerformance(Model):
                 TCS([F <= F6 + F8]),
 
                 Fsp == F/((alphap1)*mCore*state['a']),   #B.191
-
-                F >= .1*units('N'),
 
                 #TSFC
                 TSFC == 1/Isp,

@@ -251,16 +251,16 @@ class Engine(Model):
                 """GE90 vals"""
                 onDest = [
                     #estimate relevant on design values
-                    self.sizing['m_{htD}'] <= 1.3*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1400.0/288)**.5)/(1527/101.325),
-                    self.sizing['m_{htD}'] >= .7*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1400.0/288)**.5)/(1527/101.325),
-                    self.sizing['m_{ltD}'] <= 1.3*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1038.8/288)**.5)/(589.2/101.325),
-                    self.sizing['m_{ltD}'] >= .7*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1038.8/288)**.5)/(589.2/101.325),
-                    self.lpcmap['m_{lc_D}'] >= .7*self.sizing['m_{coreD}']*((292.57/288)**.5)/(84.25/101.325),
-                    self.lpcmap['m_{lc_D}'] <= 1.3*self.sizing['m_{coreD}'] *((292.57/288)**.5)/(84.25/101.325),
-                    self.hpcmap['m_{hc_D}'] >= .7*self.sizing['m_{coreD}'] *((362.47/288)**.5)/(163.02/101.325),
-                    self.hpcmap['m_{hc_D}'] <= 1.3*self.sizing['m_{coreD}'] *((362.47/288)**.5)/(163.02/101.325),
-                    self.fanmap['\\bar{m}_{fan_{D}}'] >= .7 * self.sizing['\\alpha_{OD}'] * self.sizing['m_{coreD}'] *((250.0/288)**.5)/(50/101.325),
-                    self.fanmap['\\bar{m}_{fan_{D}}'] <= 1.3 * self.sizing['\\alpha_{OD}'] * self.sizing['m_{coreD}']* ((250.0/288)**.5)/(50/101.325),
+                    self.sizing['m_{htD}'] <= 1.5*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1400.0/288)**.5)/(1527/101.325),
+                    self.sizing['m_{htD}'] >= .5*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1400.0/288)**.5)/(1527/101.325),
+                    self.sizing['m_{ltD}'] <= 1.5*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1038.8/288)**.5)/(589.2/101.325),
+                    self.sizing['m_{ltD}'] >= .5*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1038.8/288)**.5)/(589.2/101.325),
+                    self.lpcmap['m_{lc_D}'] >= .5*self.sizing['m_{coreD}']*((292.57/288)**.5)/(84.25/101.325),
+                    self.lpcmap['m_{lc_D}'] <= 1.5*self.sizing['m_{coreD}'] *((292.57/288)**.5)/(84.25/101.325),
+                    self.hpcmap['m_{hc_D}'] >= .5*self.sizing['m_{coreD}'] *((362.47/288)**.5)/(163.02/101.325),
+                    self.hpcmap['m_{hc_D}'] <= 1.5*self.sizing['m_{coreD}'] *((362.47/288)**.5)/(163.02/101.325),
+                    self.fanmap['\\bar{m}_{fan_{D}}'] >= .5 * self.sizing['\\alpha_{OD}'] * self.sizing['m_{coreD}'] *((250.0/288)**.5)/(50/101.325),
+                    self.fanmap['\\bar{m}_{fan_{D}}'] <= 1.5 * self.sizing['\\alpha_{OD}'] * self.sizing['m_{coreD}']* ((250.0/288)**.5)/(50/101.325),
                 ]
 
         if res7 == 0:
@@ -502,9 +502,6 @@ class EngineConstants(Model):
 
         #---------------------------efficiencies & takeoffs-----------------------
         Mtakeoff = Variable('M_{takeoff}', '-', '1 Minus Percent mass flow loss for de-ice, pressurization, etc.')
-
-        #------------------By-Pass Ratio (BPR)----------------------------
-        alphamax = Variable('\\alpha_{max}', '-', 'Max BPR')
 
 class Compressor(Model):
     """"
@@ -1044,6 +1041,7 @@ class ThrustPerformance(Model):
 
                 #overall thrust values
                 TCS([F8/(alpha * mCore) + state['V'] <= u8]),  #B.188
+                TCS([F6/(mCore) + state['V'] <= u6]),  #B.188, unneeded
                 
                 #SIGNOMIAL
                 TCS([F <= F6 + F8]),
@@ -1317,7 +1315,7 @@ class TestMissionGE90(Model):
 
         climb = [
             engine['F_{spec}'][1] == 19600.4*units('lbf'),
-            engine['F_{spec}'][0] == 16408.4  * units('lbf'),
+            engine['F_{spec}'][0] == 16408.4 * units('lbf'),
 
             engine.state['P_{atm}'][1] == 23.84*units('kPa'),    #36K feet
             engine.state["T_{atm}"][1] == 218*units('K'),
@@ -1595,7 +1593,7 @@ if __name__ == "__main__":
     eng = 1 is TASOPT, set N = 3
     eng = 2 is GE90, set N = 
     """
-    eng = 0
+    eng = 2
     
     if eng == 0 or eng == 2:
         N = 2
@@ -1677,6 +1675,7 @@ if __name__ == "__main__":
                 '\pi_{hc_D}': hpc,
                 '\pi_{lc_D}': lpc,
                 '\\alpha_{max}': 5.1362,
+##                '\\alpha_{OD}': 5.1362,
 
                 'hold_{4a}': 1+.5*(1.313-1)*M4a**2,
                 'r_{uc}': .5,
@@ -1715,6 +1714,7 @@ if __name__ == "__main__":
             '\pi_{hc_D}': 20.033,
             '\pi_{lc_D}': 1.26,
 
+##            '\\alpha_{OD}': 8.7877,
             '\\alpha_{max}': 8.7877,
 
             'hold_{4a}': 1+.5*(1.313-1)*M4a**2,#sol('hold_{4a}'),

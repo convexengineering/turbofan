@@ -188,6 +188,146 @@ class FleetMission(Model):
         
         return constraints + ac + climb + cruise + enginecruise + engineclimb + enginestate + statelinking + ranges + fleetfuel
 
+def test():
+    M4a = .1025
+    fan = 1.685
+    lpc  = 1.935
+    hpc = 9.369
+ 
+        
+    substitutions = {      
+            'numeng': 2,
+            'W_{pax}': 91 * 9.81,
+            'n_{pax}': 150,
+            'pax_{area}': 1,
+            'e': .9,
+            'b_{max}': 60,
+
+            #engine subs
+            '\\pi_{tn}': .98,
+            '\pi_{b}': .94,
+            '\pi_{d}': .98,
+            '\pi_{fn}': .98,
+            'T_{ref}': 288.15,
+            'P_{ref}': 101.325,
+            '\eta_{HPshaft}': .97,
+            '\eta_{LPshaft}': .97,
+            'eta_{B}': .9827,
+
+            '\pi_{f_D}': fan,
+            '\pi_{hc_D}': hpc,
+            '\pi_{lc_D}': lpc,
+
+            '\\alpha_{OD}': 5.105,
+            '\\alpha_{max}': 5.105,
+
+            'hold_{4a}': 1+.5*(1.313-1)*M4a**2,#sol('hold_{4a}'),
+            'r_{uc}': .01,
+            '\\alpha_c': .19036,
+            'T_{t_f}': 435,
+
+            'M_{takeoff}': .9556,
+
+            'G_f': 1,
+
+            'h_f': 43.003,
+
+            'Cp_t1': 1280,
+            'Cp_t2': 1184,
+            'Cp_c': 1216,
+            }
+
+    #dict of initial guesses
+    x0 = {
+        'W_{engine}': 1e4*units('N'),
+        'P_{t_0}': 1e1*units('kPa'),
+        'T_{t_0}': 1e3*units('K'),
+        'h_{t_0}': 1e6*units('J/kg'),
+        'P_{t_{1.8}}': 1e1*units('kPa'),
+        'T_{t_{1.8}}': 1e3*units('K'),
+        'h_{t_{1.8}}': 1e6*units('J/kg'),
+        'P_{t_2}': 1e1*units('kPa'),
+        'T_{t_2}': 1e3*units('K'),
+        'h_{t_2}': 1e6*units('J/kg'),
+        'P_{t_2.1}': 1e3*units('K'),
+        'T_{t_2.1}': 1e3*units('K'),
+        'h_{t_2.1}': 1e6*units('J/kg'),
+        'P_{t_{2.5}}': 1e3*units('kPa'),
+        'T_{t_{2.5}}': 1e3*units('K'),
+        'h_{t_{2.5}}': 1e6*units('J/kg'),
+        'P_{t_3}': 1e4*units('kPa'),
+        'T_{t_3}': 1e4*units('K'),
+        'h_{t_3}': 1e7*units('J/kg'),
+        'P_{t_7}': 1e2*units('kPa'),
+        'T_{t_7}': 1e3*units('K'),
+        'h_{t_7}': 1e6*units('J/kg'),
+        'P_{t_4}': 1e4*units('kPa'),
+        'h_{t_4}': 1e7*units('J/kg'),
+        'T_{t_4}': 1e4*units('K'),
+        'P_{t_{4.1}}': 1e4*units('kPa'),
+        'T_{t_{4.1}}': 1e4*units('K'),
+        'h_{t_{4.1}}': 1e7*units('J/kg'),
+        'T_{4.1}': 1e4*units('K'),
+        'f': 1e-2,
+        'P_{4a}': 1e4*units('kPa'),
+        'h_{t_{4.5}}': 1e6*units('J/kg'),
+        'P_{t_{4.5}}': 1e3*units('kPa'),
+        'T_{t_{4.5}}': 1e4*units('K'),
+        'P_{t_{4.9}}': 1e2*units('kPa'),
+        'T_{t_{4.9}}': 1e3*units('K'),
+        'h_{t_{4.9}}': 1e6*units('J/kg'),
+        '\pi_{HPT}': 1e-1,
+        '\pi_{LPT}': 1e-1,
+        'P_{t_5}': 1e2*units('kPa'),
+        'T_{t_5}': 1e3*units('K'),
+        'h_{t_5}': 1e6*units('J/kg'),
+        'P_8': 1e2*units('kPa'),
+        'P_{t_8}': 1e2*units('kPa'),
+        'h_{t_8}': 1e6*units('J/kg'),
+        'h_8': 1e6*units('J/kg'),
+        'T_{t_8}': 1e3*units('K'),
+        'T_{8}': 1e3*units('K'),
+        'P_6': 1e2*units('kPa'),
+        'P_{t_6}': 1e2*units('kPa'),
+        'T_{t_6': 1e3*units('K'),
+        'h_{t_6}': 1e6*units('J/kg'),
+        'h_6': 1e6*units('J/kg'),
+        'F_8': 1e2 * units('kN'),
+        'F_6': 1e2 * units('kN'),
+        'F': 1e2 * units('kN'),
+        'F_{sp}': 1e-1,
+        'TSFC': 1e-1,
+        'I_{sp}': 1e4*units('s'),
+        'u_6': 1e3*units('m/s'),
+        'u_8': 1e3*units('m/s'),
+        'm_{core}': 1e2*units('kg/s'),
+        'm_{fan}': 1e3*units('kg/s'),
+        '\\alpha': 1e1,
+        'alphap1': 1e1,
+        'm_{total}': 1e3*units('kg/s'),
+        'T_2': 1e3*units('K'),
+        'P_2': 1e2*units('kPa'),
+        'u_2': 1e3*units('m/s'),
+        'h_{2}': 1e6*units('J/kg'),
+        'T_{2.5}': 1e3*units('K'),
+        'P_{2.5}': 1e2*units('kPa'),
+        'u_{2.5}': 1e3*units('m/s'),
+        'h_{2.5}': 1e6*units('J/kg'),
+        'P_{7}': 1e2*units('kPa'),
+        'T_{7}': 1e3*units('K'),
+        'u_7': 1e3*units('m/s'),
+        'P_{5}': 1e2*units('kPa'),
+        'T_{5}': 1e3*units('K'),
+        'u_5': 1e3*units('m/s'),
+        'P_{atm}': 1e2*units('kPa'),
+        'T_{atm}': 1e3*units('K'),
+        'V': 3e3*units('knot'),
+        'a': 1e3*units('m/s'),
+    }
+           
+    mission = FleetMission(2, 2, 4)
+    m = Model(mission['W_{f_{fleet}}'], mission, substitutions)
+    sol = m.localsolve(verbosity = 0)
 
 if __name__ == '__main__':
     M4a = .1025

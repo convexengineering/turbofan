@@ -251,16 +251,16 @@ class Engine(Model):
                 """GE90 vals"""
                 onDest = [
                     #estimate relevant on design values
-                    self.sizing['m_{htD}'] <= 1.5*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1400.0/288)**.5)/(1527/101.325),
-                    self.sizing['m_{htD}'] >= .5*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1400.0/288)**.5)/(1527/101.325),
-                    self.sizing['m_{ltD}'] <= 1.5*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1038.8/288)**.5)/(589.2/101.325),
-                    self.sizing['m_{ltD}'] >= .5*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1038.8/288)**.5)/(589.2/101.325),
-                    self.lpcmap['m_{lc_D}'] >= .5*self.sizing['m_{coreD}']*((292.57/288)**.5)/(84.25/101.325),
-                    self.lpcmap['m_{lc_D}'] <= 1.5*self.sizing['m_{coreD}'] *((292.57/288)**.5)/(84.25/101.325),
-                    self.hpcmap['m_{hc_D}'] >= .5*self.sizing['m_{coreD}'] *((362.47/288)**.5)/(163.02/101.325),
-                    self.hpcmap['m_{hc_D}'] <= 1.5*self.sizing['m_{coreD}'] *((362.47/288)**.5)/(163.02/101.325),
-                    self.fanmap['\\bar{m}_{fan_{D}}'] >= .5 * self.sizing['\\alpha_{OD}'] * self.sizing['m_{coreD}'] *((250.0/288)**.5)/(50/101.325),
-                    self.fanmap['\\bar{m}_{fan_{D}}'] <= 1.5 * self.sizing['\\alpha_{OD}'] * self.sizing['m_{coreD}']* ((250.0/288)**.5)/(50/101.325),
+                    self.sizing['m_{htD}'] <= 1.3*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1400.0/288)**.5)/(1527/101.325),
+                    self.sizing['m_{htD}'] >= .7*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1400.0/288)**.5)/(1527/101.325),
+                    self.sizing['m_{ltD}'] <= 1.3*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1038.8/288)**.5)/(589.2/101.325),
+                    self.sizing['m_{ltD}'] >= .7*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1038.8/288)**.5)/(589.2/101.325),
+                    self.lpcmap['m_{lc_D}'] >= .7*self.sizing['m_{coreD}']*((292.57/288)**.5)/(84.25/101.325),
+                    self.lpcmap['m_{lc_D}'] <= 1.3*self.sizing['m_{coreD}'] *((292.57/288)**.5)/(84.25/101.325),
+                    self.hpcmap['m_{hc_D}'] >= .7*self.sizing['m_{coreD}'] *((362.47/288)**.5)/(163.02/101.325),
+                    self.hpcmap['m_{hc_D}'] <= 1.3*self.sizing['m_{coreD}'] *((362.47/288)**.5)/(163.02/101.325),
+                    self.fanmap['\\bar{m}_{fan_{D}}'] >= .3 * self.sizing['\\alpha_{OD}'] * self.sizing['m_{coreD}'] *((250.0/288)**.5)/(50/101.325),
+                    self.fanmap['\\bar{m}_{fan_{D}}'] <= 1.7 * self.sizing['\\alpha_{OD}'] * self.sizing['m_{coreD}']* ((250.0/288)**.5)/(50/101.325),
                 ]
 
         if res7 == 0:
@@ -1593,7 +1593,7 @@ if __name__ == "__main__":
     eng = 1 is TASOPT, set N = 3
     eng = 2 is GE90, set N = 
     """
-    eng = 2
+    eng = 0
     
     if eng == 0 or eng == 2:
         N = 2
@@ -1828,7 +1828,7 @@ if __name__ == "__main__":
         m = Model((10*engine.engineP.thrustP['TSFC'][2]+engine.engineP.thrustP['TSFC'][1]+engine.engineP.thrustP['TSFC'][0]) * (engine['W_{engine}'] * units('1/hr/N'))**.00001, [engine, mission], substitutions, x0=x0)
     #update substitutions and solve
     m.substitutions.update(substitutions)
-    sol = m.localsolve(solver='mosek', verbosity = 4)
+    sol = m.localsolve(solver='mosek', verbosity = 1)
 
     #print out various percent differences in TSFC and engine areas
     if eng == 0:

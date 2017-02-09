@@ -1584,7 +1584,7 @@ if __name__ == "__main__":
     """
     eng = 0 is CFM56, set N = 2
     eng = 1 is TASOPT, set N = 3
-    eng = 2 is GE90, set N = 
+    eng = 2 is GE90, set N = 2
     """
     eng = 0
     

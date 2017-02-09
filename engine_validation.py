@@ -1,9 +1,6 @@
 "SP Implementation of the TASOPT engine model"
-import numpy as np
 from gpkit import Model, Variable, SignomialsEnabled, units, Vectorize, SignomialEquality
-##from gpkit.nomials import SignomialEquality
 from gpkit.constraints.tight import Tight as TCS
-from collections import defaultdict
 from gpkit.small_scripts import mag
 
 #Cp and gamma values estimated from https://www.ohio.edu/mechanical/thermo/property_tables/air/air_Cp_Cv.html

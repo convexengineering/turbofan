@@ -61,6 +61,9 @@ class Engine(Model):
         #engine weight
         W_engine = Variable('W_{engine}', 'N', 'Weight of a Single Turbofan Engine')
 
+        #engine fan diameter
+        df = Variable('d_{f}', 'm', 'Fan Diameter')
+
         #make the constraints
         constraints = []
 

@@ -220,6 +220,9 @@ def test():
             'Cp_c': 1216,
 
             'RC_{min}': 50,
+
+            'HTR_{f_SUB}': 1-.3**2,
+            'HTR_{lpc_SUB}': 1 - 0.6**2,
             }
 
     #dict of initial guesses
@@ -367,6 +370,9 @@ if __name__ == '__main__':
             'Cp_c': 1216,
 
             'RC_{min}': 50,
+
+            'HTR_{f_SUB}': 1-.3**2,
+            'HTR_{lpc_SUB}': 1 - 0.6**2,
             }
 
     #dict of initial guesses
@@ -505,6 +511,9 @@ if __name__ == '__main__':
                 'Cp_c': 1216,
 
                 'RC_{min}': 500,
+
+                'HTR_{f_SUB}': 1-.3**2,
+                'HTR_{lpc_SUB}': 1 - 0.6**2,
                 }
         
         mission = Mission(2, 2)
@@ -763,6 +772,9 @@ if __name__ == '__main__':
                 'Cp_c': 1216,
 
                 'RC_{min}': 1000,
+
+                'HTR_{f_SUB}': 1-.3**2,
+                'HTR_{lpc_SUB}': 1 - 0.6**2,
                 }
                
         mmission = Mission(2, 2)
@@ -916,6 +928,9 @@ if __name__ == '__main__':
                 'Cp_c': 1216,
 
                 'RC_{min}': ('sweep', np.linspace(500,3500,10)),
+
+                'HTR_{f_SUB}': 1-.3**2,
+                'HTR_{lpc_SUB}': 1 - 0.6**2,
                 }
         
         mission = Mission(2, 2)

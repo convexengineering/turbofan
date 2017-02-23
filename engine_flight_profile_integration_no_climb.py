@@ -178,6 +178,9 @@ if __name__ == '__main__':
             'Cp_t1': 1280,
             'Cp_t2': 1184,
             'Cp_c': 1216,
+
+            'HTR_{f_SUB}': 1-.3**2,
+            'HTR_{lpc_SUB}': 1 - 0.6**2,
             }
            
     mission = Mission()

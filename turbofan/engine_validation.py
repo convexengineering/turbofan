@@ -1609,6 +1609,7 @@ def test():
             'Cp_c': 1216,
 
             'HTR_{f_SUB}': 1-.3**2,
+            'HTR_{lpc_SUB}': 1 - 0.6**2,
            }
     m = Model((10*engine.engineP.thrustP['TSFC'][0]+engine.engineP.thrustP['TSFC'][1]) * (engine['W_{engine}'] * units('1/hr/N'))**.00001, [engine, mission], substitutions, x0=x0)
     m.substitutions.update(substitutions)
@@ -1660,6 +1661,7 @@ def test():
             'Cp_c': 1216,
 
             'HTR_{f_SUB}': 1-.3**2,
+            'HTR_{lpc_SUB}': 1 - 0.6**2,
            }
     m = Model((10*engine.engineP.thrustP['TSFC'][2]+engine.engineP.thrustP['TSFC'][1]+engine.engineP.thrustP['TSFC'][0]) * (engine['W_{engine}'] * units('1/hr/N'))**.00001, [engine, mission], substitutions, x0=x0)
     m.substitutions.update(substitutions)
@@ -1712,6 +1714,7 @@ def test():
         'Cp_c': 1216,
 
         'HTR_{f_SUB}': 1-.3**2,
+        'HTR_{lpc_SUB}': 1 - 0.6**2,
         }
     m = Model((10*engine.engineP.thrustP['TSFC'][0]+engine.engineP.thrustP['TSFC'][1]) * (engine['W_{engine}'] * units('1/hr/N'))**.00001, [engine, mission], substitutions, x0=x0)
     m.substitutions.update(substitutions)
@@ -2071,7 +2074,7 @@ if __name__ == "__main__":
         m = Model((10*engine.engineP.thrustP['TSFC'][2]+engine.engineP.thrustP['TSFC'][1]+engine.engineP.thrustP['TSFC'][0]) * (engine['W_{engine}'] * units('1/hr/N'))**.00001, [engine, mission], substitutions, x0=x0)
     #update substitutions and solve
     m.substitutions.update(substitutions)
-    sol = m.localsolve(verbosity = 1)
+    sol = m.localsolve(solver = 'mosek', verbosity = 1)
 
     #print out various percent differences in TSFC and engine areas
     if eng == 0:

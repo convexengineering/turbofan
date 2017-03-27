@@ -18,7 +18,7 @@ class Engine(Model):
     eng = 0, 1, or 2. 0 = CFM56 vals, 1 = TASOPT 737-800 vals, 2 = GE90 vals, 3 = TASOPT D8.2 vals
     Nfleet - number of discrete missions in a fleet mission optimization problem, default is 0
     """
-    def setup(self, res7, cooling, N, state, eng, Nfleet=0):
+    def setup(self, res7, cooling, N, state, eng, Nfleet=0, BLI = False):
         """
         setup method for the engine model
         """
@@ -38,7 +38,7 @@ class Engine(Model):
             with Vectorize(Nfleet):
                 with Vectorize(N):
                     #-------------------Specified Thrust or Tt4-----------------------
-                    self.engineP = self.dynamic(self.state, res7)
+                    self.engineP = self.dynamic(self.state, res7, BLI)
                     if res7 == 0:
                         #variables for the thrust constraint
                         Fspec = Variable('F_{spec}', 'N', 'Specified Total Thrust')
@@ -49,7 +49,7 @@ class Engine(Model):
         else:
             with Vectorize(N):
                 #-------------------Specified Thrust or Tt4-----------------------
-                self.engineP = self.dynamic(self.state, res7)
+                self.engineP = self.dynamic(self.state, res7, BLI)
                 if res7 == 0:
                     #variables for the thrust constraint
                     Fspec = Variable('F_{spec}', 'N', 'Specified Total Thrust')
@@ -316,11 +316,11 @@ class Engine(Model):
         
         return models, constraints
 
-    def dynamic(self, state, res7):
+    def dynamic(self, state, res7, BLI):
         """
         creates an instance of the engine performance model
         """
-        return EnginePerformance(self, state, res7)
+        return EnginePerformance(self, state, res7, BLI)
 
     def setvals(self, eng):
         global fgamma, lpcgamma, hpcgamma, ccgamma, lptgamma, hptgamma, faneta, fexp1, LPCeta, lpcexp1, \
@@ -554,10 +554,10 @@ class EnginePerformance(Model):
     """
     Engine performance model
     """
-    def setup(self, engine, state, res7, **kwargs):
+    def setup(self, engine, state, res7, BLI, **kwargs):
 
         #create the subcomponent performance models
-        self.compP = engine.compressor.dynamic(engine.constants, state)
+        self.compP = engine.compressor.dynamic(engine.constants, state, BLI)
         self.combP = engine.combustor.dynamic(engine.constants, state)
         self.turbineP = engine.turbine.dynamic(engine.constants)
         self.thrustP = engine.thrust.dynamic(engine.constants, state)
@@ -606,17 +606,17 @@ class Compressor(Model):
         gammaAir = Variable('gamma_{air}', 1.4, '-', 'Specific Heat Ratio for Ambient Air')
         Cpair = Variable('Cp_{air}', 1003, 'J/kg/K', "Cp Value for Air at 250K")
 
-    def dynamic(self, engine, state):
+    def dynamic(self, engine, state, BLI):
         """
         creates an instance of the compressor performance model
         """
-        return CompressorPerformance(self, engine, state) 
+        return CompressorPerformance(self, engine, state, BLI) 
 
 class CompressorPerformance(Model):
     """
     combustor perfomrance constraints
     """
-    def setup(self, comp, engine, state):
+    def setup(self, comp, engine, state, BLI):
         self.comp = comp
         self.engine = engine
         
@@ -667,7 +667,7 @@ class CompressorPerformance(Model):
 
         diffuser = [
             #free stream stagnation values
-            Pt0 == state["P_{atm}"] / (c1 ** -3.5), #https://www.grc.nasa.gov/www/k-12/airplane/isentrop.html
+             #https://www.grc.nasa.gov/www/k-12/airplane/isentrop.html
             Tt0 == state["T_{atm}"] / (c1) ** (-1),             #https://www.grc.nasa.gov/www/k-12/airplane/isentrop.html
             ht0 == self.comp['Cp_{air}'] * Tt0,
 
@@ -676,6 +676,17 @@ class CompressorPerformance(Model):
             Tt18 == Tt0,        #B.114
             ht18 == ht0,        #B.115
             ]
+
+        if BLI:
+            pdrop = Variable('p_{drop}', 0.2, '-', 'Stagnation pressure drop percent due to BLI')
+            diffuser.extend([
+                Pt0 == pdrop*state["P_{atm}"] / (c1 ** -3.5),
+                ])
+
+        if not BLI:
+            diffuser.extend([
+                Pt0 == state["P_{atm}"] / (c1 ** -3.5),
+                ])
 
         fan = [
             #fan inlet constraints (station 2)

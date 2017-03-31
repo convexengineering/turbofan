@@ -293,6 +293,16 @@ class Engine(Model):
                 #option #1, constrain the engine's thrust
                 self.engineP['F'] == Fspec,
                 ]
+            if cooling == True:
+                Tt41max = Variable('T_{t_{4.1_{max}}}', 'K', 'Max turbine inlet temperature')
+                res7list.extend([
+                    self.engineP['T_{t_{4.1}}']  <= Tt41max,
+                    ])
+            else:
+                Tt4max = Variable('T_{t_{4_{max}}}', 'K', 'Max turbine inlet temperature')
+                res7list.extend([
+                    self.engineP['T_{t_4}'] <= Tt4max,
+                    ])
     
         if res7 == 1:
             if cooling == True:

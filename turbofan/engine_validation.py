@@ -688,7 +688,7 @@ class CompressorPerformance(Model):
             ]
 
         if BLI:
-            pdrop = Variable('p_{drop}', 1, '-', '1 plus stagnation pressure drop percent due to BLI')
+            pdrop = Variable('p_{drop}', 0.824, '-', '1 plus stagnation pressure drop percent due to BLI')
             diffuser.extend([
                 Pt0 == pdrop*state["P_{atm}"] / (c1 ** -3.5),
                 ])

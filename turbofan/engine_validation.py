@@ -688,7 +688,7 @@ class CompressorPerformance(Model):
             ]
 
         if BLI:
-            pdrop = Variable('p_{drop}', 1.2, '-', '1 plus stagnation pressure drop percent due to BLI')
+            pdrop = Variable('p_{drop}', 1, '-', '1 plus stagnation pressure drop percent due to BLI')
             diffuser.extend([
                 Pt0 == pdrop*state["P_{atm}"] / (c1 ** -3.5),
                 ])
@@ -1286,6 +1286,24 @@ class SizingPerformance(Model):
         ])
 
         return constraints
+
+class OffTakes(Model):
+    """
+    class that sets mass flow and power off takes
+    """
+    def setup(self, engine):
+        moff_PAX = Variable('moff_{PAX}', '-', 'Per passenger core mass flow bleed')
+        moff_mMTO = Variable('moff_{mMTO}', '-', 'Per aircraft mass core mass flow bleed')
+        Poff_PAX = Variable('Poff_{PAX}', '-', 'Per passenger power offtake')
+        Poff_mMTO = Variable('Poff_{mMTO}', '-', 'Per aircraft mass power offtake')
+
+        constraints = []
+
+        constraints.extend([
+            engine.constants['M_{takeoff}'] >= engine.constants['n_{pax}'] * moff_PAX + engine.constants['MTOW'] * moff_mMTO,
+            engine.constants['P_{takeoff}'] >= engine.constants['n_{pax}'] * Poff_PAX + engine.constants['MTOW'] * Poff_mMTO,
+            ])
+        
 
 class TestState(Model):
     """

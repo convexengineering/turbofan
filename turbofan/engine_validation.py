@@ -1701,6 +1701,13 @@ def test():
 
             'HTR_{f_SUB}': 1-.3**2,
             'HTR_{lpc_SUB}': 1 - 0.6**2,
+
+            'moff_{PAX}': 0.00633,
+            'moff_{mMTO}': 0.00001,
+            'Poff_{PAX}': 200.0,
+            'Poff_{mMTO}': 1.8,
+            'MTOW': 174979.1*units('lbf'),
+            'n_{pax}': 180,
            }
     m = Model((10*engine.engineP.thrustP['TSFC'][2]+engine.engineP.thrustP['TSFC'][1]+engine.engineP.thrustP['TSFC'][0]) * (engine['W_{engine}'] * units('1/hr/N'))**.00001, [engine, mission], substitutions, x0=x0)
     m.substitutions.update(substitutions)

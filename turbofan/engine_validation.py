@@ -33,6 +33,7 @@ class Engine(Model):
         self.sizing = Sizing()
         self.constants = EngineConstants()
         self.state = state
+        self.offtakes = OffTakes(self)
 
         if Nfleet != 0:
             with Vectorize(Nfleet):
@@ -42,8 +43,10 @@ class Engine(Model):
                     if res7 == 0:
                         #variables for the thrust constraint
                         Fspec = Variable('F_{spec}', 'N', 'Specified Total Thrust')
+                        Mtakeoff_percent = Variable('M_{takeoff_{percent}}', '-', 'Percent required bleed mass flow')
                     if res7 == 1:
                         Tt4spec = Variable('T_{t_{4spec}}', 'K', 'Specified Combustor Exit (Station 4) Stagnation Temperature')
+                        Mtakeoff_percent = Variable('M_{takeoff_{percent}}', '-', 'Percent required bleed mass flow')
                     
 
         else:
@@ -53,11 +56,13 @@ class Engine(Model):
                 if res7 == 0:
                     #variables for the thrust constraint
                     Fspec = Variable('F_{spec}', 'N', 'Specified Total Thrust')
+                    Mtakeoff_percent = Variable('M_{takeoff_{percent}}', '-', 'Percent required bleed mass flow')
                 if res7 == 1:
                     Tt4spec = Variable('T_{t_{4spec}}', 'K', 'Specified Combustor Exit (Station 4) Stagnation Temperature')
+                    Mtakeoff_percent = Variable('M_{takeoff_{percent}}', '-', 'Percent required bleed mass flow')
                 
             
-        models = [self.compressor , self. combustor, self. turbine, self. thrust, self.fanmap, self.lpcmap, self.hpcmap, self.sizing, self.state, self.engineP]
+        models = [self.compressor , self. combustor, self. turbine, self. thrust, self.fanmap, self.lpcmap, self.hpcmap, self.sizing, self.state, self.offtakes, self.engineP]
 
         #engine weight
         W_engine = Variable('W_{engine}', 'N', 'Weight of a Single Turbofan Engine')
@@ -67,6 +72,10 @@ class Engine(Model):
         dlpc = Variable('d_{LPC}', 'm', 'LPC Diameter')
         HTRfSub = Variable('HTR_{f_SUB}', '-', '1 - HTRf^2')
         HTRlpcSub = Variable('HTR_{lpc_SUB}', '-', '1 - HTRlpc^2')
+
+        #low pressure and high pressure shaft power offtakes
+        low_power = Variable('low_{power}', 'J/kg', 'Non-dimensional power offtake from the low pressure shaft')
+        high_power = Variable('high_{power}', 'J/kg', 'Non-dimensional power offtake from the high pressure shaft')
 
         #make the constraints
         constraints = []
@@ -80,6 +89,10 @@ class Engine(Model):
             diameter = [
                 df == (4 * self.sizing['A_2']/(np.pi * HTRfSub))**.5,
                 dlpc == (4 * self.sizing['A_{2.5}']/(np.pi * HTRlpcSub))**.5,
+                ]
+
+            masstakeoff = [
+                Mtakeoff_percent == self.constants['M_{takeoff}']/self.engineP['m_{core}'],
                 ]
 
             fmix = [
@@ -103,12 +116,14 @@ class Engine(Model):
             shaftpower = [
                 #HPT shafter power balance
                 #SIGNOMIAL   
-                SignomialEquality(self.constants['M_{takeoff}']*self.turbine['\eta_{HPshaft}']*(1+self.engineP['f'])*(self.engineP['h_{t_{4.1}}']-self.engineP['h_{t_{4.5}}']), self.engineP['h_{t_3}'] - self.engineP['h_{t_{2.5}}']),    #B.161
+                SignomialEquality(Mtakeoff_percent*self.turbine['\eta_{HPshaft}']*(1+self.engineP['f'])*(self.engineP['h_{t_{4.1}}']-self.engineP['h_{t_{4.5}}']), self.engineP['h_{t_3}'] - self.engineP['h_{t_{2.5}}'] + high_power),    #B.161
 
                 #LPT shaft power balance
                 #SIGNOMIAL  
-                SignomialEquality(self.constants['M_{takeoff}']*self.turbine['\eta_{LPshaft}']*(1+self.engineP['f'])*
-                (self.engineP['h_{t_{4.9}}'] - self.engineP['h_{t_{4.5}}']),-((self.engineP['h_{t_{2.5}}']-self.engineP['h_{t_{1.8}}'])+self.engineP['alphap1']*(self.engineP['h_{t_2.1}'] - self.engineP['h_{t_2}']))),    #B.165
+                SignomialEquality(Mtakeoff_percent*self.turbine['\eta_{LPshaft}']*(1+self.engineP['f'])*
+                (self.engineP['h_{t_{4.9}}'] - self.engineP['h_{t_{4.5}}']),-((self.engineP['h_{t_{2.5}}']-self.engineP['h_{t_{1.8}}'])+self.engineP['alphap1']*(self.engineP['h_{t_2.1}'] - self.engineP['h_{t_2}']) + low_power)),    #B.165
+
+                Mtakeoff_percent*self.engineP['m_{core}']*(low_power + high_power) >=  self.constants['P_{takeoff}'],
                 ]
 
             hptexit = [
@@ -157,7 +172,7 @@ class Engine(Model):
                 self.engineP['P_{t_6}'] == self.engineP['P_{t_5}'], #B.183
                 self.engineP['T_{t_6}'] == self.engineP['T_{t_5}'], #B.184
 
-                TCS([self.engineP['F_6']/(self.constants['M_{takeoff}']*self.engineP['m_{core}']) + (self.engineP['f']+1)*self.state['V'] <= (self.engineP['fp1'])*self.engineP['u_6']]),
+                TCS([self.engineP['F_6']/(Mtakeoff_percent*self.engineP['m_{core}']) + (self.engineP['f']+1)*self.state['V'] <= (self.engineP['fp1'])*self.engineP['u_6']]),
 
                 #ISP
                 self.engineP['I_{sp}'] == self.engineP['F_{sp}']*self.state['a']*(self.engineP['alphap1'])/(self.engineP['f']*self.constants['g']),  #B.192
@@ -176,14 +191,14 @@ class Engine(Model):
 
             res2 = [
                 #residual 2 HPT mass flow
-                self.sizing['m_{htD}'] == (self.engineP['fp1'])*self.engineP['m_{hc}']*self.constants['M_{takeoff}']*
+                self.sizing['m_{htD}'] == (self.engineP['fp1'])*self.engineP['m_{hc}']*Mtakeoff_percent*
                 (self.engineP['P_{t_{2.5}}']/self.engineP['P_{t_{4.1}}'])*
                 (self.engineP['T_{t_{4.1}}']/self.engineP['T_{t_{2.5}}'])**.5,
                 ]
 
             res3 = [
                 #residual 3 LPT mass flow
-                (self.engineP['fp1'])*self.engineP['m_{lc}']*self.constants['M_{takeoff}']*
+                (self.engineP['fp1'])*self.engineP['m_{lc}']*Mtakeoff_percent*
                 (self.engineP['P_{t_{1.8}}']/self.engineP['P_{t_{4.5}}'])*
                 (self.engineP['T_{t_{4.5}}']/self.engineP['T_{t_{1.8}}'])**.5
                 == self.sizing['m_{ltD}'],
@@ -204,7 +219,7 @@ class Engine(Model):
 
             massflux = [
                 #compute core mass flux
-                self.constants['M_{takeoff}'] * self.engineP['m_{core}'] == self.engineP['\\rho_5'] * self.sizing['A_5'] * self.engineP['u_5']/(self.engineP['fp1']),
+                Mtakeoff_percent * self.engineP['m_{core}'] == self.engineP['\\rho_5'] * self.sizing['A_5'] * self.engineP['u_5']/(self.engineP['fp1']),
 
                 #compute fan mas flow
                 self.engineP['m_{fan}'] == self.engineP['\\rho_7']*self.sizing['A_7']*self.engineP['u_7'],
@@ -231,10 +246,10 @@ class Engine(Model):
                 """CFM56 vals"""
                 onDest = [
                     #estimate relevant on design values
-                    self.sizing['m_{htD}'] <= 1.3*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1400.0/288)**.5)/(1527/101.325),
-                    self.sizing['m_{htD}'] >= .7*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1400.0/288)**.5)/(1527/101.325),
-                    self.sizing['m_{ltD}'] <= 1.3*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1038.8/288)**.5)/(589.2/101.325),
-                    self.sizing['m_{ltD}'] >= .7*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1038.8/288)**.5)/(589.2/101.325),
+                    self.sizing['m_{htD}'] <= 1.3*self.engineP['fp1']*Mtakeoff_percent*self.sizing['m_{coreD}'] *((1400.0/288)**.5)/(1527/101.325),
+                    self.sizing['m_{htD}'] >= .7*self.engineP['fp1']*Mtakeoff_percent*self.sizing['m_{coreD}'] *((1400.0/288)**.5)/(1527/101.325),
+                    self.sizing['m_{ltD}'] <= 1.3*self.engineP['fp1']*Mtakeoff_percent*self.sizing['m_{coreD}'] *((1038.8/288)**.5)/(589.2/101.325),
+                    self.sizing['m_{ltD}'] >= .7*self.engineP['fp1']*Mtakeoff_percent*self.sizing['m_{coreD}'] *((1038.8/288)**.5)/(589.2/101.325),
                     self.lpcmap['m_{lc_D}'] >= .7*self.sizing['m_{coreD}']*((292.57/288)**.5)/(84.25/101.325),
                     self.lpcmap['m_{lc_D}'] <= 1.3*self.sizing['m_{coreD}'] *((292.57/288)**.5)/(84.25/101.325),
                     self.hpcmap['m_{hc_D}'] >= .7*self.sizing['m_{coreD}'] *((362.47/288)**.5)/(163.02/101.325),
@@ -245,10 +260,10 @@ class Engine(Model):
             if eng == 1:
                 """TASOPT 737-800 vals"""
                 onDest = [
-                    self.sizing['m_{htD}'] <= 1.3*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1400.0/288)**.5)/(1498/101.325),
-                    self.sizing['m_{htD}'] >= .7*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}']*((1400.0/288)**.5)/(1498/101.325),
-                    self.sizing['m_{ltD}'] <= 1.3*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1144.8/288)**.5)/(788.5/101.325),
-                    self.sizing['m_{ltD}'] >= .7*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}']*((1144.8/288)**.5)/(788.5/101.325),
+                    self.sizing['m_{htD}'] <= 1.3*self.engineP['fp1']*Mtakeoff_percent*self.sizing['m_{coreD}'] *((1400.0/288)**.5)/(1498/101.325),
+                    self.sizing['m_{htD}'] >= .7*self.engineP['fp1']*Mtakeoff_percent*self.sizing['m_{coreD}']*((1400.0/288)**.5)/(1498/101.325),
+                    self.sizing['m_{ltD}'] <= 1.3*self.engineP['fp1']*Mtakeoff_percent*self.sizing['m_{coreD}'] *((1144.8/288)**.5)/(788.5/101.325),
+                    self.sizing['m_{ltD}'] >= .7*self.engineP['fp1']*Mtakeoff_percent*self.sizing['m_{coreD}']*((1144.8/288)**.5)/(788.5/101.325),
                     self.lpcmap['m_{lc_D}'] >= .7*self.sizing['m_{coreD}']*((294.5/288)**.5)/(84.25/101.325),
                     self.lpcmap['m_{lc_D}'] <= 1.3*self.sizing['m_{coreD}'] *((294.5/288)**.5)/(84.25/101.325),
                     self.hpcmap['m_{hc_D}'] >= .7*self.sizing['m_{coreD}'] *((482.7/288)**.5)/(399.682/101.325),
@@ -260,10 +275,10 @@ class Engine(Model):
                 """GE90 vals"""
                 onDest = [
                     #estimate relevant on design values
-                    self.sizing['m_{htD}'] <= 1.3*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1400.0/288)**.5)/(1527/101.325),
-                    self.sizing['m_{htD}'] >= .7*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1400.0/288)**.5)/(1527/101.325),
-                    self.sizing['m_{ltD}'] <= 1.3*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1038.8/288)**.5)/(589.2/101.325),
-                    self.sizing['m_{ltD}'] >= .7*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1038.8/288)**.5)/(589.2/101.325),
+                    self.sizing['m_{htD}'] <= 1.3*self.engineP['fp1']*Mtakeoff_percent*self.sizing['m_{coreD}'] *((1400.0/288)**.5)/(1527/101.325),
+                    self.sizing['m_{htD}'] >= .7*self.engineP['fp1']*Mtakeoff_percent*self.sizing['m_{coreD}'] *((1400.0/288)**.5)/(1527/101.325),
+                    self.sizing['m_{ltD}'] <= 1.3*self.engineP['fp1']*Mtakeoff_percent*self.sizing['m_{coreD}'] *((1038.8/288)**.5)/(589.2/101.325),
+                    self.sizing['m_{ltD}'] >= .7*self.engineP['fp1']*Mtakeoff_percent*self.sizing['m_{coreD}'] *((1038.8/288)**.5)/(589.2/101.325),
                     self.lpcmap['m_{lc_D}'] >= .7*self.sizing['m_{coreD}']*((292.57/288)**.5)/(84.25/101.325),
                     self.lpcmap['m_{lc_D}'] <= 1.3*self.sizing['m_{coreD}'] *((292.57/288)**.5)/(84.25/101.325),
                     self.hpcmap['m_{hc_D}'] >= .7*self.sizing['m_{coreD}'] *((362.47/288)**.5)/(163.02/101.325),
@@ -275,10 +290,10 @@ class Engine(Model):
             if eng == 3:
                 """TASOPT D8.2 vals"""
                 onDest = [
-                    self.sizing['m_{htD}'] <= 1.3*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1400.0/288)**.5)/(1598.32/101.325),
-                    self.sizing['m_{htD}'] >= .7*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}']*((1400.0/288)**.5)/(1598.32/101.325),
-                    self.sizing['m_{ltD}'] <= 1.3*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1142.6/288)**.5)/(835.585/101.325),
-                    self.sizing['m_{ltD}'] >= .7*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}']*((1142.6/288)**.5)/(835.585/101.325),
+                    self.sizing['m_{htD}'] <= 1.3*self.engineP['fp1']*Mtakeoff_percent*self.sizing['m_{coreD}'] *((1400.0/288)**.5)/(1598.32/101.325),
+                    self.sizing['m_{htD}'] >= .7*self.engineP['fp1']*Mtakeoff_percent*self.sizing['m_{coreD}']*((1400.0/288)**.5)/(1598.32/101.325),
+                    self.sizing['m_{ltD}'] <= 1.3*self.engineP['fp1']*Mtakeoff_percent*self.sizing['m_{coreD}'] *((1142.6/288)**.5)/(835.585/101.325),
+                    self.sizing['m_{ltD}'] >= .7*self.engineP['fp1']*Mtakeoff_percent*self.sizing['m_{coreD}']*((1142.6/288)**.5)/(835.585/101.325),
                     self.lpcmap['m_{lc_D}'] >= .7*self.sizing['m_{coreD}']*((289.77/288)**.5)/(80.237/101.325),
                     self.lpcmap['m_{lc_D}'] <= 1.3*self.sizing['m_{coreD}'] *((289.77/288)**.5)/( 80.237/101.325),
                     self.hpcmap['m_{hc_D}'] >= .7*self.sizing['m_{coreD}'] *((481.386/288)**.5)/(399.58/101.325),
@@ -319,10 +334,10 @@ class Engine(Model):
                     ]
 
         if cooling == True:
-            constraints = [weight, diameter, fmix, shaftpower, hptexit, fanmap, lpcmap, hpcmap, thrust, res1, res2, res3, res4, res5, massflux, fanarea, HPCarea, onDest, res7list]
+            constraints = [weight, masstakeoff, diameter, fmix, shaftpower, hptexit, fanmap, lpcmap, hpcmap, thrust, res1, res2, res3, res4, res5, massflux, fanarea, HPCarea, onDest, res7list]
 
         if cooling == False:
-            constraints = [weight, diameter, fnomix, shaftpower, hptexit, fanmap, lpcmap, hpcmap, thrust, res1, res2, res3, res4, res5, massflux, fanarea, HPCarea, onDest, res7list]
+            constraints = [weight, masstakeoff, diameter, fnomix, shaftpower, hptexit, fanmap, lpcmap, hpcmap, thrust, res1, res2, res3, res4, res5, massflux, fanarea, HPCarea, onDest, res7list]
         
         return models, constraints
 
@@ -597,7 +612,13 @@ class EngineConstants(Model):
         Pref = Variable('P_{ref}', 'kPa', 'Reference Stagnation Pressure')
 
         #---------------------------efficiencies & takeoffs-----------------------
-        Mtakeoff = Variable('M_{takeoff}', '-', '1 Minus Percent mass flow loss for de-ice, pressurization, etc.')
+        Mtakeoff = Variable('M_{takeoff}', 'kg/s', 'Required bleed mass flow')
+        Ptakeoff = Variable('P_{takeoff}', 'W', 'Required power take off')
+
+        #---------------------------aircraft values---------------
+        n_pax = Variable('n_{pax}', '-', 'Number of passengers in the aircraft')
+        MTOW = Variable('MTOW', 'N', 'Aircraft max takeoff weight')
+        
 
 class Compressor(Model):
     """"
@@ -1292,10 +1313,10 @@ class OffTakes(Model):
     class that sets mass flow and power off takes
     """
     def setup(self, engine):
-        moff_PAX = Variable('moff_{PAX}', '-', 'Per passenger core mass flow bleed')
-        moff_mMTO = Variable('moff_{mMTO}', '-', 'Per aircraft mass core mass flow bleed')
-        Poff_PAX = Variable('Poff_{PAX}', '-', 'Per passenger power offtake')
-        Poff_mMTO = Variable('Poff_{mMTO}', '-', 'Per aircraft mass power offtake')
+        moff_PAX = Variable('moff_{PAX}', 'kg/s', 'Per passenger core mass flow bleed')
+        moff_mMTO = Variable('moff_{mMTO}', 'kg/s/N', 'Per aircraft mass core mass flow bleed')
+        Poff_PAX = Variable('Poff_{PAX}', 'W', 'Per passenger power offtake')
+        Poff_mMTO = Variable('Poff_{mMTO}', 'W/N', 'Per aircraft mass power offtake')
 
         constraints = []
 
@@ -1303,6 +1324,8 @@ class OffTakes(Model):
             engine.constants['M_{takeoff}'] >= engine.constants['n_{pax}'] * moff_PAX + engine.constants['MTOW'] * moff_mMTO,
             engine.constants['P_{takeoff}'] >= engine.constants['n_{pax}'] * Poff_PAX + engine.constants['MTOW'] * Poff_mMTO,
             ])
+
+        return constraints
         
 
 class TestState(Model):
@@ -2011,7 +2034,7 @@ if __name__ == "__main__":
         '\\alpha_c': .19036,
         'T_{t_f}': 435,
 
-        'M_{takeoff}': .9556,
+##        'M_{takeoff}': .9556,
 
         'G_f': 1,
 
@@ -2023,6 +2046,13 @@ if __name__ == "__main__":
 
         'HTR_{f_SUB}': 1-.3**2,
         'HTR_{lpc_SUB}': 1 - 0.6**2,
+
+        'moff_{PAX}': 0.00633,
+        'moff_{mMTO}': 0.00001,
+        'Poff_{PAX}': 200.0,
+        'Poff_{mMTO}': 1.8,
+        'MTOW': 174979.1*units('lbf'),
+        'n_{pax}': 180,
      }
 
     #dict of initial guesses
@@ -2120,7 +2150,7 @@ if __name__ == "__main__":
         m = Model((10*engine.engineP.thrustP['TSFC'][2]+engine.engineP.thrustP['TSFC'][1]+engine.engineP.thrustP['TSFC'][0]) * (engine['W_{engine}'] * units('1/hr/N'))**.00001, [engine, mission], substitutions, x0=x0)
     #update substitutions and solve
     m.substitutions.update(substitutions)
-    sol = m.localsolve(solver = 'mosek', verbosity = 1)
+    sol = m.localsolve(solver = 'mosek', verbosity = 4)
 
     #print out various percent differences in TSFC and engine areas
     if eng == 0:

@@ -40,26 +40,37 @@ class Engine(Model):
                 with Vectorize(N):
                     #-------------------Specified Thrust or Tt4-----------------------
                     self.engineP = self.dynamic(self.state, res7, BLI)
+                    Mtakeoff_percent = Variable('M_{takeoff_{percent}}', '-', 'Percent required bleed mass flow')
+
+                    #low pressure and high pressure shaft power offtakes
+                    low_power = Variable('low_{power}', 'J/kg', 'Non-dimensional power offtake from the low pressure shaft')
+                    high_power = Variable('high_{power}', 'J/kg', 'Non-dimensional power offtake from the high pressure shaft')
+
                     if res7 == 0:
                         #variables for the thrust constraint
                         Fspec = Variable('F_{spec}', 'N', 'Specified Total Thrust')
-                        Mtakeoff_percent = Variable('M_{takeoff_{percent}}', '-', 'Percent required bleed mass flow')
+ 
                     if res7 == 1:
                         Tt4spec = Variable('T_{t_{4spec}}', 'K', 'Specified Combustor Exit (Station 4) Stagnation Temperature')
-                        Mtakeoff_percent = Variable('M_{takeoff_{percent}}', '-', 'Percent required bleed mass flow')
                     
 
         else:
             with Vectorize(N):
                 #-------------------Specified Thrust or Tt4-----------------------
                 self.engineP = self.dynamic(self.state, res7, BLI)
+                
+                #low pressure and high pressure shaft power offtakes
+                low_power = Variable('low_{power}', 'J/kg', 'Non-dimensional power offtake from the low pressure shaft')
+                high_power = Variable('high_{power}', 'J/kg', 'Non-dimensional power offtake from the high pressure shaft')
+
+                Mtakeoff_percent = Variable('M_{takeoff_{percent}}', '-', 'Percent required bleed mass flow')
+                
                 if res7 == 0:
                     #variables for the thrust constraint
                     Fspec = Variable('F_{spec}', 'N', 'Specified Total Thrust')
-                    Mtakeoff_percent = Variable('M_{takeoff_{percent}}', '-', 'Percent required bleed mass flow')
+
                 if res7 == 1:
                     Tt4spec = Variable('T_{t_{4spec}}', 'K', 'Specified Combustor Exit (Station 4) Stagnation Temperature')
-                    Mtakeoff_percent = Variable('M_{takeoff_{percent}}', '-', 'Percent required bleed mass flow')
                 
             
         models = [self.compressor , self. combustor, self. turbine, self. thrust, self.fanmap, self.lpcmap, self.hpcmap, self.sizing, self.state, self.offtakes, self.engineP]
@@ -72,10 +83,6 @@ class Engine(Model):
         dlpc = Variable('d_{LPC}', 'm', 'LPC Diameter')
         HTRfSub = Variable('HTR_{f_SUB}', '-', '1 - HTRf^2')
         HTRlpcSub = Variable('HTR_{lpc_SUB}', '-', '1 - HTRlpc^2')
-
-        #low pressure and high pressure shaft power offtakes
-        low_power = Variable('low_{power}', 'J/kg', 'Non-dimensional power offtake from the low pressure shaft')
-        high_power = Variable('high_{power}', 'J/kg', 'Non-dimensional power offtake from the high pressure shaft')
 
         #make the constraints
         constraints = []
@@ -92,7 +99,8 @@ class Engine(Model):
                 ]
 
             masstakeoff = [
-                Mtakeoff_percent == self.constants['M_{takeoff}']/self.engineP['m_{core}'],
+                Mtakeoff_percent + self.constants['M_{takeoff}']/self.engineP['m_{core}'] <= 1 ,
+##                Mtakeoff_percent <= 1,
                 ]
 
             fmix = [
@@ -117,12 +125,13 @@ class Engine(Model):
                 #HPT shafter power balance
                 #SIGNOMIAL   
                 SignomialEquality(Mtakeoff_percent*self.turbine['\eta_{HPshaft}']*(1+self.engineP['f'])*(self.engineP['h_{t_{4.1}}']-self.engineP['h_{t_{4.5}}']), self.engineP['h_{t_3}'] - self.engineP['h_{t_{2.5}}'] + high_power),    #B.161
-
+##                TCS([Mtakeoff_percent*self.turbine['\eta_{HPshaft}']*(1+self.engineP['f'])*(self.engineP['h_{t_{4.1}}']-self.engineP['h_{t_{4.5}}']) >= self.engineP['h_{t_3}'] - self.engineP['h_{t_{2.5}}'] + high_power]),
                 #LPT shaft power balance
                 #SIGNOMIAL  
-                SignomialEquality(Mtakeoff_percent*self.turbine['\eta_{LPshaft}']*(1+self.engineP['f'])*
-                (self.engineP['h_{t_{4.9}}'] - self.engineP['h_{t_{4.5}}']),-((self.engineP['h_{t_{2.5}}']-self.engineP['h_{t_{1.8}}'])+self.engineP['alphap1']*(self.engineP['h_{t_2.1}'] - self.engineP['h_{t_2}']) + low_power)),    #B.165
-
+##                SignomialEquality(Mtakeoff_percent*self.turbine['\eta_{LPshaft}']*(1+self.engineP['f'])*
+##                (self.engineP['h_{t_{4.9}}'] - self.engineP['h_{t_{4.5}}']),-((self.engineP['h_{t_{2.5}}']-self.engineP['h_{t_{1.8}}'])+self.engineP['alphap1']*(self.engineP['h_{t_2.1}'] - self.engineP['h_{t_2}']) + low_power)),    #B.165
+                Mtakeoff_percent*self.turbine['\eta_{LPshaft}']*(1+self.engineP['f'])* \
+                   (self.engineP['h_{t_{4.9}}'] - self.engineP['h_{t_{4.5}}']) >= -((self.engineP['h_{t_{2.5}}']-self.engineP['h_{t_{1.8}}'])+self.engineP['alphap1']*(self.engineP['h_{t_2.1}'] - self.engineP['h_{t_2}']) + low_power),
                 Mtakeoff_percent*self.engineP['m_{core}']*(low_power + high_power) >=  self.constants['P_{takeoff}'],
                 ]
 
@@ -224,7 +233,7 @@ class Engine(Model):
                 #compute fan mas flow
                 self.engineP['m_{fan}'] == self.engineP['\\rho_7']*self.sizing['A_7']*self.engineP['u_7'],
 
-                self.engineP['m_{total}'] >= self.engineP['m_{fan}'] + self.engineP['m_{core}'],
+                TCS([self.engineP['m_{total}'] >= self.engineP['m_{fan}'] + self.engineP['m_{core}']]),
                 ]
 
             #component area sizing
@@ -1314,16 +1323,17 @@ class OffTakes(Model):
     """
     def setup(self, engine):
         moff_PAX = Variable('moff_{PAX}', 'kg/s', 'Per passenger core mass flow bleed')
-        moff_mMTO = Variable('moff_{mMTO}', 'kg/s/N', 'Per aircraft mass core mass flow bleed')
+        moff_mMTO = Variable('moff_{mMTO}', 'kg/s/lbf', 'Per aircraft mass core mass flow bleed')
         Poff_PAX = Variable('Poff_{PAX}', 'W', 'Per passenger power offtake')
-        Poff_mMTO = Variable('Poff_{mMTO}', 'W/N', 'Per aircraft mass power offtake')
+        Poff_mMTO = Variable('Poff_{mMTO}', 'W/lbf', 'Per aircraft mass power offtake')
 
         constraints = []
 
-        constraints.extend([
-            engine.constants['M_{takeoff}'] >= engine.constants['n_{pax}'] * moff_PAX + engine.constants['MTOW'] * moff_mMTO,
-            engine.constants['P_{takeoff}'] >= engine.constants['n_{pax}'] * Poff_PAX + engine.constants['MTOW'] * Poff_mMTO,
-            ])
+        with SignomialsEnabled():
+            constraints.extend([
+                TCS([engine.constants['M_{takeoff}'] >= engine.constants['n_{pax}'] * moff_PAX + engine.constants['MTOW'] * moff_mMTO]),
+                TCS([engine.constants['P_{takeoff}'] >= engine.constants['n_{pax}'] * Poff_PAX + engine.constants['MTOW'] * Poff_mMTO]),
+                ])
 
         return constraints
         
@@ -1852,7 +1862,7 @@ if __name__ == "__main__":
     eng = 2 is GE90, set N = 2
     eng = 3 is TASOPT D8.2, set N=2
     """
-    eng = 3
+    eng = 1
     
     if eng == 0 or eng == 2 or eng == 3:
         N = 2
@@ -1940,14 +1950,14 @@ if __name__ == "__main__":
                 '\pi_{hc_D}': hpc,
                 '\pi_{lc_D}': lpc,
                 '\\alpha_{max}': 5.1362,
-##                '\\alpha_{OD}': 5.1362,
+                '\\alpha_{OD}': 5.1362,
 
                 'hold_{4a}': 1+.5*(1.313-1)*M4a**2,
                 'r_{uc}': .5,
                 '\\alpha_c': .19036,
                 'T_{t_f}': 435,
 
-                'M_{takeoff}': .972,
+##                'M_{takeoff}': .972,
 
                 'G_f': 1,
 
@@ -1959,6 +1969,13 @@ if __name__ == "__main__":
 
                 'HTR_{f_SUB}': 1-.3**2,
                 'HTR_{lpc_SUB}': 1 - 0.6**2,
+
+                'moff_{PAX}': 0.00633,
+                'moff_{mMTO}': 0.00001,
+                'Poff_{PAX}': 200.0,
+                'Poff_{mMTO}': 1.8,
+                'MTOW': 174979.1*units('lbf'),
+                'n_{pax}': 180,
                }
 
     if eng == 2:

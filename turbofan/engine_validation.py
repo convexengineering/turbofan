@@ -15,7 +15,7 @@ class Engine(Model):
     cooling = True = cooling model, False = no cooling model
     N = number of discrete flight segments
     state = state model discretized into N segments
-    eng = 0, 1, or 2. 0 = CFM56 vals, 1 = TASOPT 737-800 vals, 2 = GE90 vals, 3 = TASOPT D8.2 vals
+    eng = 0, 1, or 2. 0 = CFM56 vals, 1 = TASOPT 737-800 vals, 2 = GE90 vals, 3 = TASOPT D8.2 vals, 4 = TASOPT 777-300ER vals
     Nfleet - number of discrete missions in a fleet mission optimization problem, default is 0
     """
     def setup(self, res7, cooling, N, state, eng, Nfleet=0, BLI = False):
@@ -287,6 +287,22 @@ class Engine(Model):
                     self.fanmap['\\bar{m}_{fan_{D}}'] <= 1.3 * self.sizing['\\alpha_{OD}'] * self.sizing['m_{coreD}']* ((250.0/288)**.5)/(50/101.325),
                     ]
 
+            if eng == 4:
+                """TASOPT 777-300ER"""
+                onDest = [
+                    #estimate relevant on design values
+                    self.sizing['m_{htD}'] <= 1.3*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1400.0/288)**.5)/(1527/101.325),
+                    self.sizing['m_{htD}'] >= .7*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1400.0/288)**.5)/(1527/101.325),
+                    self.sizing['m_{ltD}'] <= 1.3*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1038.8/288)**.5)/(589.2/101.325),
+                    self.sizing['m_{ltD}'] >= .7*self.engineP['fp1']*self.constants['M_{takeoff}']*self.sizing['m_{coreD}'] *((1038.8/288)**.5)/(589.2/101.325),
+                    self.lpcmap['m_{lc_D}'] >= .7*self.sizing['m_{coreD}']*((292.57/288)**.5)/(84.25/101.325),
+                    self.lpcmap['m_{lc_D}'] <= 1.3*self.sizing['m_{coreD}'] *((292.57/288)**.5)/(84.25/101.325),
+                    self.hpcmap['m_{hc_D}'] >= .7*self.sizing['m_{coreD}'] *((362.47/288)**.5)/(163.02/101.325),
+                    self.hpcmap['m_{hc_D}'] <= 1.3*self.sizing['m_{coreD}'] *((362.47/288)**.5)/(163.02/101.325),
+                    self.fanmap['\\bar{m}_{fan_{D}}'] >= .3 * self.sizing['\\alpha_{OD}'] * self.sizing['m_{coreD}'] *((250.0/288)**.5)/(50/101.325),
+                    self.fanmap['\\bar{m}_{fan_{D}}'] <= 1.7 * self.sizing['\\alpha_{OD}'] * self.sizing['m_{coreD}']* ((250.0/288)**.5)/(50/101.325),
+                    ]
+
         if res7 == 0:
             res7list = [
                 #residual 7
@@ -388,7 +404,7 @@ class Engine(Model):
             turbexexp = (sta6gamma - 1) / sta6gamma
 
         if eng == 1:
-            """set TASOPT validation exponents"""
+            """set TASOPT CFM56 validation exponents"""
             if goption == 1:
                 fgamma = 1.401
                 lpcgamma = 1.398
@@ -500,6 +516,7 @@ class Engine(Model):
             turbexexp = (sta6gamma - 1) / sta6gamma
 
         if eng == 2:
+            """set GE90 exponents"""
             if goption == 1:
                 fgamma = 1.401
                 lpcgamma = 1.398
@@ -559,6 +576,66 @@ class Engine(Model):
             sta6gamma = 1.387
             turbexexp = (sta6gamma - 1) / sta6gamma
 
+        if eng == 4:
+            """TASOPT 777 vals"""
+            if goption == 1:
+                fgamma = 1.401
+                lpcgamma = 1.398
+                hpcgamma = 1.354
+                ccgamma = 1.313    #gamma value of air @ 1400 K
+                lptgamma = 1.354
+                hptgamma = 1.318
+            if goption == 0:
+                fgamma = 1.401
+                lpcgamma = 1.398
+                hpcgamma = 1.354
+                ccgamma = 1.313    #gamma value of air @ 1400 K
+                lptgamma = 1.3060
+                hptgamma = 1.2987
+
+            #Fan
+            faneta = .91
+            fgamma = 1.4
+
+            fexp1 = (fgamma - 1)/(faneta * fgamma)
+
+            #LPC
+            lpcgamma = 1.398
+            LPCeta = .90
+
+            lpcexp1 = (lpcgamma - 1)/(LPCeta * lpcgamma)
+
+            #HPC
+            HPCeta = .89
+            hpcgamma = 1.354
+
+            hpcexp1 = (hpcgamma - 1)/(HPCeta * hpcgamma)
+
+            #combustor cooling exponents
+            ccgamma = 1.313    #gamma value of air @ 1400 K
+
+            ccexp1 = ccgamma/(1 - ccgamma)
+            ccexp2 = -ccgamma/(1 - ccgamma)
+
+            #Turbines
+            #LPT
+            lptgamma = 1.354
+            LPTeta = .90
+            lptexp1 = lptgamma * LPTeta / (lptgamma - 1)
+
+            #HPT
+            hptgamma = 1.318
+            HPTeta = .90
+            hptexp1 = hptgamma * HPTeta / (hptgamma - 1)
+
+            #Exhaust and Thrust
+            #station 8, fan exit
+            sta8gamma = 1.4
+            fanexexp = (sta8gamma - 1)/ sta8gamma
+
+            #station 6, turbine exit
+            sta6gamma = 1.387
+            turbexexp = (sta6gamma - 1) / sta6gamma
 
 class EnginePerformance(Model):
     """
@@ -690,7 +767,8 @@ class CompressorPerformance(Model):
         if BLI:
             pdrop = Variable('p_{drop}', 0.82, '-', '1 plus stagnation pressure drop percent due to BLI')
             diffuser.extend([
-                Pt0 == pdrop*state["P_{atm}"] / (c1 ** -3.5),
+##                Pt0 == pdrop*state["P_{atm}"] / (c1 ** -3.5),
+                Pt0 == state["P_{atm}"] / (c1 ** -3.5),
                 ])
 
         if not BLI:

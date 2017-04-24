@@ -31,7 +31,7 @@ class Engine(Model):
         self.hpcmap = HPCMap()
         self.thrust = Thrust()
         self.sizing = Sizing()
-        self.constants = EngineConstants()
+        self.constants = EngineConstants(BLI)
         self.state = state
 
         if Nfleet != 0:
@@ -661,7 +661,7 @@ class EnginePerformance(Model):
         self.compP = engine.compressor.dynamic(engine.constants, state, BLI)
         self.combP = engine.combustor.dynamic(engine.constants, state)
         self.turbineP = engine.turbine.dynamic(engine.constants)
-        self.thrustP = engine.thrust.dynamic(engine.constants, state)
+        self.thrustP = engine.thrust.dynamic(engine.constants, state, BLI)
         self.fanmapP = engine.fanmap.dynamic(engine.constants)
         self.lpcmapP = engine.lpcmap.dynamic(engine.constants)
         self.hpcmapP = engine.hpcmap.dynamic(engine.constants)
@@ -675,7 +675,7 @@ class EngineConstants(Model):
     """
     Class of constants used in the engine model
     """
-    def setup(self):
+    def setup(self, BLI):
         #-----------------------air properties------------------
         #ambient
         R = Variable('R', 287, 'J/kg/K', 'R')
@@ -689,6 +689,11 @@ class EngineConstants(Model):
 
         #---------------------------efficiencies & takeoffs-----------------------
         Mtakeoff = Variable('M_{takeoff}', '-', '1 Minus Percent mass flow loss for de-ice, pressurization, etc.')
+
+        #----------------BLI pressure loss factor-------------------
+        if BLI:
+            fBLIP = Variable('f_{BLI_P}', '-', 'BLI Stagnation Pressure Loss Ratio')
+            fBLIV = Variable('f_{BLI_V}', '-', 'BLI Velocity Loss Ratio')
 
 class Compressor(Model):
     """"
@@ -779,9 +784,8 @@ class CompressorPerformance(Model):
             ]
 
         if BLI:
-            pdrop = Variable('p_{drop}', 0.82, '-', '1 plus stagnation pressure drop percent due to BLI')
             diffuser.extend([
-                Pt0 == pdrop*state["P_{atm}"] / (c1 ** -3.5),
+                Pt0 == self.engine['f_{BLI_P}']*state["P_{atm}"] / (c1 ** -3.5),
                 ])
 
         if not BLI:
@@ -1153,17 +1157,17 @@ class Thrust(Model):
         #max by pass ratio
         alpha_max = Variable('\\alpha_{max}', '-', 'By Pass Ratio')
 
-    def dynamic(self, engine, state):
+    def dynamic(self, engine, state, BLI):
         """
         creates an instance of the thrust performance model
         """
-        return ThrustPerformance(self, engine, state)
+        return ThrustPerformance(self, engine, state, BLI)
 
 class ThrustPerformance(Model):
     """
     thrust performacne model
     """
-    def setup(self, thrust, engine, state):
+    def setup(self, thrust, engine, state, BLI):
         self.thrust = thrust
         self.engine = engine
         
@@ -1220,7 +1224,6 @@ class ThrustPerformance(Model):
                 
                 #core exhaust
                 P6 == state["P_{atm}"],   #B.4.11 intro
- 
                 (P6/Pt6)**(turbexexp) == T6/Tt6,
                 TCS([u6**2 + 2*h6 <= 2*ht6]),
                 h6 == self.thrust['Cp_tex'] * T6,
@@ -1234,10 +1237,6 @@ class ThrustPerformance(Model):
                 hold == alphap1,
                 SignomialEquality(hold, alpha + 1),
                 alpha <= self.thrust['\\alpha_{max}'],
-
-                #overall thrust values
-                TCS([F8/(alpha * mCore) + state['V'] <= u8]),  #B.188
-                TCS([F6/(mCore) + state['V'] <= u6]),  #B.188, unneeded
                 
                 #SIGNOMIAL
                 TCS([F <= F6 + F8]),
@@ -1246,6 +1245,20 @@ class ThrustPerformance(Model):
 
                 #TSFC
                 TSFC == 1/Isp,
+                ])
+
+        if BLI:
+            constraints.extend([
+                #overall thrust values
+                TCS([F8/(alpha * mCore) + state['V']*engine['f_{BLI_V}'] <= u8]),  #B.188
+                TCS([F6/(mCore) + state['V']*engine['f_{BLI_V}'] <= u6]),  #B.188, unneeded
+                ])
+
+        else:
+            constraints.extend([
+                #overall thrust values
+                TCS([F8/(alpha * mCore) + state['V'] <= u8]),  #B.188
+                TCS([F6/(mCore) + state['V'] <= u6]),  #B.188, unneeded
                 ])
 
         return constraints

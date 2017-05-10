@@ -141,7 +141,7 @@ class Engine(Model):
                 ]
 
             hpcmap = [
-                self.engineP['\pi_{hc}']*(26/self.hpcmap['\pi_{hc_D}']) == (1.35 * (self.engineP['N_2'])**0.566)**10,
+                self.engineP['\pi_{hc}']*(26/self.hpcmap['\pi_{hc_D}']) == (1.38 * (self.engineP['N_2'])**0.566)**10,
                 self.engineP['\pi_{hc}']*(26/self.hpcmap['\pi_{hc_D}']) >= .9*(1.38 * (self.engineP['m_{tild_hc}'])**0.122)**10,
                 self.engineP['\pi_{hc}']*(26/self.hpcmap['\pi_{hc_D}']) <= 1.1*(1.38 * (self.engineP['m_{tild_hc}'])**0.122)**10,
 

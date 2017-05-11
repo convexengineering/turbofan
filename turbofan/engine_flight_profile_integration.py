@@ -321,6 +321,8 @@ if __name__ == '__main__':
     plotRC = False
     plotR = False
     plotAlt = False
+
+    fs = 18
     
     M4a = .1025
     fan = 1.685
@@ -351,7 +353,7 @@ if __name__ == '__main__':
             '\pi_{hc_D}': hpc,
             '\pi_{lc_D}': lpc,
 
-            '\\alpha_{OD}': 5.105,
+##            '\\alpha_{OD}': 5.105,
             '\\alpha_{max}': 5.105,
 
             'hold_{4a}': 1+.5*(1.313-1)*M4a**2,
@@ -465,11 +467,11 @@ if __name__ == '__main__':
            
     mission = Mission(2, 2)
     m = Model(mission['W_{f_{total}}'], mission, substitutions)
-    sol = m.localsolve(solver='mosek', verbosity = 4)
+    sol = m.localsolve(solver='mosek', verbosity = 1)
 
     if plotR == True:
         substitutions = {
-                'ReqRng': ('sweep', np.linspace(1000,3000,30)),
+                'ReqRng': ('sweep', np.linspace(1000,3000,23)),
                 'numeng': 2,
                 'W_{pax}': 91 * 9.81,
                 'n_{pax}': 150,
@@ -492,8 +494,8 @@ if __name__ == '__main__':
                 '\pi_{hc_D}': hpc,
                 '\pi_{lc_D}': lpc,
 
-                '\\alpha_{OD}': 5.105,
-                '\\alpha_{max}': 5.105,
+##                '\\alpha_{OD}': 5.105,
+                '\\alpha_{max}': 5.6958,
 
                 'hold_{4a}': 1+.5*(1.313-1)*M4a**2,
                 'r_{uc}': .01,
@@ -518,7 +520,7 @@ if __name__ == '__main__':
         
         mission = Mission(2, 2)
         m = Model(mission['W_{f_{total}}'], mission, substitutions, x0=x0)
-        solRsweep = m.localsolve(solver='mosek', verbosity = 4, skipsweepfailures=True)
+        solRsweep = m.localsolve(solver='mosek', verbosity = 1, skipsweepfailures=True)
 
         plt.plot(solRsweep('ReqRng'), solRsweep('W_{f_{total}}'), '-r', linewidth=2.0)
         plt.xlabel('Mission Range [nm]')
@@ -589,25 +591,28 @@ if __name__ == '__main__':
         plt.xlabel('Mission Range [nm]')
         plt.ylabel('Max Engine Mass Flow [kg/s]')
         plt.title('Max Engine Mass Flow vs Range')
-        plt.savefig('engine_Rsweeps/max_m_range.pdf')
+        
+        plt.savefig('engine_Rsweeps/max_m_range.pdf', bbox_inches="tight")
         plt.show()
 
         plt.plot(solRsweep('ReqRng'), maxF, '-r', linewidth=2.0)
-        plt.xlabel('Mission Range [nm]')
-        plt.ylabel('Max Engine Thrust [N]')
-        plt.title('Max Engine Thrust vs Range')
+        plt.xlabel('Mission Range [nm]', fontsize = fs)
+        plt.ylabel('Max Engine Thrust [N]', fontsize = fs)
+        plt.title('Max Engine Thrust vs Range', fontsize = fs)
+        plt.tick_params(axis='both', which='major', labelsize=fs)
         plt.ylim((10000,25000))
-        plt.savefig('engine_Rsweeps/max_F_range.pdf')
+        plt.savefig('engine_Rsweeps/max_F_range.pdf', bbox_inches="tight")
         plt.show()
 
         plt.plot(solRsweep('ReqRng'), totsfc, '-r', linewidth=2.0)
         plt.plot(solRsweep('ReqRng'), cruisetsfc, '-b', linewidth=2.0)
-        plt.legend(['Initial Climb', 'Initial Cruise'], loc=4)
+        plt.legend(['Initial Climb', 'Initial Cruise'], loc=4, fontsize = fs)
         plt.ylim((0,.5))
-        plt.xlabel('Mission Range [nm]')
-        plt.ylabel('TSFC [1/hr]')
-        plt.title('TSFC vs Range')
-        plt.savefig('engine_Rsweeps/TSFC_range.pdf')
+        plt.xlabel('Mission Range [nm]', fontsize = fs)
+        plt.ylabel('TSFC [1/hr]', fontsize = fs)
+        plt.title('TSFC vs Range', fontsize = fs)
+        plt.tick_params(axis='both', which='major', labelsize=fs)
+        plt.savefig('engine_Rsweeps/TSFC_range.pdf', bbox_inches="tight")
         plt.show()
 
         plt.plot(solRsweep('ReqRng'), irc, '-r', linewidth=2.0)
@@ -618,10 +623,11 @@ if __name__ == '__main__':
         plt.show()
 
         plt.plot(solRsweep('ReqRng'), f, '-r', linewidth=2.0)
-        plt.xlabel('Mission Range [nm]')
-        plt.ylabel('Initial Thrsut [N]')
-        plt.title('Initial Thrust vs Range')
-        plt.savefig('engine_Rsweeps/intitial_thrust.pdf')
+        plt.xlabel('Mission Range [nm]', fontsize = fs)
+        plt.ylabel('Initial Thrsut [N]', fontsize = fs)
+        plt.title('Initial Thrust vs Range', fontsize = fs)
+        plt.title('Max Engine Mass Flow vs Range', fontsize = fs)
+        plt.savefig('engine_Rsweeps/intitial_thrust.pdf', bbox_inches="tight")
         plt.show()
 
         plt.plot(solRsweep('ReqRng'), f6, '-r', linewidth=2.0)
@@ -640,20 +646,22 @@ if __name__ == '__main__':
 
         plt.plot(solRsweep('ReqRng'), f8, '-r', linewidth=2.0)
         plt.plot(solRsweep('ReqRng'), f6, '-b', linewidth=2.0)
-        plt.legend(['Initial Fan Thrust', 'Initial Core Thrust'], loc=2)
-        plt.xlabel('Mission Range [nm]')
-        plt.ylabel('Initial Thrust [N]')
-        plt.title('Initial Thrust vs Range')
+        plt.legend(['Initial Fan Thrust', 'Initial Core Thrust'], loc=2, fontsize = fs)
+        plt.xlabel('Mission Range [nm]', fontsize = fs)
+        plt.ylabel('Initial Thrust [N]', fontsize = fs)
+        plt.title('Initial Thrust vs Range', fontsize = fs)
         plt.ylim((0,20000))
-        plt.savefig('engine_Rsweeps/initial_F8_F6_range.pdf')
+        plt.tick_params(axis='both', which='major', labelsize=fs)
+        plt.savefig('engine_Rsweeps/initial_F8_F6_range.pdf', bbox_inches="tight")
         plt.show()
 
         plt.plot(solRsweep('ReqRng'), solRsweep('W_{engine}'), '-r', linewidth=2.0)
-        plt.xlabel('Mission Range [nm]')
-        plt.ylabel('Engine Weight [N]')
-        plt.title('Engine Weight vs Range')
+        plt.xlabel('Mission Range [nm]', fontsize = fs)
+        plt.ylabel('Engine Weight [N]', fontsize = fs)
+        plt.title('Engine Weight vs Range', fontsize = fs)
         plt.ylim((0,15000))
-        plt.savefig('engine_Rsweeps/engine_weight_range.pdf')
+        plt.tick_params(axis='both', which='major', labelsize=fs)
+        plt.savefig('engine_Rsweeps/engine_weight_range.pdf', bbox_inches="tight")
         plt.show()
 
         plt.plot(solRsweep('ReqRng'), solRsweep('A_2'), '-r', linewidth=2.0)
@@ -753,8 +761,8 @@ if __name__ == '__main__':
                 '\pi_{hc_D}': hpc,
                 '\pi_{lc_D}': lpc,
 
-                '\\alpha_{OD}': 5.105,
-                '\\alpha_{max}': 5.105,
+##                '\\alpha_{OD}': 5.105,
+                '\\alpha_{max}': 5.6958,
 
                 'hold_{4a}': 1+.5*(1.313-1)*M4a**2,
                 'r_{uc}': .01,
@@ -909,8 +917,8 @@ if __name__ == '__main__':
                 '\pi_{hc_D}': hpc,
                 '\pi_{lc_D}': lpc,
 
-                '\\alpha_{OD}': 5.105,
-                '\\alpha_{max}': 5.105,
+##                '\\alpha_{OD}': 5.105,
+                '\\alpha_{max}': 5.6958,
 
                 'hold_{4a}': 1+.5*(1.313-1)*M4a**2,
                 'r_{uc}': .01,
@@ -977,12 +985,13 @@ if __name__ == '__main__':
         plt.show()
 
         plt.plot(solRCsweep('RC_{min}'), maxF, '-r', linewidth=2.0)
-        plt.xlabel('Minimum Initial Rate of Climb [ft/min]')
-        plt.ylabel('Max Engine Thrust [N]')
-        plt.title('Max Engine Thrust vs Minimum Initial Climb Rate')
+        plt.xlabel('Minimum Initial Rate of Climb [ft/min]', fontsize = fs)
+        plt.ylabel('Max Engine Thrust [N]',fontsize = fs)
+        plt.title('Max Engine Thrust vs Minimum Initial Climb Rate',fontsize = fs)
+        plt.tick_params(axis='both', which='major', labelsize=fs)
         plt.xlim((500, 3500))
         plt.ylim((0,55000))
-        plt.savefig('engine_RCsweeps/max_F_range.pdf')
+        plt.savefig('engine_RCsweeps/max_F_RC.pdf', bbox_inches="tight")
         plt.show()
 
         plt.plot(solRCsweep('RC_{min}'), solRCsweep('CruiseAlt'), '-r', linewidth=2.0)
@@ -1048,12 +1057,14 @@ if __name__ == '__main__':
 
         plt.plot(solRCsweep('RC_{min}'), f8, '-r', linewidth=2.0)
         plt.plot(solRCsweep('RC_{min}'), f6, '-b', linewidth=2.0)
-        plt.legend(['Initial Fan Thrust', 'Initial Core Thrust'], loc=2)
-        plt.xlabel('Minimum Initial Rate of Climb [ft/min]')
-        plt.ylabel('Initial Fan Thrsut [N]')
-        plt.title('Initial Fan and Core Thrust vs Initial Rate of Climb')
+        plt.legend(['Initial Fan Thrust', 'Initial Core Thrust'], loc=2,fontsize = fs)
+        plt.xlabel('Minimum Initial Rate of Climb [ft/min]',fontsize = fs)
+        plt.ylabel('Initial Thrsut [N]',fontsize = fs)
+        plt.title('Initial Fan & Core Thrust vs Min. Initial Climb Rate',fontsize = fs)
+        plt.tick_params(axis='both', which='major', labelsize=fs)
         plt.xlim((500, 3500))
-        plt.savefig('engine_RCsweeps/initial_F8_F6_RC.pdf')
+        plt.ylim((0,30000))
+        plt.savefig('engine_RCsweeps/initial_F8_F6_RC.pdf', bbox_inches="tight")
         plt.show()
 
         plt.plot(solRCsweep('RC_{min}'), solRCsweep('W_{f_{total}}'), '-r', linewidth=2.0)
@@ -1068,15 +1079,16 @@ if __name__ == '__main__':
         plt.plot(solRCsweep('RC_{min}'), solRCsweep('W_{engine}'), '-r', linewidth=2.0)
         plt.xlabel('Minimum Initial Rate of Climb [ft/min]')
         plt.ylabel('Engine Weight [N]')
-        plt.title('Engine Weight vs Initial Rate of Climb')
+        plt.title('Engine Weight vs Minimum Initial Rate of Climb')
         plt.xlim((500, 3500))
+        plt.ylim((0, 19000))
         plt.savefig('engine_RCsweeps/weight_engine_RC.pdf')
         plt.show()
 
         plt.plot(solRCsweep('RC_{min}'), solRCsweep('A_2'), '-r', linewidth=2.0)
         plt.xlabel('Minimum Initial Rate of Climb [ft/min]')
         plt.ylabel('Fan Area [m^$2$]')
-        plt.title('Fan Area vs Initial Rate of Climb')
+        plt.title('Fan Area vs  Minimum Initial Rate of Climb')
         plt.ylim((0, 0.8))
         plt.xlim((500, 3500))
         plt.savefig('engine_RCsweeps/fan_area_RC.pdf')

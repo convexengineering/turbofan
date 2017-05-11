@@ -3,7 +3,6 @@ from gpkit import Model, Variable, SignomialsEnabled, units, Vectorize, Signomia
 from gpkit.constraints.tight import Tight as TCS
 from gpkit.small_scripts import mag
 import numpy as np
-
 #Cp and gamma values estimated from https://www.ohio.edu/mechanical/thermo/property_tables/air/air_Cp_Cv.html
 
 class Engine(Model):
@@ -119,8 +118,8 @@ class Engine(Model):
 
             fanmap = [
                 self.engineP['\pi_f']*(1.7/self.fanmap['\pi_{f_D}']) == (1.05*self.engineP['N_f']**.0871)**10,
-                (self.engineP['\pi_f']*(1.7/self.fanmap['\pi_{f_D}']))**(.1) <= 1.1*(1.06 * (self.engineP['m_{tild_f}'])**0.137),
-                (self.engineP['\pi_f']*(1.7/self.fanmap['\pi_{f_D}']))**(.1) >= .9*(1.06 * (self.engineP['m_{tild_f}'])**0.137),
+                (self.engineP['\pi_f']*(1.7/self.fanmap['\pi_{f_D}'])) <= 1.1*(1.06 * (self.engineP['m_{tild_f}'])**0.137)**10,
+                (self.engineP['\pi_f']*(1.7/self.fanmap['\pi_{f_D}'])) >= .9*(1.06 * (self.engineP['m_{tild_f}'])**0.137)**10,
 
                 #define mbar
                 self.engineP['m_{f}'] == self.engineP['m_{fan}']*((self.engineP['T_{t_2}']/self.constants['T_{ref}'])**.5)/(self.engineP['P_{t_2}']/self.constants['P_{ref}']),    #B.280
@@ -1440,7 +1439,7 @@ class TestMissionCFM(Model):
     place holder of a mission calss
     """
     def setup(self, engine):
-        M2 = .8
+        M2 = .6
         M25 = .6
         M4a = .1025
         M0 = .8
@@ -1461,7 +1460,7 @@ class TestMissionCFM(Model):
             engine.engineP['c1'] == 1+.5*(.401)*M0**2,
             ]
 
-        M2 = .8
+        M2 = .6
         M25 = .6
         M4a = .1025
         M0 = .8
@@ -1480,7 +1479,7 @@ class TestMissionTASOPT(Model):
     place holder of a mission calss
     """
     def setup(self, engine):
-        M2 = .8025
+        M2 = .6
         M25 = .6
         M4a = .1025
         M0 = .8025
@@ -1495,35 +1494,41 @@ class TestMissionTASOPT(Model):
             engine.state['M'][1] == M0,
             engine.engineP['M_2'][1] == M2,
             engine.engineP['M_{2.5}'][1] == M25,
-            engine.engineP['hold_{2}'] == 1+.5*(1.398-1)*M2**2,
-            engine.engineP['hold_{2.5}'] == 1+.5*(1.354-1)*M25**2,
-            engine.engineP['c1'] == 1+.5*(.401)*M0**2,
+            engine.engineP['hold_{2}'][1] == 1+.5*(1.398-1)*M2**2,
+            engine.engineP['hold_{2.5}'][1] == 1+.5*(1.354-1)*M25**2,
+            engine.engineP['c1'][1] == 1+.5*(.401)*M0**2,
             ]
 
-        M2 = .8
+        M2 = .6
         M25 = .6
         M4a = .1025
         M0 = .8
 
         cruise = [
-            engine.state['P_{atm}'][2] == 23.84*units('kPa'),    #36K feet
-            engine.state["T_{atm}"][2] == 218*units('K'),
+            engine.state['P_{atm}'][2] == 23.92*units('kPa'),    #36K feet
+            engine.state["T_{atm}"][2] == 219.4*units('K'),
             engine.state['M'][2] == M0,
             engine.engineP['M_2'][2] == M2,
             engine.engineP['M_{2.5}'][2] == M25,
+            engine.engineP['hold_{2}'][2] == 1+.5*(1.398-1)*M2**2,
+            engine.engineP['hold_{2.5}'][2] == 1+.5*(1.354-1)*M25**2,
+            engine.engineP['c1'][2] == 1+.5*(.401)*M0**2,
             ]
 
-        M2 = .223
+        M2 = .6
         M25 = .6
         M4a = .1025
-        M0 = .223
+        M0 = .2201
 
         rotation = [
             engine.state['P_{atm}'][0] == 101.325*units('kPa'),
-            engine.state["T_{atm}"][0] == 291*units('K'),
+            engine.state["T_{atm}"][0] == 288*units('K'),
             engine.state['M'][0] == M0,
             engine.engineP['M_2'][0] == M2,
             engine.engineP['M_{2.5}'][0] == M25,
+            engine.engineP['hold_{2}'][0] == 1+.5*(1.401-1)*M2**2,
+            engine.engineP['hold_{2.5}'][0] == 1+.5*(1.401-1)*M25**2,
+            engine.engineP['c1'][0] == 1+.5*(.401)*M0**2,
             ]
 
         return rotation, toclimb, cruise
@@ -1533,8 +1538,8 @@ class TestMissionGE90(Model):
     place holder of a mission calss
     """
     def setup(self, engine):
-        M2 = .85
-        M25 = .45
+        M2 = .65
+        M25 = .6
         M4a = .1025
         M0 = .85
 
@@ -1552,8 +1557,8 @@ class TestMissionGE90(Model):
             engine.engineP['c1'][1] == 1+.5*(.401)*M0**2,
             ]
 
-        M0 = .8
-        M2 = .8
+        M0 = .65
+        M2 = .6
         M25 = .45
         M4a = .1025
 
@@ -1926,7 +1931,7 @@ if __name__ == "__main__":
     eng = 2 is GE90, set N = 2
     eng = 3 is TASOPT D8.2, set N=2
     """
-    eng = 3
+    eng = 1
     
     if eng == 0 or eng == 2 or eng == 3:
         N = 2
@@ -2008,20 +2013,20 @@ if __name__ == "__main__":
                 'P_{ref}': 101.325,
                 '\eta_{HPshaft}': .97,
                 '\eta_{LPshaft}': .97,
-                'eta_{B}': .9827,
+                'eta_{B}': .985,
 
                 '\pi_{f_D}': fan,
                 '\pi_{hc_D}': hpc,
                 '\pi_{lc_D}': lpc,
-                '\\alpha_{max}': 5.1362,
+                '\\alpha_{max}': 5.103,
 ##                '\\alpha_{OD}': 5.1362,
 
                 'hold_{4a}': 1+.5*(1.313-1)*M4a**2,
-                'r_{uc}': .5,
+                'r_{uc}': .01,
                 '\\alpha_c': .19036,
                 'T_{t_f}': 435,
 
-                'M_{takeoff}': .972,
+                'M_{takeoff}': .9709,
 
                 'G_f': 1,
 
@@ -2214,10 +2219,12 @@ if __name__ == "__main__":
     if eng == 0 or eng == 2 or eng == 3:
         m = Model((10*engine.engineP.thrustP['TSFC'][0]+engine.engineP.thrustP['TSFC'][1]) * (engine['W_{engine}'] * units('1/hr/N'))**.00001, [engine, mission], substitutions, x0=x0)
     if eng == 1:
-        m = Model((10*engine.engineP.thrustP['TSFC'][2]+engine.engineP.thrustP['TSFC'][1]+engine.engineP.thrustP['TSFC'][0]) * (engine['W_{engine}'] * units('1/hr/N'))**.00001, [engine, mission], substitutions, x0=x0)
+        m = Model((10*engine.engineP.thrustP['TSFC'][2]+engine.engineP.thrustP['TSFC'][1]+.1*engine.engineP.thrustP['TSFC'][0]) * (engine['W_{engine}'] * units('1/hr/N'))**.0001, [engine, mission], substitutions, x0=x0)
     #update substitutions and solve
     m.substitutions.update(substitutions)
-    sol = m.localsolve(solver = 'mosek', verbosity = 1)
+##    m_relax = relaxed_constants(m)
+    sol = m.localsolve(solver = 'mosek', verbosity = 4)
+##    post_process(sol)
 
     #print out various percent differences in TSFC and engine areas
     if eng == 0:

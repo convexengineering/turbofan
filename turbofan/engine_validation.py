@@ -14,7 +14,7 @@ class Engine(Model):
     cooling = True = cooling model, False = no cooling model
     N = number of discrete flight segments
     state = state model discretized into N segments
-    eng = 0, 1, or 2. 0 = CFM56 vals, 1 = TASOPT 737-800 vals, 2 = GE90 vals, 3 = TASOPT D8.2 vals, 4 = TASOPT 777-300ER vals
+    eng = 0 = CFM56 vals, 1 = TASOPT 737-800 vals, 2 = GE90 vals, 3 = TASOPT D8.2 vals, 4 = TASOPT 777-300ER vals
     Nfleet - number of discrete missions in a fleet mission optimization problem, default is 0
     """
     def setup(self, res7, cooling, N, state, eng, Nfleet=0, BLI = False):

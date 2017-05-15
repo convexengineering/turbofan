@@ -1807,59 +1807,6 @@ def test():
     m = Model((10*engine.engineP.thrustP['TSFC'][2]+engine.engineP.thrustP['TSFC'][1]+engine.engineP.thrustP['TSFC'][0]) * (engine['W_{engine}'] * units('1/hr/N'))**.00001, [engine, mission], substitutions, x0=x0)
     m.substitutions.update(substitutions)
     sol = m.localsolve(verbosity = 0)
-        
-    #test the GE90 engine
-
-    with Vectorize(2):
-        state = TestState()
-
-    engine = Engine(0, True, 2, state, 2)
-
-    mission = TestMissionGE90(engine)
-
-    M4a = .1025
-    fan = 1.58
-    lpc  = 1.26
-    hpc = 20.033
-    
-    substitutions = {
-        '\pi_{tn}': .98,
-        '\pi_{b}': .94,
-        '\pi_{d}': .98,
-        '\pi_{fn}': .98,
-        'T_{ref}': 288.15,
-        'P_{ref}': 101.325,
-        '\eta_{HPshaft}': .98,
-        '\eta_{LPshaft}': .98,
-        'eta_{B}': .9970,
-
-        '\pi_{f_D}': 1.58,
-        '\pi_{hc_D}': 20.033,
-        '\pi_{lc_D}': 1.26,
-
-        '\\alpha_{max}': 8.7877,
-
-        'hold_{4a}': 1+.5*(1.313-1)*M4a**2,#sol('hold_{4a}'),
-        'r_{uc}': .1,
-        '\\alpha_c': .14,
-        'T_{t_f}': 435,
-
-        'M_{takeoff}': .955,
-
-        'G_f': 1,
-
-        'h_f': 43.003,
-
-        'Cp_t1': 1280,
-        'Cp_t2': 1184,
-        'Cp_c': 1216,
-
-        'HTR_{f_SUB}': 1-.3**2,
-        'HTR_{lpc_SUB}': 1 - 0.6**2,
-        }
-    m = Model((10*engine.engineP.thrustP['TSFC'][0]+engine.engineP.thrustP['TSFC'][1]) * (engine['W_{engine}'] * units('1/hr/N'))**.00001, [engine, mission], substitutions, x0=x0)
-    m.substitutions.update(substitutions)
-    sol = m.localsolve(verbosity = 0)
 
     #test the D8.2 engine
     with Vectorize(2):
@@ -1924,7 +1871,7 @@ if __name__ == "__main__":
     eng = 2 is GE90, set N = 2
     eng = 3 is TASOPT D8.2, set N=2
     """
-    eng = 0
+    eng = 2
     
     if eng == 0 or eng == 2 or eng == 3:
         N = 2
@@ -2046,8 +1993,8 @@ if __name__ == "__main__":
             '\pi_{fn}': .98,
             'T_{ref}': 288.15,
             'P_{ref}': 101.325,
-            '\eta_{HPshaft}': .98,
-            '\eta_{LPshaft}': .98,
+            '\eta_{HPshaft}': .97,
+            '\eta_{LPshaft}': .97,
             'eta_{B}': .9970,
 
             '\pi_{f_D}': 1.58,

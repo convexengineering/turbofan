@@ -1776,17 +1776,18 @@ def test():
             '\pi_{fn}': .98,
             'T_{ref}': 288.15,
             'P_{ref}': 101.325,
-            '\eta_{HPshaft}': .97,
-            '\eta_{LPshaft}': .97,
-            'eta_{B}': .9827,
+            '\eta_{HPshaft}': .98,
+            '\eta_{LPshaft}': .98,
+            'eta_{B}': .985,
 
             '\pi_{f_D}': fan,
             '\pi_{hc_D}': hpc,
             '\pi_{lc_D}': lpc,
-            '\\alpha_{max}': 5.1362,
+            '\\alpha_{max}': 5.103,
+##                '\\alpha_{OD}': 5.1362,
 
             'hold_{4a}': 1+.5*(1.313-1)*M4a**2,
-            'r_{uc}': .5,
+            'r_{uc}': .01,
             '\\alpha_c': .19036,
             'T_{t_f}': 435,
 
@@ -1798,7 +1799,7 @@ def test():
 
             'Cp_t1': 1280,
             'Cp_t2': 1184,
-            'Cp_c': 1216,
+            'Cp_c': 1283,
 
             'HTR_{f_SUB}': 1-.3**2,
             'HTR_{lpc_SUB}': 1 - 0.6**2,

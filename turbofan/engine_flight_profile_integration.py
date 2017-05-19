@@ -318,7 +318,7 @@ def test():
     sol = m.localsolve(verbosity = 0)
 
 if __name__ == '__main__':
-    plotRC = False
+    plotRC = True
     plotR = False
     plotAlt = False
 
@@ -354,7 +354,7 @@ if __name__ == '__main__':
             '\pi_{lc_D}': lpc,
 
 ##            '\\alpha_{OD}': 5.105,
-            '\\alpha_{max}': 5.105,
+            '\\alpha_{max}': 5.6958,
 
             'hold_{4a}': 1+.5*(1.313-1)*M4a**2,
             'r_{uc}': .01,
@@ -1016,7 +1016,7 @@ if __name__ == '__main__':
         plt.legend(['Initial Climb', 'Initial Cruise'], loc=2)
         plt.ylabel('TSFC [1/hr]')
         plt.xlabel('Minimum Initial Rate of Climb [ft/min]')
-        plt.title('Initial Climb and Cruise TSFC vs Initial Rate of Climb')
+        plt.title('Initial Climb and Cruise TSFC vs Minimum Initial Rate of Climb')
         plt.xlim((500, 3500))
         plt.savefig('engine_RCsweeps/tsfc_RC.pdf')
         plt.ylim((0,.7))
@@ -1025,7 +1025,7 @@ if __name__ == '__main__':
         plt.plot(solRCsweep('RC_{min}'), crtsfc, '-r', linewidth=2.0)
         plt.ylabel('Initial Cruise TSFC [1/hr]')
         plt.xlabel('Minimum Initial Rate of Climb [ft/min]')
-        plt.title('Initial Cruise TSFC vs Initial Rate of Climb')
+        plt.title('Initial Cruise TSFC vs Minimum Initial Rate of Climb')
         plt.xlim((500, 3500))
         plt.ylim((0,.7))
         plt.savefig('engine_RCsweeps/crtsfc_RC.pdf')
@@ -1097,7 +1097,7 @@ if __name__ == '__main__':
         plt.plot(solRCsweep('RC_{min}'), solRCsweep('\pi_{f_D}'), '-r', linewidth=2.0)
         plt.ylabel('$\pi_{f_D}$')
         plt.xlabel('Minimum Initial Rate of Climb [ft/min]')
-        plt.title('Fan Design Pressure Ratio vs Initial Rate of Climb')
+        plt.title('Fan Design Pressure Ratio vs Min. Initial Rate of Climb')
         plt.xlim((500, 3500))
         plt.savefig('engine_RCsweeps/pifD_RC.pdf')
         plt.show()
@@ -1114,7 +1114,7 @@ if __name__ == '__main__':
         plt.ylabel('Sensitivity to $\pi_{f_D}$')
         plt.xlabel('Minimum Initial Rate of Climb [ft/min]')
         plt.ylim((0, .6))
-        plt.title('Fan Design Pressure Ratio Sensitivity vs Initial Rate of Climb')
+        plt.title('Fan Design Pressure Ratio Sensitivity vs Min. Initial Climb Rate')
         plt.xlim((500, 3500))
         plt.savefig('engine_RCsweeps/pifD_sens_RC.pdf')
         plt.show()

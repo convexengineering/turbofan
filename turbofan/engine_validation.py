@@ -75,7 +75,7 @@ class Engine(Model):
         with SignomialsEnabled():
 
             weight = [
-                  W_engine >= ((self.engineP['m_{total}']/(self.engineP['alphap1']*self.engineP['m_{core}'])*self.engineP['m_{core}'])*.220462)*(1684.5+17.7*(self.engineP['\pi_f']*self.engineP['\pi_{lc}']*self.engineP['\pi_{hc}'])/30+1662.2*(self.engineP['\\alpha']/5)**1.2)*self.engineP['dum2'],
+                  W_engine/units('kg') >= (self.engineP['m_{total}']/(self.engineP['alphap1']))*((1/(100*units('lb/s')))*9.81*units('m/s^2'))*(1684.5+17.7*(self.engineP['\pi_f']*self.engineP['\pi_{lc}']*self.engineP['\pi_{hc}'])/30+1662.2*(self.engineP['\\alpha']/5)**1.2),#*self.engineP['dum2'],
                   ]
 
             diameter = [
@@ -1234,9 +1234,6 @@ class ThrustPerformance(Model):
                 h6 == self.thrust['Cp_tex'] * T6,
                 ht6 == self.thrust['Cp_tex'] * Tt6,
 
-                u6 >= state['V'],
-                u8 >= state['V'],
-
                 #constrain the new BPR
                 alpha == mFan / mCore,
                 hold == alphap1,
@@ -1369,7 +1366,6 @@ class SizingPerformance(Model):
             #residual 4
             P7 >= state["P_{atm}"],
             M7 <= 1,
-            u7 >= state['V'],
             a7 == (1.4*self.engine['R']*T7)**.5,
             a7*M7 == u7,
             rho7 == P7/(self.engine['R']*T7),
@@ -1377,7 +1373,6 @@ class SizingPerformance(Model):
             #residual 5 core nozzle mass flow
             P5 >= state["P_{atm}"],
             M5 <= 1,
-            u5 >= state['V'],
             a5 == (1.387*self.engine['R']*T5)**.5,
             a5*M5 == u5,
             rho5 == P5/(self.engine['R']*T5),
@@ -1460,6 +1455,8 @@ class TestMissionCFM(Model):
             engine.engineP['M_{2.5}'][1] == M25,
 
 ##            engine.engineP['T_{t_{4.1}}'] <= 1500*units('K')
+
+            engine['W_{engine}'] <= 5216*units('lbf'),
             ]
 
         return climb, cruise
@@ -1563,6 +1560,8 @@ class TestMissionGE90(Model):
             engine.engineP['hold_{2}'][0] == 1+.5*(1.398-1)*M2**2,
             engine.engineP['hold_{2.5}'][0] == 1+.5*(1.354-1)*M25**2,
             engine.engineP['c1'][0] == 1+.5*(.401)*M0**2,
+
+            engine['W_{engine}'] <= 77399*units('N'),
             ]
 
         return climb, cruise
@@ -1928,7 +1927,7 @@ if __name__ == "__main__":
 
                 'G_f': 1,
 
-                'h_f': 43.003,
+                'h_f': 40.8,
 
                 'Cp_t1': 1280,
                 'Cp_t2': 1184,
@@ -2157,7 +2156,7 @@ if __name__ == "__main__":
 
     #select the proper objective based off of the number of flight segments
     if eng == 0 or eng == 2 or eng == 3:
-        m = Model((10*engine.engineP.thrustP['TSFC'][0]+engine.engineP.thrustP['TSFC'][1]) * (engine['W_{engine}'] * units('1/hr/N'))**.00001, [engine, mission], substitutions, x0=x0)
+        m = Model((10*engine.engineP.thrustP['TSFC'][0]+engine.engineP.thrustP['TSFC'][1]), [engine, mission], substitutions, x0=x0)
     if eng == 1:
         m = Model((10*engine.engineP.thrustP['TSFC'][2]+engine.engineP.thrustP['TSFC'][1]+.1*engine.engineP.thrustP['TSFC'][0]), [engine, mission], substitutions, x0=x0)
     #update substitutions and solve
@@ -2172,7 +2171,12 @@ if __name__ == "__main__":
         cruiseerror = 100*(mag(sol('TSFC')[0]) - .6793)/.6793
         weighterror =  100*(mag(sol('W_{engine}').to('lbf'))-5216)/5216
 
-        print tocerror, cruiseerror, weighterror
+        print "Cruise error"
+        print cruiseerror
+        print "TOC error"
+        print tocerror
+        print "Weight Error"
+        print weighterror
 
     if eng == 1:
         rotationerror = 100*(mag(sol('TSFC')[0]) - .48434)/.48434

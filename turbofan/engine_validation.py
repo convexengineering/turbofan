@@ -21,7 +21,7 @@ class Engine(Model):
         """
         setup method for the engine model
         """
-        self.setvals(eng)
+        self.setvals(eng, BLI)
         self.compressor = Compressor()
         self.combustor = Combustor()
         self.turbine = Turbine()
@@ -367,10 +367,15 @@ class Engine(Model):
         """
         return EnginePerformance(self, state, res7, BLI)
 
-    def setvals(self, eng):
+    def setvals(self, eng, BLI):
         global fgamma, lpcgamma, hpcgamma, ccgamma, lptgamma, hptgamma, faneta, fexp1, LPCeta, lpcexp1, \
                HPCeta, hpcexp1, ccexp1, ccexp2, LPTeta, lptexp1, HPTeta, hptexp1, sta8gamma, fanexexp, sta6gamma, turbexexp
         #goption sets the gamma value
+        if BLI:
+            fan_eta_reduct = 0.97
+        else:
+            fan_eta_reduct = 1.0
+        
         goption = 1
         if eng == 0:
             """set CFM56 validation exponents"""
@@ -389,7 +394,7 @@ class Engine(Model):
                 lptgamma = 1.3060
                 hptgamma = 1.2987
             #Fan
-            faneta = .9005
+            faneta = .9005 * fan_eta_reduct
             fexp1 = (fgamma - 1)/(faneta * fgamma)
 
             #LPC
@@ -440,7 +445,7 @@ class Engine(Model):
                 hptgamma = 1.2987
 
             #Fan
-            faneta = .8948
+            faneta = .8948 * fan_eta_reduct
             fexp1 = (fgamma - 1)/(faneta * fgamma)
 
             #LPC
@@ -491,7 +496,7 @@ class Engine(Model):
                 hptgamma = 1.2987
 
             #Fan
-            faneta = .93
+            faneta = .93 * fan_eta_reduct
             fgamma = 1.4
 
             fexp1 = (fgamma - 1)/(faneta * fgamma)
@@ -552,7 +557,7 @@ class Engine(Model):
                 hptgamma = 1.2987
 
             #Fan
-            faneta = .9153
+            faneta = .9153 * fan_eta_reduct
             fgamma = 1.4
 
             fexp1 = (fgamma - 1)/(faneta * fgamma)
@@ -613,7 +618,7 @@ class Engine(Model):
                 hptgamma = 1.2987
 
             #Fan
-            faneta = .91
+            faneta = .91 * fan_eta_reduct
             fgamma = 1.4
 
             fexp1 = (fgamma - 1)/(faneta * fgamma)

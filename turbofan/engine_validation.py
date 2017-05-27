@@ -372,7 +372,7 @@ class Engine(Model):
                HPCeta, hpcexp1, ccexp1, ccexp2, LPTeta, lptexp1, HPTeta, hptexp1, sta8gamma, fanexexp, sta6gamma, turbexexp
         #goption sets the gamma value
         if BLI:
-            fan_eta_reduct = 0.97
+            fan_eta_reduct = 0.96
         else:
             fan_eta_reduct = 1.0
         

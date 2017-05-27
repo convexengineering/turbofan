@@ -1,0 +1,2 @@
+skipsolvers : cvxopt
+gpkit-models branch : master 

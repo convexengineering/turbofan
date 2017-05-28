@@ -1277,7 +1277,7 @@ class Sizing(Model):
     def setup(self):
         #define new variables
         #gear ratio, set to 1 if no gearing present
-        Gf = Variable('G_f', '', 'Gear Ratio Between Fan and LPC')
+        Gf = Variable('G_f', '-', 'Gear Ratio Between Fan and LPC')
 
         mhtD = Variable('m_{htD}', 'kg/s', 'Design HPT Corrected Mass Flow (see B.225)')
         mltD = Variable('m_{ltD}', 'kg/s', 'Design LPT Corrected Mass Flow (see B.226)')

@@ -10,9 +10,6 @@ from get_d82_subs import get_D82_subs
 from cfm56_subs import get_cfm56_subs
 from get_ge90_subs import get_ge90_subs
 
-# Import constant relaxation tool
-from relaxed_constants import relaxed_constants
-
 #Cp and gamma values estimated from https://www.ohio.edu/mechanical/thermo/property_tables/air/air_Cp_{c}v.html
 
 class Engine(Model):
@@ -1799,9 +1796,9 @@ if __name__ == "__main__":
         m = Model((10*engine.engineP.thrustP['TSFC'][0]+engine.engineP.thrustP['TSFC'][1]), [engine, mission], substitutions, x0=x0)
     if eng == 1:
         m = Model((10*engine.engineP.thrustP['TSFC'][2]+engine.engineP.thrustP['TSFC'][1]+engine.engineP.thrustP['TSFC'][0]), [engine, mission], substitutions, x0=x0)
+
     #update substitutions and solve
     m.substitutions.update(substitutions)
-
     sol = m.localsolve(solver = 'mosek', verbosity = 0)
 
     #print out various percent differences in TSFC and engine areas

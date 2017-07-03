@@ -1638,21 +1638,6 @@ def test():
     m.substitutions.update(substitutions)
     sol = m.localsolve(verbosity = 0)
 
-    #test the D8.2 engine
-    with Vectorize(2):
-        state = TestState()
-
-    engine = Engine(0, True, 2, state, 3)
-
-    mission = TestMissionD82(engine)
-
-    substitutions = get_D82_subs()
-
-    m = Model((10*engine.engineP.thrustP['TSFC'][0]+engine.engineP.thrustP['TSFC'][1]), [engine, mission], substitutions)
-    m.substitutions.update(substitutions)
-    sol = m.localsolve(verbosity = 0)
-
-
 if __name__ == "__main__":
     """
     eng = 0 is CFM56, set N = 2

@@ -1622,7 +1622,7 @@ class TestMissionD82(Model):
 
 def test():
     """
-    Test each different engine
+    Test the cfm56 engine model
     """
     #test the CFM engine
     with Vectorize(2):

@@ -218,8 +218,8 @@ def test():
             '\pi_{hc_D}': hpc,
             '\pi_{lc_D}': lpc,
 
-            '\\alpha_{OD}': 5.105,
-            '\\alpha_{max}': 5.105,
+##            '\\alpha_{OD}': 5.105,
+            '\\alpha_{max}': 5.6958,
 
             'hold_{4a}': 1+.5*(1.313-1)*M4a**2,#sol('hold_{4a}'),
             'r_{uc}': .01,
@@ -330,7 +330,7 @@ def test():
            
     mission = FleetMission(2, 2, 4)
     m = Model(mission['W_{f_{fleet}}'], mission, substitutions)
-    sol = m.localsolve(verbosity = 0)
+    sol = m.localsolve(solver='mosek', verbosity = 4)
 
 if __name__ == '__main__':
     M4a = .1025
@@ -474,4 +474,4 @@ if __name__ == '__main__':
            
     mission = FleetMission(2, 2, 4)
     m = Model(mission['W_{f_{fleet}}'], mission, substitutions)
-    sol = m.localsolve(solver='mosek', verbosity = 4)
+    sol = m.localsolve(solver='mosek', verbosity = 1)

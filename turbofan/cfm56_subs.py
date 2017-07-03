@@ -10,18 +10,18 @@ def get_cfm56_subs():
         
     substitutions = {
         '\\pi_{tn}': .98,
-        '\pi_{b}': .94,
-        '\pi_{d}': .98,
-        '\pi_{fn}': .98,
+        '\\pi_{b}': .94,
+        '\\pi_{d}': .98,
+        '\\pi_{fn}': .98,
         'T_{ref}': 288.15,
         'P_{ref}': 101.325,
-        '\eta_{HPshaft}': .97,
-        '\eta_{LPshaft}': .97,
-        'eta_{B}': .9827,
+        '\\eta_{HPshaft}': .97,
+        '\\eta_{LPshaft}': .97,
+        '\\eta_{B}': .9827,
 
-        '\pi_{f_D}': fan,
-        '\pi_{hc_D}': hpc,
-        '\pi_{lc_D}': lpc,
+        '\\pi_{f_D}': fan,
+        '\\pi_{hc_D}': hpc,
+        '\\pi_{lc_D}': lpc,
 
         '\\alpha_{OD}': 5.105,
         '\\alpha_{max}': 5.105,
@@ -33,16 +33,16 @@ def get_cfm56_subs():
 
         'M_{takeoff}': .9556,
 
-        'G_f': 1,
+        'G_{f}': 1,
 
-        'h_f': 40.8,
+        'h_{f}': 40.8,
 
-        'Cp_t1': 1280,
-        'Cp_t2': 1184,
-        'Cp_c': 1216,
+        'Cp_{t1}': 1280,
+        'Cp_{t2}': 1184,
+        'Cp_{c}': 1216,
 
-        'HTR_{f_SUB}': 1-.3**2,
-        'HTR_{lpc_SUB}': 1 - 0.6**2,
+        'HTR_{f_{SUB}}': 1-.3**2,
+        'HTR_{lpc_{SUB}}': 1 - 0.6**2,
        }
 
     return substitutions

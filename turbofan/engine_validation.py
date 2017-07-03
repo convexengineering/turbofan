@@ -92,7 +92,7 @@ class Engine(Model):
 
             fmix = [
                 #compute f with mixing
-                TCS([self.combustor['\\eta_{B}'] * self.engineP['f'] * self.combustor['h_{f}'] >= (1-self.combustor['\\alpha_c'])*self.engineP['h_{t_4}']-(1-self.combustor['\\alpha_c'])*self.engineP['h_{t_3}']+self.combustor['Cp_{fuel}']*self.engineP['f']*(self.engineP['T_{t_4}']-self.combustor['T_{t_f}'])]),
+                TCS([self.combustor['\\eta_{B}'] * self.engineP['f'] * self.combustor['h_{f}'] >= (1-self.combustor['\\alpha_c'])*self.engineP['h_{t_4}']-(1-self.combustor['\\alpha_c'])*self.engineP['h_{t_3}']+self.combustor['C_{p_{fuel}']*self.engineP['f']*(self.engineP['T_{t_4}']-self.combustor['T_{t_f}'])]),
                 #compute Tt41...mixing causes a temperature drop
                 #had to include Tt4 here to prevent it from being pushed down to zero
                 SignomialEquality(self.engineP['h_{t_{4.1}}']*self.engineP['fp1'], ((1-self.combustor['\\alpha_c']+self.engineP['f'])*self.engineP['h_{t_4}'] + self.combustor['\\alpha_c']*self.engineP['h_{t_3}'])),
@@ -719,15 +719,15 @@ class Compressor(Model):
     def setup(self):
         #define new variables
         #fan, LPC, HPC
-        Cp1 = Variable('Cp_{1}', 1008, 'J/kg/K', "Cp Value for Air at 350K")#gamma = 1.398
-        Cp2 = Variable('Cp_{2}', 1099, 'J/kg/K', "Cp Value for Air at 800K") #gamma = 1.354
+        Cp1 = Variable('C_{p_{1}', 1008, 'J/kg/K', "Cp Value for Air at 350K")#gamma = 1.398
+        Cp2 = Variable('C_{p_{2}', 1099, 'J/kg/K', "Cp Value for Air at 800K") #gamma = 1.354
 
         #-------------------------diffuser pressure ratios--------------------------
         pid = Variable('\pi_{d}', '-', 'Diffuser Pressure Ratio')
         pifn = Variable('\\pi_{fn}', '-', 'Fan Duct Pressure Loss Ratio')
 
         gammaAir = Variable('\\gamma_{air}', 1.4, '-', 'Specific Heat Ratio for Ambient Air')
-        Cpair = Variable('Cp_{air}', 1003, 'J/kg/K', "Cp Value for Air at 250K")
+        Cpair = Variable('C_{p_{air}', 1003, 'J/kg/K', "Cp Value for Air at 250K")
 
     def dynamic(self, engine, state, BLI):
         """
@@ -792,7 +792,7 @@ class CompressorPerformance(Model):
             #free stream stagnation values
              #https://www.grc.nasa.gov/www/k-12/airplane/isentrop.html
             Tt0 == state["T_{atm}"] / (c1) ** (-1),             #https://www.grc.nasa.gov/www/k-12/airplane/isentrop.html
-            ht0 == self.comp['Cp_{air}'] * Tt0,
+            ht0 == self.comp['C_{p_{air}'] * Tt0,
 
             #diffuser exit stagnation values (station 1.8)
             Pt18 == self.comp['\pi_{d}'] * Pt0,  #B.113
@@ -819,7 +819,7 @@ class CompressorPerformance(Model):
             #fan exit constraints (station 2.1)
             Pt21 == pif * Pt2,  #16.50
             Tt21 == Tt2 * pif ** (fexp1),   #16.50
-            ht21 == self.comp['Cp_{air}'] * Tt21,   #16.50
+            ht21 == self.comp['C_{p_{air}'] * Tt21,   #16.50
                        
             #fan nozzle exit (station 7)
             Pt7 == self.comp['\\pi_{fn}'] * Pt21,     #B.125
@@ -831,13 +831,13 @@ class CompressorPerformance(Model):
             #LPC exit (station 2.5)
             Pt25 == pilc * pif * Pt2,
             Tt25 == Tt2 * (pif*pilc) ** (lpcexp1),
-            ht25 == Tt25 * self.comp['Cp_{1}'],
+            ht25 == Tt25 * self.comp['C_{p_{1}'],
             ]
 
         hpc = [
             Pt3 == pihc * Pt25,
             Tt3 == Tt25 * pihc ** (hpcexp1),
-            ht3 == self.comp['Cp_{2}'] * Tt3
+            ht3 == self.comp['C_{p_{2}'] * Tt3
             ]
         
         return diffuser, fan, lpc, hpc
@@ -848,8 +848,8 @@ class Combustor(Model):
     """
     def setup(self):
         #define new variables
-        Cpc = Variable('Cp_{c}', 1216, 'J/kg/K', "Cp Value for Fuel/Air Mix in Combustor") #1400K, gamma equals 1.312
-        Cpfuel = Variable('Cp_{fuel}', 2010, 'J/kg/K', 'Specific Heat Capacity of Kerosene (~Jet Fuel)')
+        Cpc = Variable('C_{p_{c}', 1216, 'J/kg/K', "Cp Value for Fuel/Air Mix in Combustor") #1400K, gamma equals 1.312
+        Cpfuel = Variable('C_{p_{fuel}', 2010, 'J/kg/K', 'Specific Heat Capacity of Kerosene (~Jet Fuel)')
         hf = Variable('h_{f}', 43.003, 'MJ/kg', 'Heat of Combustion of Jet Fuel')     #http://hypeRbook.com/facts/2003/EvelynGofman.shtml...prob need a better source
 
         #-------------------------diffuser pressure ratios--------------------------
@@ -914,10 +914,10 @@ class CombustorPerformance(Model):
             #combustor constraints
             constraints.extend([
                 #flow through combustor
-                ht4 == self.combustor['Cp_{c}'] * Tt4,
+                ht4 == self.combustor['C_{p_{c}'] * Tt4,
 
                 #compute the station 4.1 enthalpy
-                ht41 == self.combustor['Cp_{c}'] * Tt41,
+                ht41 == self.combustor['C_{p_{c}'] * Tt41,
 
                 #making f+1 GP compatible --> needed for convergence
                 SignomialEquality(fp1,f+1),
@@ -931,7 +931,7 @@ class CombustorPerformance(Model):
                 constraints.extend([
                     fp1*u41 == (u4a*(fp1)*self.combustor['\\alpha_c']*uc)**.5,
                     #this is a stagnation relation...need to fix it to not be signomial
-                    SignomialEquality(T41, Tt41-.5*(u41**2)/self.combustor['Cp_{c}']),
+                    SignomialEquality(T41, Tt41-.5*(u41**2)/self.combustor['C_{p_{c}']),
                     
                     #here we assume no pressure loss in mixing so P41=P4a
                     Pt41 == P4a*(Tt41/T41)**(ccexp1),
@@ -957,8 +957,8 @@ class Turbine(Model):
     def setup(self):
         #define new variables
         #turbines
-        Cpt1 = Variable('Cp_{t1}', 1280, 'J/kg/K', "Cp Value for Combustion Products in HP Turbine") #1300K gamma = 1.318
-        Cpt2 = Variable('Cp_{t2}', 1184, 'J/kg/K', "Cp Value for Combustion Products in LP Turbine") #800K gamma = 1.354
+        Cpt1 = Variable('C_{p_{t1}', 1280, 'J/kg/K', "Cp Value for Combustion Products in HP Turbine") #1300K gamma = 1.318
+        Cpt2 = Variable('C_{p_{t2}', 1184, 'J/kg/K', "Cp Value for Combustion Products in LP Turbine") #800K gamma = 1.354
 
         #-------------------------diffuser pressure ratios--------------------------
         pitn = Variable('\\pi_{tn}', '-', 'Turbine Nozzle Pressure Ratio')
@@ -1007,12 +1007,12 @@ class TurbinePerformance(Model):
         #turbine constraints
         constraints.extend([
             #HPT Exit states (station 4.5)
-            ht45 == self.turbine['Cp_{t1}'] * Tt45,
+            ht45 == self.turbine['C_{p_{t1}'] * Tt45,
 
             #LPT Exit States
             Pt49 == pilpt * Pt45,
             pilpt == (Tt49/Tt45)**(lptexp1),    #turbine efficiency is 0.9
-            ht49 == self.turbine['Cp_{t2}'] * Tt49,
+            ht49 == self.turbine['C_{p_{t2}'] * Tt49,
 
             #turbine nozzle exit states
             Pt5 == self.turbine['\\pi_{tn}'] * Pt49, #B.167
@@ -1168,8 +1168,8 @@ class Thrust(Model):
     def setup(self):
         #define new variables
         #fan and exhaust
-        Cptex =Variable('Cp_{tex}', 1029, 'J/kg/K', "Cp Value for Combustion Products at Core Exhaust") #500K, gamma = 1.387
-        Cpfanex = Variable('Cp_{fex}', 1005, 'J/kg/K', "Cp Value for Air at 300K") #gamma =1.4        #heat of combustion of jet fuel
+        Cptex =Variable('C_{p_{tex}', 1029, 'J/kg/K', "Cp Value for Combustion Products at Core Exhaust") #500K, gamma = 1.387
+        Cpfanex = Variable('C_{p_{fex}', 1005, 'J/kg/K', "Cp Value for Air at 300K") #gamma =1.4        #heat of combustion of jet fuel
 
         #max by pass ratio
         alpha_max = Variable('\\alpha_{max}', '-', 'By Pass Ratio')
@@ -1234,17 +1234,17 @@ class ThrustPerformance(Model):
             #exhaust and thrust constraints
             constraints.extend([
                 P8 == state["P_{atm}"],
-                h8 == self.thrust['Cp_{fex}'] * T8,
+                h8 == self.thrust['C_{p_{fex}'] * T8,
                 TCS([u8**2 + 2*h8 <= 2*ht8]),
                 (P8/Pt8)**(fanexexp) == T8/Tt8,
-                ht8 == self.thrust['Cp_{fex}'] * Tt8,
+                ht8 == self.thrust['C_{p_{fex}'] * Tt8,
                 
                 #core exhaust
                 P6 == state["P_{atm}"],   #B.4.11 intro
                 (P6/Pt6)**(turbexexp) == T6/Tt6,
                 TCS([u6**2 + 2*h6 <= 2*ht6]),
-                h6 == self.thrust['Cp_{tex}'] * T6,
-                ht6 == self.thrust['Cp_{tex}'] * Tt6,
+                h6 == self.thrust['C_{p_{tex}'] * T6,
+                ht6 == self.thrust['C_{p_{tex}'] * Tt6,
 
                 #constrain the new BPR
                 alpha == mFan / mCore,
@@ -1391,14 +1391,14 @@ class SizingPerformance(Model):
             
             #component area sizing
             #fan area
-            h2 == self.compressor['Cp_{1}'] * T2,
+            h2 == self.compressor['C_{p_{1}'] * T2,
             rho2 == P2/(self.engine['R'] * T2),  #B.196
-            u2 == M2*(self.compressor['Cp_{1}']*self.engine['R']*T2/(dum))**.5,  #B.197
+            u2 == M2*(self.compressor['C_{p_{1}']*self.engine['R']*T2/(dum))**.5,  #B.197
 
             #HPC area
-            h25 == self.compressor['Cp_{2}'] * T25,
+            h25 == self.compressor['C_{p_{2}'] * T25,
             rho25 == P25/(self.engine['R']*T25),
-            u25 == M25*(self.compressor['Cp_{2}']*self.engine['R']*T25/(dum))**.5,   #B.202
+            u25 == M25*(self.compressor['C_{p_{2}']*self.engine['R']*T25/(dum))**.5,   #B.202
         ])
 
         return constraints

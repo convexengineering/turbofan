@@ -3,6 +3,13 @@ from gpkit import Model, Variable, SignomialsEnabled, units, Vectorize, Signomia
 from gpkit.constraints.tight import Tight as TCS
 from gpkit.small_scripts import mag
 import numpy as np
+
+#import substitution files
+from get_737800_subs import get_737800_subs
+from get_d82_subs import get_D82_subs
+from cfm56_subs import get_cfm56_subs
+from get_ge90_subs import get_ge90_subs
+
 #Cp and gamma values estimated from https://www.ohio.edu/mechanical/thermo/property_tables/air/air_Cp_Cv.html
 
 class Engine(Model):
@@ -1459,8 +1466,6 @@ class TestMissionCFM(Model):
             engine.engineP['M_2'][1] == M2,
             engine.engineP['M_{2.5}'][1] == M25,
 
-##            engine.engineP['T_{t_{4.1}}'] <= 1500*units('K')
-
             engine['W_{engine}'] <= 5216*units('lbf'),
             ]
 
@@ -1608,6 +1613,8 @@ class TestMissionD82(Model):
             engine.engineP['hold_{2}'][0] == 1+.5*(1.398-1)*M2**2,
             engine.engineP['hold_{2.5}'][0] == 1+.5*(1.354-1)*M25**2,
             engine.engineP['c1'][0] == 1+.5*(.401)*M0**2,
+
+            engine['W_{engine}'] <= 10502.8*units('lbf'),
             ]
 
 
@@ -1714,48 +1721,9 @@ def test():
 
     mission = TestMissionCFM(engine)
 
-    M4a = .1025
-    fan = 1.685
-    lpc  = 1.935
-    hpc = 9.369
-
-    substitutions = {
-            '\\pi_{tn}': .98,
-            '\pi_{b}': .94,
-            '\pi_{d}': .98,
-            '\pi_{fn}': .98,
-            'T_{ref}': 288.15,
-            'P_{ref}': 101.325,
-            '\eta_{HPshaft}': .97,
-            '\eta_{LPshaft}': .97,
-            'eta_{B}': .9827,
-
-            '\pi_{f_D}': fan,
-            '\pi_{hc_D}': hpc,
-            '\pi_{lc_D}': lpc,
-
-            '\\alpha_{OD}': 5.105,
-            '\\alpha_{max}': 5.105,
-
-            'hold_{4a}': 1+.5*(1.313-1)*M4a**2,
-            'r_{uc}': .01,
-            '\\alpha_c': .19036,
-            'T_{t_f}': 435,
-
-            'M_{takeoff}': .9556,
-
-            'G_f': 1,
-
-            'h_f': 43.003,
-
-            'Cp_t1': 1280,
-            'Cp_t2': 1184,
-            'Cp_c': 1216,
-
-            'HTR_{f_SUB}': 1-.3**2,
-            'HTR_{lpc_SUB}': 1 - 0.6**2,
-           }
-    m = Model((10*engine.engineP.thrustP['TSFC'][0]+engine.engineP.thrustP['TSFC'][1]) * (engine['W_{engine}'] * units('1/hr/N'))**.00001, [engine, mission], substitutions, x0=x0)
+    substitutions = get_cfm56_subs()
+ 
+    m = Model((10*engine.engineP.thrustP['TSFC'][0]+engine.engineP.thrustP['TSFC'][1]), [engine, mission], substitutions, x0=x0)
     m.substitutions.update(substitutions)
     sol = m.localsolve(verbosity = 0)
     
@@ -1768,47 +1736,9 @@ def test():
 
     mission = TestMissionTASOPT(engine)
 
-    M4a = .1025
-    fan = 1.685
-    lpc  = 4.744
-    hpc = 3.75
- 
-    substitutions = {
-            '\\pi_{tn}': .989,
-            '\pi_{b}': .94,
-            '\pi_{d}': .998,
-            '\pi_{fn}': .98,
-            'T_{ref}': 288.15,
-            'P_{ref}': 101.325,
-            '\eta_{HPshaft}': .98,
-            '\eta_{LPshaft}': .98,
-            'eta_{B}': .985,
+    substitutions = get_737800_subs()
 
-            '\pi_{f_D}': fan,
-            '\pi_{hc_D}': hpc,
-            '\pi_{lc_D}': lpc,
-            '\\alpha_{max}': 5.103,
-##                '\\alpha_{OD}': 5.1362,
-
-            'hold_{4a}': 1+.5*(1.313-1)*M4a**2,
-            'r_{uc}': .01,
-            '\\alpha_c': .19036,
-            'T_{t_f}': 435,
-
-            'M_{takeoff}': .972,
-
-            'G_f': 1,
-
-            'h_f': 43.003,
-
-            'Cp_t1': 1280,
-            'Cp_t2': 1184,
-            'Cp_c': 1283,
-
-            'HTR_{f_SUB}': 1-.3**2,
-            'HTR_{lpc_SUB}': 1 - 0.6**2,
-           }
-    m = Model((10*engine.engineP.thrustP['TSFC'][2]+engine.engineP.thrustP['TSFC'][1]+engine.engineP.thrustP['TSFC'][0]) * (engine['W_{engine}'] * units('1/hr/N'))**.00001, [engine, mission], substitutions, x0=x0)
+    m = Model((10*engine.engineP.thrustP['TSFC'][2]+engine.engineP.thrustP['TSFC'][1]+engine.engineP.thrustP['TSFC'][0]), [engine, mission], substitutions, x0=x0)
     m.substitutions.update(substitutions)
     sol = m.localsolve(verbosity = 0)
 
@@ -1820,50 +1750,9 @@ def test():
 
     mission = TestMissionD82(engine)
 
-    M4a = .1025
-    fan = 1.60474
-    lpc  = 4.98
-    hpc = 35/8
+    substitutions = get_D82_subs()
 
-    substitutions = {
-        # Engine substitutions
-        '\\pi_{tn}': .995,
-        '\pi_{b}': .94,
-        '\pi_{d}': .995,
-        '\pi_{fn}': .985,
-        'T_{ref}': 288.15,
-        'P_{ref}': 101.325,
-        '\eta_{HPshaft}': .97,
-        '\eta_{LPshaft}': .97,
-        'eta_{B}': .9827,
-
-        '\pi_{f_D}': fan,
-        '\pi_{hc_D}': hpc,
-        '\pi_{lc_D}': lpc,
-
-        '\\alpha_{OD}': 6.97,
-        '\\alpha_{max}': 6.97,
-
-        'hold_{4a}': 1+.5*(1.313-1)*M4a**2,
-        'r_{uc}': .01,
-        '\\alpha_c': .19036,
-        'T_{t_f}': 435,
-
-        'M_{takeoff}': .9556,
-
-        'G_f': 1,
-
-        'h_f': 43.003,
-
-        'Cp_t1': 1280,
-        'Cp_t2': 1184,
-        'Cp_c': 1216,
-
-        'HTR_{f_SUB}': 1-.3**2,
-        'HTR_{lpc_SUB}': 1 - 0.6**2,
-     }
-
-    m = Model((10*engine.engineP.thrustP['TSFC'][0]+engine.engineP.thrustP['TSFC'][1]) * (engine['W_{engine}'] * units('1/hr/N'))**.00001, [engine, mission], substitutions, x0=x0)
+    m = Model((10*engine.engineP.thrustP['TSFC'][0]+engine.engineP.thrustP['TSFC'][1]), [engine, mission], substitutions, x0=x0)
     m.substitutions.update(substitutions)
     sol = m.localsolve(verbosity = 0)
 
@@ -1889,187 +1778,19 @@ if __name__ == "__main__":
 
     if eng == 0:
         mission = TestMissionCFM(engine)
+        substitutions = get_cfm56_subs()
         
     if eng == 1:
         mission = TestMissionTASOPT(engine)
+        substitutions = get_737800_subs()
 
     if eng == 2:
         mission = TestMissionGE90(engine)
+        substitutions = get_ge90_subs()
     
     if eng == 3:
         mission = TestMissionD82(engine)
-
-    if eng == 0:
-        M4a = .1025
-        fan = 1.685
-        lpc  = 1.935
-        hpc = 9.369
-     
-        substitutions = {
-                '\\pi_{tn}': .98,
-                '\pi_{b}': .94,
-                '\pi_{d}': .98,
-                '\pi_{fn}': .98,
-                'T_{ref}': 288.15,
-                'P_{ref}': 101.325,
-                '\eta_{HPshaft}': .97,
-                '\eta_{LPshaft}': .97,
-                'eta_{B}': .9827,
-
-                '\pi_{f_D}': fan,
-                '\pi_{hc_D}': hpc,
-                '\pi_{lc_D}': lpc,
-
-                '\\alpha_{OD}': 5.105,
-                '\\alpha_{max}': 5.105,
-
-                'hold_{4a}': 1+.5*(1.313-1)*M4a**2,
-                'r_{uc}': .01,
-                '\\alpha_c': .19036,
-                'T_{t_f}': 435,
-
-                'M_{takeoff}': .9556,
-
-                'G_f': 1,
-
-                'h_f': 40.8,
-
-                'Cp_t1': 1280,
-                'Cp_t2': 1184,
-                'Cp_c': 1216,
-
-                'HTR_{f_SUB}': 1-.3**2,
-                'HTR_{lpc_SUB}': 1 - 0.6**2,
-               }
-
-    if eng == 1:
-        M4a = .1025
-        fan = 1.685
-        lpc  = 4.744
-        hpc = 3.75
-     
-        substitutions = {
-                '\\pi_{tn}': .989,
-                '\pi_{b}': .94,
-                '\pi_{d}': .998,
-                '\pi_{fn}': .98,
-                'T_{ref}': 288.15,
-                'P_{ref}': 101.325,
-                '\eta_{HPshaft}': .98,
-                '\eta_{LPshaft}': .98,
-                'eta_{B}': .985,
-
-                '\pi_{f_D}': fan,
-                '\pi_{hc_D}': hpc,
-                '\pi_{lc_D}': lpc,
-                '\\alpha_{max}': 5.103,
-##                '\\alpha_{OD}': 5.1362,
-
-                'hold_{4a}': 1+.5*(1.313-1)*M4a**2,
-                'r_{uc}': .01,
-                '\\alpha_c': .19036,
-                'T_{t_f}': 435,
-
-                'M_{takeoff}': .972,
-
-                'G_f': 1,
-
-                'h_f': 43.003,
-
-                'Cp_t1': 1280,
-                'Cp_t2': 1184,
-                'Cp_c': 1283,
-
-                'HTR_{f_SUB}': 1-.3**2,
-                'HTR_{lpc_SUB}': 1 - 0.6**2,
-               }
-
-    if eng == 2:
-        M4a = .1025
-        fan = 1.58
-        lpc  = 1.26
-        hpc = 20.033
-        
-        substitutions = {
-            '\pi_{tn}': .98,
-            '\pi_{b}': .94,
-            '\pi_{d}': .98,
-            '\pi_{fn}': .98,
-            'T_{ref}': 288.15,
-            'P_{ref}': 101.325,
-            '\eta_{HPshaft}': .97,
-            '\eta_{LPshaft}': .97,
-            'eta_{B}': .9970,
-
-            '\pi_{f_D}': 1.58,
-            '\pi_{hc_D}': 20.033,
-            '\pi_{lc_D}': 1.26,
-
-##            '\\alpha_{OD}': 8.7877,
-            '\\alpha_{max}': 8.7877,
-
-            'hold_{4a}': 1+.5*(1.313-1)*M4a**2,#sol('hold_{4a}'),
-            'r_{uc}': .1,
-            '\\alpha_c': .14,
-            'T_{t_f}': 435,
-
-            'M_{takeoff}': .955,
-
-            'G_f': 1,
-
-            'h_f': 43.003,
-
-            'Cp_t1': 1280,
-            'Cp_t2': 1184,
-            'Cp_c': 1216,
-
-            'HTR_{f_SUB}': 1-.3**2,
-            'HTR_{lpc_SUB}': 1 - 0.6**2,
-            }
-
-    if eng == 3:
-        M4a = .1025
-        fan = 1.60474
-        lpc  = 4.98
-        hpc = 35/8
-
-        substitutions = {
-        # Engine substitutions
-        '\\pi_{tn}': .995,
-        '\pi_{b}': .94,
-        '\pi_{d}': .995,
-        '\pi_{fn}': .985,
-        'T_{ref}': 288.15,
-        'P_{ref}': 101.325,
-        '\eta_{HPshaft}': .97,
-        '\eta_{LPshaft}': .97,
-        'eta_{B}': .9827,
-
-        '\pi_{f_D}': fan,
-        '\pi_{hc_D}': hpc,
-        '\pi_{lc_D}': lpc,
-
-        '\\alpha_{OD}': 6.97,
-        '\\alpha_{max}': 6.97,
-
-        'hold_{4a}': 1+.5*(1.313-1)*M4a**2,
-        'r_{uc}': .01,
-        '\\alpha_c': .19036,
-        'T_{t_f}': 435,
-
-        'M_{takeoff}': .9556,
-
-        'G_f': 1,
-
-        'h_f': 43.003,
-
-        'Cp_t1': 1280,
-        'Cp_t2': 1184,
-        'Cp_c': 1216,
-
-        'HTR_{f_SUB}': 1-.3**2,
-        'HTR_{lpc_SUB}': 1 - 0.6**2,
-     }
+        substitutions = get_D82_subs()
 
     #dict of initial guesses
     x0 = {
@@ -2167,7 +1888,7 @@ if __name__ == "__main__":
     #update substitutions and solve
     m.substitutions.update(substitutions)
 ##    m_relax = relaxed_constants(m)
-    sol = m.localsolve(solver = 'mosek', verbosity = 4)
+    sol = m.localsolve(solver = 'mosek', verbosity = 1)
 ##    post_process(sol)
 
     #print out various percent differences in TSFC and engine areas

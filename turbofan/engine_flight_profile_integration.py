@@ -8,6 +8,7 @@ from gpkit.constraints.tight import Tight as TCS
 import matplotlib.pyplot as plt
 from gpkit.small_scripts import mag
 from simple_ac_imports import Aircraft, CruiseSegment, ClimbSegment, FlightState
+from get_parametric_studies_subs import get_parametric_studies_subs
 
 """
 Models requird to minimze the aircraft total fuel weight. Rate of climb equation taken from John
@@ -172,146 +173,8 @@ class Mission(Model):
         return constraints + ac + climb + cruise + enginecruise + engineclimb + enginestate + statelinking
 
 def test():
-    M4a = .1025
-    fan = 1.685
-    lpc  = 1.935
-    hpc = 9.369
-        
-    substitutions = {      
-            'ReqRng': 2000,
-            'numeng': 2,
-            'W_{pax}': 91 * 9.81,
-            'n_{pax}': 150,
-            'pax_{area}': 1,
-            'e': .9,
-            'b_{max}': 60,
-
-            #engine subs
-            '\\pi_{tn}': .98,
-            '\pi_{b}': .94,
-            '\pi_{d}': .98,
-            '\pi_{fn}': .98,
-            'T_{ref}': 288.15,
-            'P_{ref}': 101.325,
-            '\eta_{HPshaft}': .97,
-            '\eta_{LPshaft}': .97,
-            'eta_{B}': .9827,
-
-            '\pi_{f_D}': fan,
-            '\pi_{hc_D}': hpc,
-            '\pi_{lc_D}': lpc,
-
-            '\\alpha_{OD}': 5.105,
-            '\\alpha_{max}': 5.105,
-
-            'hold_{4a}': 1+.5*(1.313-1)*M4a**2,
-            'r_{uc}': .01,
-            '\\alpha_c': .19036,
-            'T_{t_f}': 435,
-
-            'M_{takeoff}': .9556,
-
-            'G_f': 1,
-
-            'h_f': 43.003,
-
-            'Cp_t1': 1280,
-            'Cp_t2': 1184,
-            'Cp_c': 1216,
-
-            'RC_{min}': 50,
-
-            'HTR_{f_SUB}': 1-.3**2,
-            'HTR_{lpc_SUB}': 1 - 0.6**2,
-            }
-
-    #dict of initial guesses
-    x0 = {
-        'W_{engine}': 1e4*units('N'),
-        'P_{t_0}': 1e1*units('kPa'),
-        'T_{t_0}': 1e3*units('K'),
-        'h_{t_0}': 1e6*units('J/kg'),
-        'P_{t_{1.8}}': 1e1*units('kPa'),
-        'T_{t_{1.8}}': 1e3*units('K'),
-        'h_{t_{1.8}}': 1e6*units('J/kg'),
-        'P_{t_2}': 1e1*units('kPa'),
-        'T_{t_2}': 1e3*units('K'),
-        'h_{t_2}': 1e6*units('J/kg'),
-        'P_{t_2.1}': 1e3*units('K'),
-        'T_{t_2.1}': 1e3*units('K'),
-        'h_{t_2.1}': 1e6*units('J/kg'),
-        'P_{t_{2.5}}': 1e3*units('kPa'),
-        'T_{t_{2.5}}': 1e3*units('K'),
-        'h_{t_{2.5}}': 1e6*units('J/kg'),
-        'P_{t_3}': 1e4*units('kPa'),
-        'T_{t_3}': 1e4*units('K'),
-        'h_{t_3}': 1e7*units('J/kg'),
-        'P_{t_7}': 1e2*units('kPa'),
-        'T_{t_7}': 1e3*units('K'),
-        'h_{t_7}': 1e6*units('J/kg'),
-        'P_{t_4}': 1e4*units('kPa'),
-        'h_{t_4}': 1e7*units('J/kg'),
-        'T_{t_4}': 1e4*units('K'),
-        'P_{t_{4.1}}': 1e4*units('kPa'),
-        'T_{t_{4.1}}': 1e4*units('K'),
-        'h_{t_{4.1}}': 1e7*units('J/kg'),
-        'T_{4.1}': 1e4*units('K'),
-        'f': 1e-2,
-        'P_{4a}': 1e4*units('kPa'),
-        'h_{t_{4.5}}': 1e6*units('J/kg'),
-        'P_{t_{4.5}}': 1e3*units('kPa'),
-        'T_{t_{4.5}}': 1e4*units('K'),
-        'P_{t_{4.9}}': 1e2*units('kPa'),
-        'T_{t_{4.9}}': 1e3*units('K'),
-        'h_{t_{4.9}}': 1e6*units('J/kg'),
-        '\pi_{HPT}': 1e-1,
-        '\pi_{LPT}': 1e-1,
-        'P_{t_5}': 1e2*units('kPa'),
-        'T_{t_5}': 1e3*units('K'),
-        'h_{t_5}': 1e6*units('J/kg'),
-        'P_8': 1e2*units('kPa'),
-        'P_{t_8}': 1e2*units('kPa'),
-        'h_{t_8}': 1e6*units('J/kg'),
-        'h_8': 1e6*units('J/kg'),
-        'T_{t_8}': 1e3*units('K'),
-        'T_{8}': 1e3*units('K'),
-        'P_6': 1e2*units('kPa'),
-        'P_{t_6}': 1e2*units('kPa'),
-        'T_{t_6': 1e3*units('K'),
-        'h_{t_6}': 1e6*units('J/kg'),
-        'h_6': 1e6*units('J/kg'),
-        'F_8': 1e2 * units('kN'),
-        'F_6': 1e2 * units('kN'),
-        'F': 1e2 * units('kN'),
-        'F_{sp}': 1e-1,
-        'TSFC': 1e-1,
-        'I_{sp}': 1e4*units('s'),
-        'u_6': 1e3*units('m/s'),
-        'u_8': 1e3*units('m/s'),
-        'm_{core}': 1e2*units('kg/s'),
-        'm_{fan}': 1e3*units('kg/s'),
-        '\\alpha': 1e1,
-        'alphap1': 1e1,
-        'm_{total}': 1e3*units('kg/s'),
-        'T_2': 1e3*units('K'),
-        'P_2': 1e2*units('kPa'),
-        'u_2': 1e3*units('m/s'),
-        'h_{2}': 1e6*units('J/kg'),
-        'T_{2.5}': 1e3*units('K'),
-        'P_{2.5}': 1e2*units('kPa'),
-        'u_{2.5}': 1e3*units('m/s'),
-        'h_{2.5}': 1e6*units('J/kg'),
-        'P_{7}': 1e2*units('kPa'),
-        'T_{7}': 1e3*units('K'),
-        'u_7': 1e3*units('m/s'),
-        'P_{5}': 1e2*units('kPa'),
-        'T_{5}': 1e3*units('K'),
-        'u_5': 1e3*units('m/s'),
-        'P_{atm}': 1e2*units('kPa'),
-        'T_{atm}': 1e3*units('K'),
-        'V': 3e3*units('knot'),
-        'a': 1e3*units('m/s'),
-    }
+    substitutions = get_parametric_studies_subs()    
+    substitutions.update({'ReqRng': 2000}) #('sweep', np.linspace(500,2000,4)),
            
     mission = Mission(2, 2)
     m = Model(mission['W_{f_{total}}'], mission, substitutions)
@@ -324,200 +187,17 @@ if __name__ == '__main__':
 
     fs = 18
     
-    M4a = .1025
-    fan = 1.685
-    lpc  = 1.935
-    hpc = 9.369
-        
-    substitutions = {      
-            'ReqRng': 2000,
-            'numeng': 2,
-            'W_{pax}': 91 * 9.81,
-            'n_{pax}': 150,
-            'pax_{area}': 1,
-            'e': .9,
-            'b_{max}': 60,
-
-            #engine subs
-            '\\pi_{tn}': .98,
-            '\pi_{b}': .94,
-            '\pi_{d}': .98,
-            '\pi_{fn}': .98,
-            'T_{ref}': 288.15,
-            'P_{ref}': 101.325,
-            '\eta_{HPshaft}': .97,
-            '\eta_{LPshaft}': .97,
-            'eta_{B}': .9827,
-
-            '\pi_{f_D}': fan,
-            '\pi_{hc_D}': hpc,
-            '\pi_{lc_D}': lpc,
-
-##            '\\alpha_{OD}': 5.105,
-            '\\alpha_{max}': 5.6958,
-
-            'hold_{4a}': 1+.5*(1.313-1)*M4a**2,
-            'r_{uc}': .01,
-            '\\alpha_c': .19036,
-            'T_{t_f}': 435,
-
-            'M_{takeoff}': .9556,
-
-            'G_f': 1,
-
-            'h_f': 43.003,
-
-            'Cp_t1': 1280,
-            'Cp_t2': 1184,
-            'Cp_c': 1216,
-
-            'RC_{min}': 50,
-
-            'HTR_{f_SUB}': 1-.3**2,
-            'HTR_{lpc_SUB}': 1 - 0.6**2,
-            }
-
-    #dict of initial guesses
-    x0 = {
-        'W_{engine}': 1e4*units('N'),
-        'P_{t_0}': 1e1*units('kPa'),
-        'T_{t_0}': 1e3*units('K'),
-        'h_{t_0}': 1e6*units('J/kg'),
-        'P_{t_{1.8}}': 1e1*units('kPa'),
-        'T_{t_{1.8}}': 1e3*units('K'),
-        'h_{t_{1.8}}': 1e6*units('J/kg'),
-        'P_{t_2}': 1e1*units('kPa'),
-        'T_{t_2}': 1e3*units('K'),
-        'h_{t_2}': 1e6*units('J/kg'),
-        'P_{t_2.1}': 1e3*units('K'),
-        'T_{t_2.1}': 1e3*units('K'),
-        'h_{t_2.1}': 1e6*units('J/kg'),
-        'P_{t_{2.5}}': 1e3*units('kPa'),
-        'T_{t_{2.5}}': 1e3*units('K'),
-        'h_{t_{2.5}}': 1e6*units('J/kg'),
-        'P_{t_3}': 1e4*units('kPa'),
-        'T_{t_3}': 1e4*units('K'),
-        'h_{t_3}': 1e7*units('J/kg'),
-        'P_{t_7}': 1e2*units('kPa'),
-        'T_{t_7}': 1e3*units('K'),
-        'h_{t_7}': 1e6*units('J/kg'),
-        'P_{t_4}': 1e4*units('kPa'),
-        'h_{t_4}': 1e7*units('J/kg'),
-        'T_{t_4}': 1e4*units('K'),
-        'P_{t_{4.1}}': 1e4*units('kPa'),
-        'T_{t_{4.1}}': 1e4*units('K'),
-        'h_{t_{4.1}}': 1e7*units('J/kg'),
-        'T_{4.1}': 1e4*units('K'),
-        'f': 1e-2,
-        'P_{4a}': 1e4*units('kPa'),
-        'h_{t_{4.5}}': 1e6*units('J/kg'),
-        'P_{t_{4.5}}': 1e3*units('kPa'),
-        'T_{t_{4.5}}': 1e4*units('K'),
-        'P_{t_{4.9}}': 1e2*units('kPa'),
-        'T_{t_{4.9}}': 1e3*units('K'),
-        'h_{t_{4.9}}': 1e6*units('J/kg'),
-        '\pi_{HPT}': 1e-1,
-        '\pi_{LPT}': 1e-1,
-        'P_{t_5}': 1e2*units('kPa'),
-        'T_{t_5}': 1e3*units('K'),
-        'h_{t_5}': 1e6*units('J/kg'),
-        'P_8': 1e2*units('kPa'),
-        'P_{t_8}': 1e2*units('kPa'),
-        'h_{t_8}': 1e6*units('J/kg'),
-        'h_8': 1e6*units('J/kg'),
-        'T_{t_8}': 1e3*units('K'),
-        'T_{8}': 1e3*units('K'),
-        'P_6': 1e2*units('kPa'),
-        'P_{t_6}': 1e2*units('kPa'),
-        'T_{t_6': 1e3*units('K'),
-        'h_{t_6}': 1e6*units('J/kg'),
-        'h_6': 1e6*units('J/kg'),
-        'F_8': 1e2 * units('kN'),
-        'F_6': 1e2 * units('kN'),
-        'F': 1e2 * units('kN'),
-        'F_{sp}': 1e-1,
-        'TSFC': 1e-1,
-        'I_{sp}': 1e4*units('s'),
-        'u_6': 1e3*units('m/s'),
-        'u_8': 1e3*units('m/s'),
-        'm_{core}': 1e2*units('kg/s'),
-        'm_{fan}': 1e3*units('kg/s'),
-        '\\alpha': 1e1,
-        'alphap1': 1e1,
-        'm_{total}': 1e3*units('kg/s'),
-        'T_2': 1e3*units('K'),
-        'P_2': 1e2*units('kPa'),
-        'u_2': 1e3*units('m/s'),
-        'h_{2}': 1e6*units('J/kg'),
-        'T_{2.5}': 1e3*units('K'),
-        'P_{2.5}': 1e2*units('kPa'),
-        'u_{2.5}': 1e3*units('m/s'),
-        'h_{2.5}': 1e6*units('J/kg'),
-        'P_{7}': 1e2*units('kPa'),
-        'T_{7}': 1e3*units('K'),
-        'u_7': 1e3*units('m/s'),
-        'P_{5}': 1e2*units('kPa'),
-        'T_{5}': 1e3*units('K'),
-        'u_5': 1e3*units('m/s'),
-        'P_{atm}': 1e2*units('kPa'),
-        'T_{atm}': 1e3*units('K'),
-        'V': 3e3*units('knot'),
-        'a': 1e3*units('m/s'),
-    }
+    substitutions = get_parametric_studies_subs()    
+    substitutions.update({'ReqRng': 2000}) #('sweep', np.linspace(500,2000,4)),
            
     mission = Mission(2, 2)
     m = Model(mission['W_{f_{total}}'], mission, substitutions)
     sol = m.localsolve(solver='mosek', verbosity = 1)
 
     if plotR == True:
-        substitutions = {
-                'ReqRng': ('sweep', np.linspace(1000,3000,23)),
-                'numeng': 2,
-                'W_{pax}': 91 * 9.81,
-                'n_{pax}': 150,
-                'pax_{area}': 1,
-                'e': .9,
-                'b_{max}': 60,
-
-                #engine subs
-                '\\pi_{tn}': .98,
-                '\pi_{b}': .94,
-                '\pi_{d}': .98,
-                '\pi_{fn}': .98,
-                'T_{ref}': 288.15,
-                'P_{ref}': 101.325,
-                '\eta_{HPshaft}': .97,
-                '\eta_{LPshaft}': .97,
-                'eta_{B}': .9827,
-
-                '\pi_{f_D}': fan,
-                '\pi_{hc_D}': hpc,
-                '\pi_{lc_D}': lpc,
-
-##                '\\alpha_{OD}': 5.105,
-                '\\alpha_{max}': 5.6958,
-
-                'hold_{4a}': 1+.5*(1.313-1)*M4a**2,
-                'r_{uc}': .01,
-                '\\alpha_c': .19036,
-                'T_{t_f}': 435,
-
-                'M_{takeoff}': .9556,
-
-                'G_f': 1,
-
-                'h_f': 43.003,
-
-                'Cp_t1': 1280,
-                'Cp_t2': 1184,
-                'Cp_c': 1216,
-
-                'RC_{min}': 500,
-
-                'HTR_{f_SUB}': 1-.3**2,
-                'HTR_{lpc_SUB}': 1 - 0.6**2,
-                }
-        
+        substitutions = get_parametric_studies_subs()    
+        substitutions.update({'ReqRng': ('sweep', np.linspace(1000,3000,23)),})
+          
         mission = Mission(2, 2)
         m = Model(mission['W_{f_{total}}'], mission, substitutions, x0=x0)
         solRsweep = m.localsolve(solver='mosek', verbosity = 1, skipsweepfailures=True)
@@ -550,7 +230,7 @@ if __name__ == '__main__':
         plt.savefig('engine_Rsweeps/cruise_altitude_range.pdf')
         plt.show()
 
-        plt.plot(solRsweep('ReqRng'), solRsweep('A_2'), '-r', linewidth=2.0)
+        plt.plot(solRsweep('ReqRng'), solRsweep('A_{2}'), '-r', linewidth=2.0)
         plt.xlabel('Mission Range [nm]')
         plt.ylabel('Fan Area [m^$2$]')
         plt.title('Fan Area vs Range')
@@ -571,8 +251,8 @@ if __name__ == '__main__':
         while i < len(solRsweep('RC')):
             irc.append(mag(solRsweep('RC')[i][0]))
             f.append(mag(solRsweep('F')[i][0]))
-            f6.append(mag(solRsweep('F_6')[i][0]))
-            f8.append(mag(solRsweep('F_8')[i][0]))
+            f6.append(mag(solRsweep('F_{6}')[i][0]))
+            f8.append(mag(solRsweep('F_{8}')[i][0]))
             totsfc.append(mag(solRsweep('TSFC')[i][0]))
             cruisetsfc.append(mag(solRsweep('TSFC')[i][2]))
             maxm.append(max(mag(solRsweep('m_{total}')[i])))
@@ -664,7 +344,7 @@ if __name__ == '__main__':
         plt.savefig('engine_Rsweeps/engine_weight_range.pdf', bbox_inches="tight")
         plt.show()
 
-        plt.plot(solRsweep('ReqRng'), solRsweep('A_2'), '-r', linewidth=2.0)
+        plt.plot(solRsweep('ReqRng'), solRsweep('A_{2}'), '-r', linewidth=2.0)
         plt.xlabel('Mission Range [nm]')
         plt.ylabel('Fan Area [m^$2$]')
         plt.title('Fan Area vs Range')
@@ -693,24 +373,24 @@ if __name__ == '__main__':
         plt.savefig('engine_Rsweeps/mtakeoff_sens_range.pdf')
         plt.show()
 
-        plt.plot(solRsweep('ReqRng'), solRsweep['sensitivities']['constants']['\pi_{f_D}'], '-r', linewidth=2.0)
-        plt.ylabel('Sensitivity to $\pi_{f_D}$')
+        plt.plot(solRsweep('ReqRng'), solRsweep['sensitivities']['constants']['\\\pi_{f_D}'], '-r', linewidth=2.0)
+        plt.ylabel('Sensitivity to $\\pi_{f_D}$')
         plt.xlabel('Mission Range [nm]')
-        plt.title('Sensitivity to $\pi_{f_D}$ vs Range')
+        plt.title('Sensitivity to $\\pi_{f_D}$ vs Range')
         plt.savefig('engine_Rsweeps/pifd_sens_range.pdf')
         plt.show()
 
-        plt.plot(solRsweep('ReqRng'), solRsweep['sensitivities']['constants']['\pi_{lc_D}'], '-r', linewidth=2.0)
-        plt.ylabel('Sensitivity to $\pi_{lc_D}$')
+        plt.plot(solRsweep('ReqRng'), solRsweep['sensitivities']['constants']['\\\pi_{lc_D}'], '-r', linewidth=2.0)
+        plt.ylabel('Sensitivity to $\\pi_{lc_D}$')
         plt.xlabel('Mission Range [nm]')
-        plt.title('Sensitivity to $\pi_{lc_D}$ vs Range')
+        plt.title('Sensitivity to $\\pi_{lc_D}$ vs Range')
         plt.savefig('engine_Rsweeps/pilcD_sens_range.pdf')
         plt.show()
 
-        plt.plot(solRsweep('ReqRng'), solRsweep['sensitivities']['constants']['\pi_{hc_D}'], '-r', linewidth=2.0)
-        plt.ylabel('Sensitivity to $\pi_{hc_D}$')
+        plt.plot(solRsweep('ReqRng'), solRsweep['sensitivities']['constants']['\\\pi_{hc_D}'], '-r', linewidth=2.0)
+        plt.ylabel('Sensitivity to $\\pi_{hc_D}$')
         plt.xlabel('Mission Range [nm]')
-        plt.title('Sensitivity to $\pi_{hc_D}$ vs Range')
+        plt.title('Sensitivity to $\\pi_{hc_D}$ vs Range')
         plt.savefig('engine_Rsweeps/pihcD_sens_range.pdf')
         plt.show()
 
@@ -728,63 +408,17 @@ if __name__ == '__main__':
         plt.savefig('engine_Rsweeps/alphac_sens_range.pdf')
         plt.show()
 
-        plt.plot(solRsweep('ReqRng'), solRsweep('\pi_{f_D}'), '-r', linewidth=2.0)
-        plt.ylabel('$\pi_{f_D}$')
+        plt.plot(solRsweep('ReqRng'), solRsweep('\\\pi_{f_D}'), '-r', linewidth=2.0)
+        plt.ylabel('$\\pi_{f_D}$')
         plt.xlabel('Mission Range [nm]')
         plt.title('Fan Design Pressure Ratio vs Initial Rate of Climb')
         plt.savefig('engine_Rsweeps/pifD_R.pdf')
         plt.show()
 
     if plotAlt == True:
-        substitutions = {      
-                'ReqRng': 2000,
-                'CruiseAlt': ('sweep', np.linspace(30000,40000,20)),
-                'numeng': 1,
-                'W_{pax}': 91 * 9.81,
-                'n_{pax}': 150,
-                'pax_{area}': 1,
-                'e': .9,
-                'b_{max}': 35,
-
-                #engine subs
-                '\\pi_{tn}': .98,
-                '\pi_{b}': .94,
-                '\pi_{d}': .98,
-                '\pi_{fn}': .98,
-                'T_{ref}': 288.15,
-                'P_{ref}': 101.325,
-                '\eta_{HPshaft}': .97,
-                '\eta_{LPshaft}': .97,
-                'eta_{B}': .9827,
-
-                '\pi_{f_D}': fan,
-                '\pi_{hc_D}': hpc,
-                '\pi_{lc_D}': lpc,
-
-##                '\\alpha_{OD}': 5.105,
-                '\\alpha_{max}': 5.6958,
-
-                'hold_{4a}': 1+.5*(1.313-1)*M4a**2,
-                'r_{uc}': .01,
-                '\\alpha_c': .19036,
-                'T_{t_f}': 435,
-
-                'M_{takeoff}': .9556,
-
-                'G_f': 1,
-
-                'h_f': 43.003,
-
-                'Cp_t1': 1280,
-                'Cp_t2': 1184,
-                'Cp_c': 1216,
-
-                'RC_{min}': 1000,
-
-                'HTR_{f_SUB}': 1-.3**2,
-                'HTR_{lpc_SUB}': 1 - 0.6**2,
-                }
-               
+        substitutions = get_parametric_studies_subs()    
+        substitutions.update({'ReqRng': 2000, 'CruiseAlt': ('sweep', np.linspace(30000,40000,20))}) #('sweep', np.linspace(500,2000,4)),
+    
         mmission = Mission(2, 2)
         m = Model(mission['W_{f_{total}}'], mission, substitutions)
         solAltsweep = m.localsolve(solver='mosek', verbosity = 4, skipsweepfailures=True)
@@ -797,8 +431,8 @@ if __name__ == '__main__':
         while i < len(solAltsweep('RC')):
             irc.append(mag(solAltsweep('RC')[i][0]))
             f.append(mag(solAltsweep('F')[i][0]))
-            f6.append(mag(solAltsweep('F_6')[i][0]))
-            f8.append(mag(solAltsweep('F_8')[i][0]))
+            f6.append(mag(solAltsweep('F_{6}')[i][0]))
+            f8.append(mag(solAltsweep('F_{8}')[i][0]))
             i+=1
 
         plt.plot(solAltsweep('CruiseAlt'), irc, '-r')
@@ -843,7 +477,7 @@ if __name__ == '__main__':
         plt.savefig('engine_Altsweeps/weight_engine_alt.pdf')
         plt.show()
 
-        plt.plot(solAltsweep('CruiseAlt'), solAltsweep('A_2'), '-r')
+        plt.plot(solAltsweep('CruiseAlt'), solAltsweep('A_{2}'), '-r')
         plt.xlabel('Cruise Alt [ft]')
         plt.ylabel('Fan Area [m^$2$]')
         plt.title('Fan Area vs Cruise Altitude')
@@ -857,22 +491,22 @@ if __name__ == '__main__':
         plt.savefig('engine_Altsweeps/m_takeoff_sens_alt.pdf')
         plt.show()
 
-        plt.plot(solAltsweep('CruiseAlt'), solAltsweep['sensitivities']['constants']['\pi_{f_D}'], '-r')
-        plt.ylabel('Sensitivity to $\pi_{f_D}$')
+        plt.plot(solAltsweep('CruiseAlt'), solAltsweep['sensitivities']['constants']['\\pi_{f_D}'], '-r')
+        plt.ylabel('Sensitivity to $\\pi_{f_D}$')
         plt.ylabel('Fan Area [m^$2$]')
         plt.title('Fan Area vs Cruise Altitude')
         plt.savefig('engine_Altsweeps/pifD_sens_alt.pdf')
         plt.show()
 
-        plt.plot(solAltsweep('CruiseAlt'), solAltsweep['sensitivities']['constants']['\pi_{lc_D}'], '-r')
-        plt.ylabel('Sensitivity to $\pi_{lc_D}$')
+        plt.plot(solAltsweep('CruiseAlt'), solAltsweep['sensitivities']['constants']['\\pi_{lc_D}'], '-r')
+        plt.ylabel('Sensitivity to $\\pi_{lc_D}$')
         plt.xlabel('Cruise Alt [ft]')
         plt.title('Fan Area vs Cruise Altitdue')
         plt.savefig('engine_Altsweeps/pilcD_sens_alt.pdf')
         plt.show()
 
-        plt.plot(solAltsweep('CruiseAlt'), solAltsweep['sensitivities']['constants']['\pi_{hc_D}'], '-r')
-        plt.ylabel('Sensitivity to $\pi_{hc_D}$')
+        plt.plot(solAltsweep('CruiseAlt'), solAltsweep['sensitivities']['constants']['\\pi_{hc_D}'], '-r')
+        plt.ylabel('Sensitivity to $\\pi_{hc_D}$')
         plt.xlabel('Cruise Alt [ft]')
         plt.title('Fan Area vs Cruise Altitude')
         plt.savefig('engine_Altsweeps/pihcD_sens_alt.pdf')
@@ -893,56 +527,11 @@ if __name__ == '__main__':
         plt.show()
 
     if plotRC == True:
-        substitutions = {
-                'ReqRng': 2000,
-                'numeng': 2,
-                'W_{pax}': 91 * 9.81,
-                'n_{pax}': 150,
-                'pax_{area}': 1,
-                'e': .9,
-                'b_{max}': 60,
+        substitutions = get_parametric_studies_subs()    
+        substitutions.update({'ReqRng': 2000, 'RC_{min}': ('sweep', np.linspace(500,3500,10))}) #('sweep', np.linspace(500,2000,4)),
 
-                #engine subs
-                '\\pi_{tn}': .98,
-                '\pi_{b}': .94,
-                '\pi_{d}': .98,
-                '\pi_{fn}': .98,
-                'T_{ref}': 288.15,
-                'P_{ref}': 101.325,
-                '\eta_{HPshaft}': .97,
-                '\eta_{LPshaft}': .97,
-                'eta_{B}': .9827,
-
-                '\pi_{f_D}': fan,
-                '\pi_{hc_D}': hpc,
-                '\pi_{lc_D}': lpc,
-
-##                '\\alpha_{OD}': 5.105,
-                '\\alpha_{max}': 5.6958,
-
-                'hold_{4a}': 1+.5*(1.313-1)*M4a**2,
-                'r_{uc}': .01,
-                '\\alpha_c': .19036,
-                'T_{t_f}': 435,
-
-                'M_{takeoff}': .9556,
-
-                'G_f': 1,
-
-                'h_f': 43.003,
-
-                'Cp_t1': 1280,
-                'Cp_t2': 1184,
-                'Cp_c': 1216,
-
-                'RC_{min}': ('sweep', np.linspace(500,3500,10)),
-
-                'HTR_{f_SUB}': 1-.3**2,
-                'HTR_{lpc_SUB}': 1 - 0.6**2,
-                }
-        
         mission = Mission(2, 2)
-        m = Model(mission['W_{f_{total}}'], mission, substitutions, x0=x0)
+        m = Model(mission['W_{f_{total}}'], mission, substitutions)
         solRCsweep = m.localsolve(solver='mosek', verbosity = 2, skipsweepfailures=True)
 
         i = 0
@@ -958,8 +547,8 @@ if __name__ == '__main__':
 
         while i < len(solRCsweep('RC')):
             f.append(mag(solRCsweep('F')[i][0]))
-            f6.append(mag(solRCsweep('F_6')[i][0]))
-            f8.append(mag(solRCsweep('F_8')[i][0]))
+            f6.append(mag(solRCsweep('F_{6}')[i][0]))
+            f8.append(mag(solRCsweep('F_{8}')[i][0]))
             crtsfc.append(mag(solRCsweep('TSFC')[i][2]))
             itsfc.append(mag(solRCsweep('TSFC')[i][0]))
             maxm.append(max(mag(solRCsweep('m_{total}')[i])))
@@ -1085,17 +674,17 @@ if __name__ == '__main__':
         plt.savefig('engine_RCsweeps/weight_engine_RC.pdf')
         plt.show()
 
-        plt.plot(solRCsweep('RC_{min}'), solRCsweep('A_2'), '-r', linewidth=2.0)
+        plt.plot(solRCsweep('RC_{min}'), solRCsweep('A_{2}'), '-r', linewidth=2.0)
         plt.xlabel('Minimum Initial Rate of Climb [ft/min]')
-        plt.ylabel('Fan Area [m^$2$]')
+        plt.ylabel('Fan Area [m$^2$]')
         plt.title('Fan Area vs  Minimum Initial Rate of Climb')
         plt.ylim((0, 0.8))
         plt.xlim((500, 3500))
         plt.savefig('engine_RCsweeps/fan_area_RC.pdf')
         plt.show()
 
-        plt.plot(solRCsweep('RC_{min}'), solRCsweep('\pi_{f_D}'), '-r', linewidth=2.0)
-        plt.ylabel('$\pi_{f_D}$')
+        plt.plot(solRCsweep('RC_{min}'), solRCsweep('\\pi_{f_D}'), '-r', linewidth=2.0)
+        plt.ylabel('$\\pi_{f_D}$')
         plt.xlabel('Minimum Initial Rate of Climb [ft/min]')
         plt.title('Fan Design Pressure Ratio vs Min. Initial Rate of Climb')
         plt.xlim((500, 3500))
@@ -1110,8 +699,8 @@ if __name__ == '__main__':
         plt.savefig('engine_RCsweeps/m_takeoff_sens_RC.pdf')
         plt.show()
 
-        plt.plot(solRCsweep('RC_{min}'), solRCsweep['sensitivities']['constants']['\pi_{f_D}'], '-r', linewidth=2.0)
-        plt.ylabel('Sensitivity to $\pi_{f_D}$')
+        plt.plot(solRCsweep('RC_{min}'), solRCsweep['sensitivities']['constants']['\\pi_{f_D}'], '-r', linewidth=2.0)
+        plt.ylabel('Sensitivity to $\\pi_{f_D}$')
         plt.xlabel('Minimum Initial Rate of Climb [ft/min]')
         plt.ylim((0, .6))
         plt.title('Fan Design Pressure Ratio Sensitivity vs Min. Initial Climb Rate')
@@ -1119,16 +708,16 @@ if __name__ == '__main__':
         plt.savefig('engine_RCsweeps/pifD_sens_RC.pdf')
         plt.show()
 
-        plt.plot(solRCsweep('RC_{min}'), solRCsweep['sensitivities']['constants']['\pi_{lc_D}'], '-r', linewidth=2.0)
-        plt.ylabel('Sensitivity to $\pi_{lc_D}$')
+        plt.plot(solRCsweep('RC_{min}'), solRCsweep['sensitivities']['constants']['\\pi_{lc_D}'], '-r', linewidth=2.0)
+        plt.ylabel('Sensitivity to $\\pi_{lc_D}$')
         plt.xlabel('Minimum Initial Rate of Climb [ft/min]')
         plt.title('LPC Design Pressure Ratio Sensitivity vs Initial Rate of Climb')
         plt.xlim((500, 3500))
         plt.savefig('engine_RCsweeps/pilcD_sens_RC.pdf')
         plt.show()
 
-        plt.plot(solRCsweep('RC_{min}'), solRCsweep['sensitivities']['constants']['\pi_{hc_D}'], '-r', linewidth=2.0)
-        plt.ylabel('Sensitivity to $\pi_{hc_D}$')
+        plt.plot(solRCsweep('RC_{min}'), solRCsweep['sensitivities']['constants']['\\pi_{hc_D}'], '-r', linewidth=2.0)
+        plt.ylabel('Sensitivity to $\\pi_{hc_D}$')
         plt.xlabel('Minimum Initial Rate of Climb [ft/min]')
         plt.title('HPC Design Pressure Ratio Sensitivity vs Initial Rate of Climb')
         plt.xlim((500, 3500))

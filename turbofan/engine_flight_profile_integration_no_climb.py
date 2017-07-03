@@ -9,6 +9,8 @@ import matplotlib.pyplot as plt
 from gpkit.small_scripts import mag
 from collections import defaultdict
 from simple_ac_imports import Aircraft, CruiseSegment, ClimbSegment, FlightState
+from get_parametric_studies_subs import get_parametric_studies_subs
+
 """
 Models requird to minimze the aircraft total fuel weight. Rate of climb equation taken from John
 Anderson's Aircraft Performance and Design (eqn 5.85).
@@ -133,56 +135,9 @@ class Mission(Model):
     
  
 if __name__ == '__main__':
-    M4a = .1025
-    fan = 1.685
-    lpc  = 1.935
-    hpc = 9.369
- 
-    substitutions = {      
-            'ReqRng': 2000, #('sweep', np.linspace(500,2000,4)),
-            'numeng': 2,
-            'W_{pax}': 91 * 9.81,
-            'n_{pax}': 150,
-            'pax_{area}': 1,
-            'e': .9,
+    substitutions = get_parametric_studies_subs()    
+    substitutions.update({'ReqRng': 2000}) #('sweep', np.linspace(500,2000,4)),
 
-            #engine subs
-            '\\pi_{tn}': .98,
-            '\pi_{b}': .94,
-            '\pi_{d}': .98,
-            '\pi_{fn}': .98,
-            'T_{ref}': 288.15,
-            'P_{ref}': 101.325,
-            '\eta_{HPshaft}': .97,
-            '\eta_{LPshaft}': .97,
-            'eta_{B}': .9827,
-
-            '\pi_{f_D}': fan,
-            '\pi_{hc_D}': hpc,
-            '\pi_{lc_D}': lpc,
-
-##            '\\alpha_{OD}': 5.105,
-            '\\alpha_{max}': 5.6958,
-
-            'hold_{4a}': 1+.5*(1.313-1)*M4a**2,#sol('hold_{4a}'),
-            'r_{uc}': .01,
-            '\\alpha_c': .19036,
-            'T_{t_f}': 435,
-
-            'M_{takeoff}': .9556,
-
-            'G_f': 1,
-
-            'h_f': 43.003,
-
-            'Cp_t1': 1280,
-            'Cp_t2': 1184,
-            'Cp_c': 1216,
-
-            'HTR_{f_SUB}': 1-.3**2,
-            'HTR_{lpc_SUB}': 1 - 0.6**2,
-            }
-           
     mission = Mission()
     m = Model(mission['W_{f_{total}}'], mission, substitutions)
     sol = m.localsolve(solver='mosek', verbosity = 4)

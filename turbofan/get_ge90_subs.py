@@ -10,19 +10,19 @@ def get_ge90_subs():
     hpc = 20.033
 
     substitutions = {
-        '\pi_{tn}': .98,
-        '\pi_{b}': .94,
-        '\pi_{d}': .98,
-        '\pi_{fn}': .98,
+        '\\pi_{tn}': .98,
+        '\\pi_{b}': .94,
+        '\\pi_{d}': .98,
+        '\\pi_{fn}': .98,
         'T_{ref}': 288.15,
         'P_{ref}': 101.325,
-        '\eta_{HPshaft}': .97,
-        '\eta_{LPshaft}': .97,
-        'eta_{B}': .9970,
+        '\\eta_{HPshaft}': .97,
+        '\\eta_{LPshaft}': .97,
+        '\\eta_{B}': .9970,
 
-        '\pi_{f_D}': 1.58,
-        '\pi_{hc_D}': 20.033,
-        '\pi_{lc_D}': 1.26,
+        '\\pi_{f_D}': 1.58,
+        '\\pi_{hc_D}': 20.033,
+        '\\pi_{lc_D}': 1.26,
 
         '\\alpha_{max}': 8.7877,
 
@@ -33,16 +33,16 @@ def get_ge90_subs():
 
         'M_{takeoff}': .955,
 
-        'G_f': 1,
+        'G_{f}': 1,
 
-        'h_f': 43.003,
+        'h_{f}': 43.003,
 
-        'Cp_t1': 1280,
-        'Cp_t2': 1184,
-        'Cp_c': 1216,
+        'Cp_{t1}': 1280,
+        'Cp_{t2}': 1184,
+        'Cp_{c}': 1216,
 
-        'HTR_{f_SUB}': 1-.3**2,
-        'HTR_{lpc_SUB}': 1 - 0.6**2,
+        'HTR_{f_{SUB}}': 1-.3**2,
+        'HTR_{lpc_{SUB}}': 1 - 0.6**2,
         }
 
     return substitutions

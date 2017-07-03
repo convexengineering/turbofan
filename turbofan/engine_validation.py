@@ -10,7 +10,7 @@ from get_d82_subs import get_D82_subs
 from cfm56_subs import get_cfm56_subs
 from get_ge90_subs import get_ge90_subs
 
-#Cp and gamma values estimated from https://www.ohio.edu/mechanical/thermo/property_tables/air/air_Cp_Cv.html
+#Cp and gamma values estimated from https://www.ohio.edu/mechanical/thermo/property_tables/air/air_Cp_{c}v.html
 
 class Engine(Model):
     """
@@ -73,8 +73,8 @@ class Engine(Model):
         #engine fan diameter
         df = Variable('d_{f}', 'm', 'Fan Diameter')
         dlpc = Variable('d_{LPC}', 'm', 'LPC Diameter')
-        HTRfSub = Variable('HTR_{f_SUB}', '-', '1 - HTRf^2')
-        HTRlpcSub = Variable('HTR_{lpc_SUB}', '-', '1 - HTRlpc^2')
+        HTRfSub = Variable('HTR_{f_{SUB}}', '-', '1 - HTRf^2')
+        HTRlpcSub = Variable('HTR_{lpc_{SUB}}', '-', '1 - HTRlpc^2')
 
         #make the constraints
         constraints = []
@@ -82,30 +82,30 @@ class Engine(Model):
         with SignomialsEnabled():
 
             weight = [
-                  W_engine/units('kg') >= (self.engineP['m_{total}']/(self.engineP['alphap1']))*((1/(100*units('lb/s')))*9.81*units('m/s^2'))*(1684.5+17.7*(self.engineP['\pi_f']*self.engineP['\pi_{lc}']*self.engineP['\pi_{hc}'])/30+1662.2*(self.engineP['\\alpha']/5)**1.2),#*self.engineP['dum2'],
+                  W_engine/units('kg') >= (self.engineP['m_{total}']/(self.engineP['\\alpha_{+1}']))*((1/(100*units('lb/s')))*9.81*units('m/s^2'))*(1684.5+17.7*(self.engineP['\\pi_{f}']*self.engineP['\\pi_{lc}']*self.engineP['\\pi_{hc}'])/30+1662.2*(self.engineP['\\alpha']/5)**1.2),#*self.engineP['dum2'],
                   ]
 
             diameter = [
-                df == (4 * self.sizing['A_2']/(np.pi * HTRfSub))**.5,
+                df == (4 * self.sizing['A_{2}']/(np.pi * HTRfSub))**.5,
                 dlpc == (4 * self.sizing['A_{2.5}']/(np.pi * HTRlpcSub))**.5,
                 ]
 
             fmix = [
                 #compute f with mixing
-                TCS([self.combustor['eta_{B}'] * self.engineP['f'] * self.combustor['h_f'] >= (1-self.combustor['\\alpha_c'])*self.engineP['h_{t_4}']-(1-self.combustor['\\alpha_c'])*self.engineP['h_{t_3}']+self.combustor['Cp_{fuel}']*self.engineP['f']*(self.engineP['T_{t_4}']-self.combustor['T_{t_f}'])]),
+                TCS([self.combustor['\\eta_{B}'] * self.engineP['f'] * self.combustor['h_{f}'] >= (1-self.combustor['\\alpha_c'])*self.engineP['h_{t_4}']-(1-self.combustor['\\alpha_c'])*self.engineP['h_{t_3}']+self.combustor['Cp_{fuel}']*self.engineP['f']*(self.engineP['T_{t_4}']-self.combustor['T_{t_f}'])]),
                 #compute Tt41...mixing causes a temperature drop
                 #had to include Tt4 here to prevent it from being pushed down to zero
                 SignomialEquality(self.engineP['h_{t_{4.1}}']*self.engineP['fp1'], ((1-self.combustor['\\alpha_c']+self.engineP['f'])*self.engineP['h_{t_4}'] + self.combustor['\\alpha_c']*self.engineP['h_{t_3}'])),
 
-                self.engineP['P_{t_4}'] == self.combustor['\pi_{b}'] * self.engineP['P_{t_3}'],   #B.145
+                self.engineP['P_{t_4}'] == self.combustor['\\pi_{b}'] * self.engineP['P_{t_3}'],   #B.145
                 ]
 
             fnomix = [
                 #only if mixing = false
                 #compute f without mixing, overestimation if there is cooling
-                TCS([self.combustor['eta_{B}'] * self.engineP['f'] * self.combustor['h_f'] + self.engineP['h_{t_3}'] >= self.engineP['h_{t_4}']]),
+                TCS([self.combustor['\\eta_{B}'] * self.engineP['f'] * self.combustor['h_{f}'] + self.engineP['h_{t_3}'] >= self.engineP['h_{t_4}']]),
 
-                self.engineP['P_{t_4}'] == self.combustor['\pi_{b}'] * self.engineP['P_{t_3}'],   #B.145
+                self.engineP['P_{t_4}'] == self.combustor['\\pi_{b}'] * self.engineP['P_{t_3}'],   #B.145
                 ]
 
             shaftpower = [
@@ -116,50 +116,50 @@ class Engine(Model):
                 #LPT shaft power balance
                 #SIGNOMIAL  
                 SignomialEquality(self.constants['M_{takeoff}']*self.turbine['\eta_{LPshaft}']*(1+self.engineP['f'])*
-                (self.engineP['h_{t_{4.9}}'] - self.engineP['h_{t_{4.5}}']),-((self.engineP['h_{t_{2.5}}']-self.engineP['h_{t_{1.8}}'])+self.engineP['alphap1']*(self.engineP['h_{t_2.1}'] - self.engineP['h_{t_2}']))),    #B.165
+                (self.engineP['h_{t_{4.9}}'] - self.engineP['h_{t_{4.5}}']),-((self.engineP['h_{t_{2.5}}']-self.engineP['h_{t_{1.8}}'])+self.engineP['\\alpha_{+1}']*(self.engineP['h_{t_{2.1}}'] - self.engineP['h_{T_{2}}']))),    #B.165
                 ]
 
             hptexit = [
                 #HPT Exit states (station 4.5)
-                self.engineP['P_{t_{4.5}}'] == self.engineP['\pi_{HPT}'] * self.engineP['P_{t_{4.1}}'],
-                self.engineP['\pi_{HPT}'] == (self.engineP['T_{t_{4.5}}']/self.engineP['T_{t_{4.1}}'])**(hptexp1),      #turbine efficiency is 0.9
+                self.engineP['P_{t_{4.5}}'] == self.engineP['\\pi_{HPT}'] * self.engineP['P_{t_{4.1}}'],
+                self.engineP['\\pi_{HPT}'] == (self.engineP['T_{t_{4.5}}']/self.engineP['T_{t_{4.1}}'])**(hptexp1),      #turbine efficiency is 0.9
                 ]
 
             fanmap = [
-                self.engineP['\pi_f']*(1.7/self.fanmap['\pi_{f_D}']) == (1.05*self.engineP['N_f']**.0871)**10,
-                (self.engineP['\pi_f']*(1.7/self.fanmap['\pi_{f_D}'])) <= 1.1*(1.06 * (self.engineP['m_{tild_f}'])**0.137)**10,
-                (self.engineP['\pi_f']*(1.7/self.fanmap['\pi_{f_D}'])) >= .9*(1.06 * (self.engineP['m_{tild_f}'])**0.137)**10,
+                self.engineP['\\pi_{f}']*(1.7/self.fanmap['\\pi_{f_D}']) == (1.05*self.engineP['N_{f}']**.0871)**10,
+                (self.engineP['\\pi_{f}']*(1.7/self.fanmap['\\pi_{f_D}'])) <= 1.1*(1.06 * (self.engineP['m_{tild_f}'])**0.137)**10,
+                (self.engineP['\\pi_{f}']*(1.7/self.fanmap['\\pi_{f_D}'])) >= .9*(1.06 * (self.engineP['m_{tild_f}'])**0.137)**10,
 
                 #define mbar
-                self.engineP['m_{f}'] == self.engineP['m_{fan}']*((self.engineP['T_{t_2}']/self.constants['T_{ref}'])**.5)/(self.engineP['P_{t_2}']/self.constants['P_{ref}']),    #B.280
+                self.engineP['m_{f}'] == self.engineP['m_{fan}']*((self.engineP['T_{T_{2}}']/self.constants['T_{ref}'])**.5)/(self.engineP['P_{T_{2}}']/self.constants['P_{ref}']),    #B.280
 
-                self.engineP['\pi_f'] >= 1,
+                self.engineP['\\pi_{f}'] >= 1,
 
                 ]
 
             lpcmap = [
-                self.engineP['\pi_{lc}']*(26/self.lpcmap['\pi_{lc_D}']) == (1.38 * (self.engineP['N_1'])**0.566)**10,
-                self.engineP['\pi_{lc}']*(26/self.lpcmap['\pi_{lc_D}']) <= 1.1*(1.38 * (self.engineP['m_{tild_lc}'])**0.122)**10,
-                self.engineP['\pi_{lc}']*(26/self.lpcmap['\pi_{lc_D}']) >= .9*(1.38 * (self.engineP['m_{tild_lc}'])**0.122)**10,
+                self.engineP['\\pi_{lc}']*(26/self.lpcmap['\pi_{lc_D}']) == (1.38 * (self.engineP['N_{1}'])**0.566)**10,
+                self.engineP['\\pi_{lc}']*(26/self.lpcmap['\pi_{lc_D}']) <= 1.1*(1.38 * (self.engineP['m_{tild_lc}'])**0.122)**10,
+                self.engineP['\\pi_{lc}']*(26/self.lpcmap['\pi_{lc_D}']) >= .9*(1.38 * (self.engineP['m_{tild_lc}'])**0.122)**10,
 
-                self.engineP['\pi_{lc}'] >= 1,
+                self.engineP['\\pi_{lc}'] >= 1,
 
                 #define mbar..technially not needed b/c constrained in res 2 and/or 3
-                self.engineP['m_{lc}'] == self.engineP['m_{core}']*((self.engineP['T_{t_2}']/self.constants['T_{ref}'])**.5)/(self.engineP['P_{t_2}']/self.constants['P_{ref}']),    #B.280
+                self.engineP['m_{lc}'] == self.engineP['m_{core}']*((self.engineP['T_{T_{2}}']/self.constants['T_{ref}'])**.5)/(self.engineP['P_{T_{2}}']/self.constants['P_{ref}']),    #B.280
                 ]
 
             hpcmap = [
-                self.engineP['\pi_{hc}']*(26/self.hpcmap['\pi_{hc_D}']) == (1.38 * (self.engineP['N_2'])**0.566)**10,
-                self.engineP['\pi_{hc}']*(26/self.hpcmap['\pi_{hc_D}']) >= .9*(1.38 * (self.engineP['m_{tild_hc}'])**0.122)**10,
-                self.engineP['\pi_{hc}']*(26/self.hpcmap['\pi_{hc_D}']) <= 1.1*(1.38 * (self.engineP['m_{tild_hc}'])**0.122)**10,
+                self.engineP['\\pi_{hc}']*(26/self.hpcmap['\\pi_{hc_D}']) == (1.38 * (self.engineP['N_{2}'])**0.566)**10,
+                self.engineP['\\pi_{hc}']*(26/self.hpcmap['\\pi_{hc_D}']) >= .9*(1.38 * (self.engineP['m_{tild_{hc}}'])**0.122)**10,
+                self.engineP['\\pi_{hc}']*(26/self.hpcmap['\\pi_{hc_D}']) <= 1.1*(1.38 * (self.engineP['m_{tild_{hc}}'])**0.122)**10,
 
                 self.engineP['m_{hc}'] == self.engineP['m_{core}']*((self.engineP['T_{t_{2.5}}']/self.constants['T_{ref}'])**.5)/(self.engineP['P_{t_{2.5}}']/self.constants['P_{ref}']),    #B.280
 
-                self.engineP['\pi_{hc}'] >= 1,
+                self.engineP['\\pi_{hc}'] >= 1,
                 ]
 
             opr = [
-                OPR == self.engineP['\pi_{hc}']*self.engineP['\pi_{lc}']*self.engineP['\pi_f'],
+                OPR == self.engineP['\\pi_{hc}']*self.engineP['\\pi_{lc}']*self.engineP['\\pi_{f}'],
                 ]
  
             thrust = [
@@ -169,17 +169,17 @@ class Engine(Model):
                 self.engineP['P_{t_6}'] == self.engineP['P_{t_5}'], #B.183
                 self.engineP['T_{t_6}'] == self.engineP['T_{t_5}'], #B.184
 
-                TCS([self.engineP['F_6']/(self.constants['M_{takeoff}']*self.engineP['m_{core}']) + (self.engineP['f']+1)*self.state['V'] <= (self.engineP['fp1'])*self.engineP['u_6']]),
+                TCS([self.engineP['F_{6}']/(self.constants['M_{takeoff}']*self.engineP['m_{core}']) + (self.engineP['f']+1)*self.state['V'] <= (self.engineP['fp1'])*self.engineP['u_{6}']]),
 
                 #ISP
-                self.engineP['I_{sp}'] == self.engineP['F_{sp}']*self.state['a']*(self.engineP['alphap1'])/(self.engineP['f']*self.constants['g']),  #B.192
+                self.engineP['I_{sp}'] == self.engineP['F_{sp}']*self.state['a']*(self.engineP['\\alpha_{+1}'])/(self.engineP['f']*self.constants['g']),  #B.192
                 ]
 
             res1 = [
                 #residual 1 Fan/LPC speed
-                self.engineP['N_f']*self.sizing['G_f'] == self.engineP['N_1'],
-                self.engineP['N_1'] <= 1.1,
-                self.engineP['N_2'] <= 1.1,
+                self.engineP['N_{f}']*self.sizing['G_{f}'] == self.engineP['N_{1}'],
+                self.engineP['N_{1}'] <= 1.1,
+                self.engineP['N_{2}'] <= 1.1,
                 ]
 
                 #note residuals 2 and 3 differ from TASOPT, by replacing mhc with mlc
@@ -216,10 +216,10 @@ class Engine(Model):
 
             massflux = [
                 #compute core mass flux
-                self.constants['M_{takeoff}'] * self.engineP['m_{core}'] == self.engineP['\\rho_5'] * self.sizing['A_5'] * self.engineP['u_5']/(self.engineP['fp1']),
+                self.constants['M_{takeoff}'] * self.engineP['m_{core}'] == self.engineP['\\rho_5'] * self.sizing['a_{5}'] * self.engineP['u_{5}']/(self.engineP['fp1']),
 
                 #compute fan mas flow
-                self.engineP['m_{fan}'] == self.engineP['\\rho_7']*self.sizing['A_7']*self.engineP['u_7'],
+                self.engineP['m_{fan}'] == self.engineP['\\rho_7']*self.sizing['a_{7}']*self.engineP['u_{7}'],
 
                 self.engineP['m_{total}'] >= self.engineP['m_{fan}'] + self.engineP['m_{core}'],
                 ]
@@ -227,16 +227,16 @@ class Engine(Model):
             #component area sizing
             fanarea = [
                 #fan area
-                self.engineP['P_2'] == self.engineP['P_{t_2}']*(self.engineP['hold_{2}'])**(-3.512),
-                self.engineP['T_2'] == self.engineP['T_{t_2}'] * self.engineP['hold_{2}']**-1,
-                self.sizing['A_2'] == self.engineP['m_{fan}']/(self.engineP['\\rho_2']*self.engineP['u_2']),     #B.198
+                self.engineP['P_{2}'] == self.engineP['P_{T_{2}}']*(self.engineP['hold_{2}'])**(-3.512),
+                self.engineP['T_{2}'] == self.engineP['T_{T_{2}}'] * self.engineP['hold_{2}']**-1,
+                self.sizing['A_{2}'] == self.engineP['m_{fan}']/(self.engineP['\\rho_{2}']*self.engineP['u_{2}']),     #B.198
                 ]
 
             HPCarea = [
                 #HPC area
                 self.engineP['P_{2.5}'] == self.engineP['P_{t_{2.5}}']*(self.engineP['hold_{2.5}'])**(-3.824857),
                 self.engineP['T_{2.5}'] == self.engineP['T_{t_{2.5}}'] * self.engineP['hold_{2.5}']**-1,
-                self.sizing['A_{2.5}'] == self.engineP['m_{core}']/(self.engineP['\\rho_2.5']*self.engineP['u_{2.5}']),     #B.203
+                self.sizing['A_{2.5}'] == self.engineP['m_{core}']/(self.engineP['\\rho_{2.5}']*self.engineP['u_{2.5}']),     #B.203
                 ]
 
             if eng == 0:
@@ -709,8 +709,8 @@ class EngineConstants(Model):
 
         #----------------BLI pressure loss factor-------------------
         if BLI:
-            fBLIP = Variable('f_{BLI_P}', '-', 'BLI Stagnation Pressure Loss Ratio')
-            fBLIV = Variable('f_{BLI_V}', '-', 'BLI Velocity Loss Ratio')
+            fBLIP = Variable('f_{BLI_{P}}', '-', 'BLI Stagnation Pressure Loss Ratio')
+            fBLIV = Variable('f_{BLI_{V}}', '-', 'BLI Velocity Loss Ratio')
 
 class Compressor(Model):
     """"
@@ -724,9 +724,9 @@ class Compressor(Model):
 
         #-------------------------diffuser pressure ratios--------------------------
         pid = Variable('\pi_{d}', '-', 'Diffuser Pressure Ratio')
-        pifn = Variable('\pi_{fn}', '-', 'Fan Duct Pressure Loss Ratio')
+        pifn = Variable('\\pi_{fn}', '-', 'Fan Duct Pressure Loss Ratio')
 
-        gammaAir = Variable('gamma_{air}', 1.4, '-', 'Specific Heat Ratio for Ambient Air')
+        gammaAir = Variable('\\gamma_{air}', 1.4, '-', 'Specific Heat Ratio for Ambient Air')
         Cpair = Variable('Cp_{air}', 1003, 'J/kg/K', "Cp Value for Air at 250K")
 
     def dynamic(self, engine, state, BLI):
@@ -755,14 +755,14 @@ class CompressorPerformance(Model):
         ht18 = Variable('h_{t_{1.8}}', 'J/kg', 'Stagnation Enthalpy at the Diffuser Exit (1.8)')
         
         #--------------------------fan inlet (station 2) stagnation states---------------------------
-        Pt2 = Variable('P_{t_2}', 'kPa', 'Stagnation Pressure at the Fan Inlet (2)')
-        Tt2 = Variable('T_{t_2}', 'K', 'Stagnation Temperature at the Fan Inlet (2)')
-        ht2 = Variable('h_{t_2}', 'J/kg', 'Stagnation Enthalpy at the Fan Inlet (2)')
+        Pt2 = Variable('P_{T_{2}}', 'kPa', 'Stagnation Pressure at the Fan Inlet (2)')
+        Tt2 = Variable('T_{T_{2}}', 'K', 'Stagnation Temperature at the Fan Inlet (2)')
+        ht2 = Variable('h_{T_{2}}', 'J/kg', 'Stagnation Enthalpy at the Fan Inlet (2)')
 
         #--------------------------fan exit (station 2.1) stagnation states---------------------
-        Pt21 = Variable('P_{t_2.1}', 'kPa', 'Stagnation Pressure at the Fan Exit (2.1)')
-        Tt21 = Variable('T_{t_2.1}', 'K', 'Stagnation Temperature at the Fan Exit (2.1)')
-        ht21 = Variable('h_{t_2.1}', 'J/kg', 'Stagnation Enthalpy at the Fan Exit (2.1)')
+        Pt21 = Variable('P_{t_{2.1}}', 'kPa', 'Stagnation Pressure at the Fan Exit (2.1)')
+        Tt21 = Variable('T_{t_{2.1}}', 'K', 'Stagnation Temperature at the Fan Exit (2.1)')
+        ht21 = Variable('h_{t_{2.1}}', 'J/kg', 'Stagnation Enthalpy at the Fan Exit (2.1)')
 
         #-------------------------LPC exit (station 2.5) stagnation states-------------------
         Pt25 = Variable('P_{t_{2.5}}', 'kPa', 'Stagnation Pressure at the LPC Exit (2.5)')
@@ -780,9 +780,9 @@ class CompressorPerformance(Model):
         ht7 = Variable('h_{t_7}', 'J/kg', 'Stagnation Enthalpy at the Fan Nozzle Exit (7)')
 
         #------------------------turbo machinery pressure ratios--------------
-        pif = Variable('\pi_f', '-', 'Fan Pressure Ratio')
-        pilc = Variable('\pi_{lc}', '-', 'LPC Pressure Ratio')
-        pihc = Variable('\pi_{hc}', '-', 'HPC Pressure Ratio')
+        pif = Variable('\\pi_{f}', '-', 'Fan Pressure Ratio')
+        pilc = Variable('\\pi_{lc}', '-', 'LPC Pressure Ratio')
+        pihc = Variable('\\pi_{hc}', '-', 'HPC Pressure Ratio')
 
         hold25 = Variable('hold_{2.5}', '-', '1+(gamma-1)/2 * M_2.5**2')
         hold2 = Variable('hold_{2}', '-', '1+(gamma-1)/2 * M_2**2')
@@ -802,7 +802,7 @@ class CompressorPerformance(Model):
 
         if BLI:
             diffuser.extend([
-                Pt0 == self.engine['f_{BLI_P}']*state["P_{atm}"] / (c1 ** -3.5),
+                Pt0 == self.engine['f_{BLI_{P}}']*state["P_{atm}"] / (c1 ** -3.5),
                 ])
 
         if not BLI:
@@ -822,7 +822,7 @@ class CompressorPerformance(Model):
             ht21 == self.comp['Cp_{air}'] * Tt21,   #16.50
                        
             #fan nozzle exit (station 7)
-            Pt7 == self.comp['\pi_{fn}'] * Pt21,     #B.125
+            Pt7 == self.comp['\\pi_{fn}'] * Pt21,     #B.125
             Tt7 == Tt21,    #B.126
             ht7 == ht21,    #B.127
             ]
@@ -848,15 +848,15 @@ class Combustor(Model):
     """
     def setup(self):
         #define new variables
-        Cpc = Variable('Cp_c', 1216, 'J/kg/K', "Cp Value for Fuel/Air Mix in Combustor") #1400K, gamma equals 1.312
+        Cpc = Variable('Cp_{c}', 1216, 'J/kg/K', "Cp Value for Fuel/Air Mix in Combustor") #1400K, gamma equals 1.312
         Cpfuel = Variable('Cp_{fuel}', 2010, 'J/kg/K', 'Specific Heat Capacity of Kerosene (~Jet Fuel)')
-        hf = Variable('h_f', 43.003, 'MJ/kg', 'Heat of Combustion of Jet Fuel')     #http://hypeRbook.com/facts/2003/EvelynGofman.shtml...prob need a better source
+        hf = Variable('h_{f}', 43.003, 'MJ/kg', 'Heat of Combustion of Jet Fuel')     #http://hypeRbook.com/facts/2003/EvelynGofman.shtml...prob need a better source
 
         #-------------------------diffuser pressure ratios--------------------------
-        pib = Variable('\pi_{b}', '-', 'Burner Pressure Ratio')
+        pib = Variable('\\pi_{b}', '-', 'Burner Pressure Ratio')
 
         #---------------------------efficiencies & takeoffs-----------------------
-        etaB = Variable('eta_{B}', '-', 'Burner Efficiency')
+        etaB = Variable('\\eta_{B}', '-', 'Burner Efficiency')
 
         #------------------------Variables for cooling flow model---------------------------
         #cooling flow bypass ratio
@@ -914,10 +914,10 @@ class CombustorPerformance(Model):
             #combustor constraints
             constraints.extend([
                 #flow through combustor
-                ht4 == self.combustor['Cp_c'] * Tt4,
+                ht4 == self.combustor['Cp_{c}'] * Tt4,
 
                 #compute the station 4.1 enthalpy
-                ht41 == self.combustor['Cp_c'] * Tt41,
+                ht41 == self.combustor['Cp_{c}'] * Tt41,
 
                 #making f+1 GP compatible --> needed for convergence
                 SignomialEquality(fp1,f+1),
@@ -931,7 +931,7 @@ class CombustorPerformance(Model):
                 constraints.extend([
                     fp1*u41 == (u4a*(fp1)*self.combustor['\\alpha_c']*uc)**.5,
                     #this is a stagnation relation...need to fix it to not be signomial
-                    SignomialEquality(T41, Tt41-.5*(u41**2)/self.combustor['Cp_c']),
+                    SignomialEquality(T41, Tt41-.5*(u41**2)/self.combustor['Cp_{c}']),
                     
                     #here we assume no pressure loss in mixing so P41=P4a
                     Pt41 == P4a*(Tt41/T41)**(ccexp1),
@@ -957,8 +957,8 @@ class Turbine(Model):
     def setup(self):
         #define new variables
         #turbines
-        Cpt1 = Variable('Cp_t1', 1280, 'J/kg/K', "Cp Value for Combustion Products in HP Turbine") #1300K gamma = 1.318
-        Cpt2 = Variable('Cp_t2', 1184, 'J/kg/K', "Cp Value for Combustion Products in LP Turbine") #800K gamma = 1.354
+        Cpt1 = Variable('Cp_{t1}', 1280, 'J/kg/K', "Cp Value for Combustion Products in HP Turbine") #1300K gamma = 1.318
+        Cpt2 = Variable('Cp_{t2}', 1184, 'J/kg/K', "Cp Value for Combustion Products in LP Turbine") #800K gamma = 1.354
 
         #-------------------------diffuser pressure ratios--------------------------
         pitn = Variable('\\pi_{tn}', '-', 'Turbine Nozzle Pressure Ratio')
@@ -993,8 +993,8 @@ class TurbinePerformance(Model):
         ht49 = Variable('h_{t_{4.9}}', 'J/kg', 'Stagnation Enthalpy at the HPT Exit (49)')
 
         #------------------------turbo machinery pressure ratios--------------
-        pihpt = Variable('\pi_{HPT}', '-', 'HPT Pressure Ratio')
-        pilpt = Variable('\pi_{LPT}', '-', 'LPT Pressure Ratio')
+        pihpt = Variable('\\pi_{HPT}', '-', 'HPT Pressure Ratio')
+        pilpt = Variable('\\pi_{LPT}', '-', 'LPT Pressure Ratio')
 
         #------------------turbine nozzle exit stagnation states (station 5)------------
         Pt5 = Variable('P_{t_5}', 'kPa', 'Stagnation Pressure at the Turbine Nozzle Exit (5)')
@@ -1007,12 +1007,12 @@ class TurbinePerformance(Model):
         #turbine constraints
         constraints.extend([
             #HPT Exit states (station 4.5)
-            ht45 == self.turbine['Cp_t1'] * Tt45,
+            ht45 == self.turbine['Cp_{t1}'] * Tt45,
 
             #LPT Exit States
             Pt49 == pilpt * Pt45,
             pilpt == (Tt49/Tt45)**(lptexp1),    #turbine efficiency is 0.9
-            ht49 == self.turbine['Cp_t2'] * Tt49,
+            ht49 == self.turbine['Cp_{t2}'] * Tt49,
 
             #turbine nozzle exit states
             Pt5 == self.turbine['\\pi_{tn}'] * Pt49, #B.167
@@ -1030,7 +1030,7 @@ class FanMap(Model):
         #define new variables
         #------------------Fan map variables----------------
         mFanBarD = Variable('\\bar{m}_{fan_{D}}', 'kg/s', 'Fan On-Design Corrected Mass Flow')
-        piFanD = Variable('\pi_{f_D}', '-', 'On-Design Pressure Ratio')
+        piFanD = Variable('\\pi_{f_D}', '-', 'On-Design Pressure Ratio')
 
     def dynamic(self, engine):
         """
@@ -1055,7 +1055,7 @@ class FanMapPerformance(Model):
         #----------------------Compressor Speeds--------------------
         #Speed Variables...by setting the design speed to be 1 since only ratios are
         #imporant I was able to drop out all the other speeds
-        Nf = Variable('N_f', '-', 'Fan Speed')
+        Nf = Variable('N_{f}', '-', 'Fan Speed')
 
         #make the constraints
         constraints = []
@@ -1101,7 +1101,7 @@ class LPCMapPerformance(Model):
         #----------------------Compressor Speeds--------------------
         #Speed Variables...by setting the design speed to be 1 since only ratios are
         #imporant I was able to drop out all the other speeds
-        N1 = Variable('N_1', '-', 'LPC Speed')
+        N1 = Variable('N_{1}', '-', 'LPC Speed')
 
         #make the constraints
         constraints = []
@@ -1122,7 +1122,7 @@ class HPCMap(Model):
         #define new variables
         #-----------------HPC map variables-----------
         mhcD = Variable('m_{hc_D}', 'kg/s', 'On Design HPC Corrected Mass Flow')
-        pihcD = Variable('\pi_{hc_D}', '-', 'HPC On-Design Pressure Ratio')
+        pihcD = Variable('\\pi_{hc_D}', '-', 'HPC On-Design Pressure Ratio')
         mhcD = Variable('m_{hc_D}', 'kg/s', 'On Design HPC Corrected Mass Flow')
 
     def dynamic(self, engine):
@@ -1143,12 +1143,12 @@ class HPCMapPerformance(Model):
         #--------------------------HPC Map Variables------------------
         #Mass Flow Variables
         mhc = Variable('m_{hc}', 'kg/s', 'HPC Corrected Mass Flow')
-        mtildhc = Variable('m_{tild_hc}', '-', 'HPC Normalized Mass Flow')
+        mtildhc = Variable('m_{tild_{hc}}', '-', 'HPC Normalized Mass Flow')
 
         #----------------------Compressor Speeds--------------------
         #Speed Variables...by setting the design speed to be 1 since only ratios are
         #imporant I was able to drop out all the other speeds
-        N2 = Variable('N_2', '-', 'HPC Speed')
+        N2 = Variable('N_{2}', '-', 'HPC Speed')
 
         #make the constraints
         constraints = []
@@ -1168,8 +1168,8 @@ class Thrust(Model):
     def setup(self):
         #define new variables
         #fan and exhaust
-        Cptex =Variable('Cp_tex', 1029, 'J/kg/K', "Cp Value for Combustion Products at Core Exhaust") #500K, gamma = 1.387
-        Cpfanex = Variable('Cp_fex', 1005, 'J/kg/K', "Cp Value for Air at 300K") #gamma =1.4        #heat of combustion of jet fuel
+        Cptex =Variable('Cp_{tex}', 1029, 'J/kg/K', "Cp Value for Combustion Products at Core Exhaust") #500K, gamma = 1.387
+        Cpfanex = Variable('Cp_{fex}', 1005, 'J/kg/K', "Cp Value for Air at 300K") #gamma =1.4        #heat of combustion of jet fuel
 
         #max by pass ratio
         alpha_max = Variable('\\alpha_{max}', '-', 'By Pass Ratio')
@@ -1190,15 +1190,15 @@ class ThrustPerformance(Model):
         
         #define new variables
         #------------------fan exhaust (station 8) statge variables------------
-        P8 = Variable('P_8', 'kPa', 'Fan Exhaust Static Pressure')
+        P8 = Variable('P_{8}', 'kPa', 'Fan Exhaust Static Pressure')
         Pt8 = Variable('P_{t_8}', 'kPa', 'Fan Exhaust Stagnation Pressure')
         ht8 = Variable('h_{t_8}', 'J/kg', 'Fan Exhaust Stagnation Enthalpy')
-        h8 = Variable('h_8', 'J/kg', 'Fan Exhasut Static Enthalpy')
+        h8 = Variable('h_{8}', 'J/kg', 'Fan Exhasut Static Enthalpy')
         Tt8 = Variable('T_{t_8}', 'K', 'Fan Exhaust Stagnation Temperature (8)')
         T8 = Variable('T_{8}', 'K', 'Fan Exhaust Sttic Temperature (8)')
 
         #-----------------core exhaust (station 6) state variables-------------
-        P6 = Variable('P_6', 'kPa', 'Core Exhaust Static Pressure')
+        P6 = Variable('P_{6}', 'kPa', 'Core Exhaust Static Pressure')
         Pt6 = Variable('P_{t_6}', 'kPa', 'Core Exhaust Stagnation Pressure')
         Tt6 = Variable('T_{t_6}', 'K', 'Core Exhaust Stagnation Temperature (6)')
         T6 = Variable('T_{6}', 'K', 'Core Exhaust Static Temperature (6)')
@@ -1206,16 +1206,16 @@ class ThrustPerformance(Model):
         h6 = Variable('h_6', 'J/kg', 'Core Exhasut Static Enthalpy')
 
         #thrust variables
-        F8 = Variable('F_8', 'N', 'Fan Thrust')
-        F6 = Variable('F_6', 'N', 'Core Thrust')
+        F8 = Variable('F_{8}', 'N', 'Fan Thrust')
+        F6 = Variable('F_{6}', 'N', 'Core Thrust')
         F = Variable('F', 'N', 'Total Thrust')
         Fsp = Variable('F_{sp}', '-', 'Specific Net Thrust')
         Isp = Variable('I_{sp}', 's', 'Specific Impulse')
         TSFC = Variable('TSFC', '1/hr', 'Thrust Specific Fuel Consumption')
 
         #exhaust speeds
-        u6 = Variable('u_6', 'm/s', 'Core Exhaust Velocity')
-        u8 = Variable('u_8', 'm/s', 'Fan Exhaust Velocity')
+        u6 = Variable('u_{6}', 'm/s', 'Core Exhaust Velocity')
+        u8 = Variable('u_{8}', 'm/s', 'Fan Exhaust Velocity')
 
         #mass flows
         mCore = Variable('m_{core}', 'kg/s', 'Core Mass Flow')
@@ -1223,7 +1223,7 @@ class ThrustPerformance(Model):
 
         #------------------By-Pass Ratio (BPR)----------------------------
         alpha = Variable('\\alpha', '-', 'By Pass Ratio')
-        alphap1 = Variable('alphap1', '-', '1 plus BPR')
+        alphap1 = Variable('\\alpha_{+1}', '-', '1 plus BPR')
 
         hold = Variable('hold', '-', 'unecessary hold var')
 
@@ -1234,17 +1234,17 @@ class ThrustPerformance(Model):
             #exhaust and thrust constraints
             constraints.extend([
                 P8 == state["P_{atm}"],
-                h8 == self.thrust['Cp_fex'] * T8,
+                h8 == self.thrust['Cp_{fex}'] * T8,
                 TCS([u8**2 + 2*h8 <= 2*ht8]),
                 (P8/Pt8)**(fanexexp) == T8/Tt8,
-                ht8 == self.thrust['Cp_fex'] * Tt8,
+                ht8 == self.thrust['Cp_{fex}'] * Tt8,
                 
                 #core exhaust
                 P6 == state["P_{atm}"],   #B.4.11 intro
                 (P6/Pt6)**(turbexexp) == T6/Tt6,
                 TCS([u6**2 + 2*h6 <= 2*ht6]),
-                h6 == self.thrust['Cp_tex'] * T6,
-                ht6 == self.thrust['Cp_tex'] * Tt6,
+                h6 == self.thrust['Cp_{tex}'] * T6,
+                ht6 == self.thrust['Cp_{tex}'] * Tt6,
 
                 #constrain the new BPR
                 alpha == mFan / mCore,
@@ -1264,8 +1264,8 @@ class ThrustPerformance(Model):
         if BLI:
             constraints.extend([
                 #overall thrust values
-                TCS([F8/(alpha * mCore) + state['V']*engine['f_{BLI_V}'] <= u8]),  #B.188
-                TCS([F6/(mCore) + state['V']*engine['f_{BLI_V}'] <= u6]),  #B.188, unneeded
+                TCS([F8/(alpha * mCore) + state['V']*engine['f_{BLI_{V}}'] <= u8]),  #B.188
+                TCS([F6/(mCore) + state['V']*engine['f_{BLI_{V}}'] <= u6]),  #B.188, unneeded
                 ])
 
         else:
@@ -1284,7 +1284,7 @@ class Sizing(Model):
     def setup(self):
         #define new variables
         #gear ratio, set to 1 if no gearing present
-        Gf = Variable('G_f', '-', 'Gear Ratio Between Fan and LPC')
+        Gf = Variable('G_{f}', '-', 'Gear Ratio Between Fan and LPC')
 
         mhtD = Variable('m_{htD}', 'kg/s', 'Design HPT Corrected Mass Flow (see B.225)')
         mltD = Variable('m_{ltD}', 'kg/s', 'Design LPT Corrected Mass Flow (see B.226)')
@@ -1293,10 +1293,10 @@ class Sizing(Model):
         alpha_max = Variable('\\alpha_{OD}', '-', 'By Pass Ratio')
 
         #-------------------------Areas------------------------
-        A2 = Variable('A_2', 'm^2', 'Fan Area')
+        A2 = Variable('A_{2}', 'm^2', 'Fan Area')
         A25 = Variable('A_{2.5}', 'm^2', 'HPC Area')
-        A5 = Variable('A_5', 'm^2', 'Core Exhaust Nozzle Area')
-        A7 = Variable('A_7', 'm^2', 'Fan Exhaust Nozzle Area')
+        A5 = Variable('a_{5}', 'm^2', 'Core Exhaust Nozzle Area')
+        A7 = Variable('a_{7}', 'm^2', 'Fan Exhaust Nozzle Area')
 
         mCoreD = Variable('m_{coreD}', 'kg/s', 'Estimated on Design Mass Flow')  
 
@@ -1330,22 +1330,22 @@ class SizingPerformance(Model):
 
         #new variables
         #exhaust mach numbers
-        a5 = Variable('a_5', 'm/s', 'Speed of Sound at Station 5')
-        a7 = Variable('a_7', 'm/s', 'Speed of Sound at Station 7')
+        a5 = Variable('a_{5}', 'm/s', 'Speed of Sound at Station 5')
+        a7 = Variable('a_{7}', 'm/s', 'Speed of Sound at Station 7')
         
         #mass flows
         mtot = Variable('m_{total}', 'kg/s', 'Total Engine Mass Flux')
         
         #-------------------fan face variables---------------------
-        rho2 = Variable('\\rho_2', 'kg/m^3', 'Air Static Density at Fan Face')
-        T2 = Variable('T_2', 'K', 'Air Static Temperature at Fan Face')
-        P2 = Variable('P_2', 'kPa', 'Air Static Pressure at Fan Face')
-        u2 = Variable('u_2', 'm/s', 'Air Speed at Fan Face')
+        rho2 = Variable('\\rho_{2}', 'kg/m^3', 'Air Static Density at Fan Face')
+        T2 = Variable('T_{2}', 'K', 'Air Static Temperature at Fan Face')
+        P2 = Variable('P_{2}', 'kPa', 'Air Static Pressure at Fan Face')
+        u2 = Variable('u_{2}', 'm/s', 'Air Speed at Fan Face')
         h2 = Variable('h_{2}', 'J/kg', 'Static Enthalpy at the Fan Inlet (2)')
         M2 = Variable('M_2', '-', 'Fan Face/LPC Face Axial Mach Number')
 
         #------------------HPC face variables---------------------
-        rho25 = Variable('\\rho_2.5', 'kg/m^3', 'Static Air Density at HPC Face')
+        rho25 = Variable('\\rho_{2.5}', 'kg/m^3', 'Static Air Density at HPC Face')
         T25 = Variable('T_{2.5}', 'K', 'Static Air Temperature at HPC Face')
         P25 = Variable('P_{2.5}', 'kPa', 'Static Air Pressure at HPC Face')
         u25 = Variable('u_{2.5}', 'm/s', 'Air Speed at HPC Face')
@@ -1355,7 +1355,7 @@ class SizingPerformance(Model):
         #fan exhuast states
         P7 = Variable('P_{7}', 'kPa', 'Fan Exhaust Static Pressure (7)')
         T7 = Variable('T_{7}', 'K', 'Static Temperature at the Fan Nozzle Exit (7)')
-        u7 = Variable('u_7', 'm/s', 'Station 7 Exhaust Velocity')
+        u7 = Variable('u_{7}', 'm/s', 'Station 7 Exhaust Velocity')
         M7 = Variable('M_7', '-', 'Station 7 Mach Number')
         rho7 = Variable('\\rho_7', 'kg/m^3', 'Air Static Density at Fam Exhaust Exit (7)')
 
@@ -1363,7 +1363,7 @@ class SizingPerformance(Model):
         P5 = Variable('P_{5}', 'kPa', 'Core Exhaust Static Pressure (5)')
         T5 = Variable('T_{5}', 'K', 'Static Temperature at the Turbine Nozzle Exit (5)')
         M5 = Variable('M_5', '-', 'Station 5 Mach Number')
-        u5 = Variable('u_5', 'm/s', 'Station 5 Exhaust Velocity')
+        u5 = Variable('u_{5}', 'm/s', 'Station 5 Exhaust Velocity')
         rho5 = Variable('\\rho_5', 'kg/m^3', 'Air Static Density at Core Exhaust Exit (5)')
 
         #dummy vairables for pint purposes
@@ -1633,12 +1633,12 @@ def test():
         'P_{t_{1.8}}': 1e1*units('kPa'),
         'T_{t_{1.8}}': 1e3*units('K'),
         'h_{t_{1.8}}': 1e6*units('J/kg'),
-        'P_{t_2}': 1e1*units('kPa'),
-        'T_{t_2}': 1e3*units('K'),
-        'h_{t_2}': 1e6*units('J/kg'),
-        'P_{t_2.1}': 1e3*units('K'),
-        'T_{t_2.1}': 1e3*units('K'),
-        'h_{t_2.1}': 1e6*units('J/kg'),
+        'P_{T_{2}}': 1e1*units('kPa'),
+        'T_{T_{2}}': 1e3*units('K'),
+        'h_{T_{2}}': 1e6*units('J/kg'),
+        'P_{t_{2.1}}': 1e3*units('K'),
+        'T_{t_{2.1}}': 1e3*units('K'),
+        'h_{t_{2.1}}': 1e6*units('J/kg'),
         'P_{t_{2.5}}': 1e3*units('kPa'),
         'T_{t_{2.5}}': 1e3*units('K'),
         'h_{t_{2.5}}': 1e6*units('J/kg'),
@@ -1663,38 +1663,38 @@ def test():
         'P_{t_{4.9}}': 1e2*units('kPa'),
         'T_{t_{4.9}}': 1e3*units('K'),
         'h_{t_{4.9}}': 1e6*units('J/kg'),
-        '\pi_{HPT}': 1e-1,
-        '\pi_{LPT}': 1e-1,
+        '\\pi_{HPT}': 1e-1,
+        '\\pi_{LPT}': 1e-1,
         'P_{t_5}': 1e2*units('kPa'),
         'T_{t_5}': 1e3*units('K'),
         'h_{t_5}': 1e6*units('J/kg'),
-        'P_8': 1e2*units('kPa'),
+        'P_{8}': 1e2*units('kPa'),
         'P_{t_8}': 1e2*units('kPa'),
         'h_{t_8}': 1e6*units('J/kg'),
-        'h_8': 1e6*units('J/kg'),
+        'h_{8}': 1e6*units('J/kg'),
         'T_{t_8}': 1e3*units('K'),
         'T_{8}': 1e3*units('K'),
-        'P_6': 1e2*units('kPa'),
+        'P_{6}': 1e2*units('kPa'),
         'P_{t_6}': 1e2*units('kPa'),
         'T_{t_6': 1e3*units('K'),
         'h_{t_6}': 1e6*units('J/kg'),
         'h_6': 1e6*units('J/kg'),
-        'F_8': 1e2 * units('kN'),
-        'F_6': 1e2 * units('kN'),
+        'F_{8}': 1e2 * units('kN'),
+        'F_{6}': 1e2 * units('kN'),
         'F': 1e2 * units('kN'),
         'F_{sp}': 1e-1,
         'TSFC': 1e-1,
         'I_{sp}': 1e4*units('s'),
-        'u_6': 1e3*units('m/s'),
-        'u_8': 1e3*units('m/s'),
+        'u_{6}': 1e3*units('m/s'),
+        'u_{8}': 1e3*units('m/s'),
         'm_{core}': 1e2*units('kg/s'),
         'm_{fan}': 1e3*units('kg/s'),
         '\\alpha': 1e1,
-        'alphap1': 1e1,
+        '\\alpha_{+1}': 1e1,
         'm_{total}': 1e3*units('kg/s'),
-        'T_2': 1e3*units('K'),
-        'P_2': 1e2*units('kPa'),
-        'u_2': 1e3*units('m/s'),
+        'T_{2}': 1e3*units('K'),
+        'P_{2}': 1e2*units('kPa'),
+        'u_{2}': 1e3*units('m/s'),
         'h_{2}': 1e6*units('J/kg'),
         'T_{2.5}': 1e3*units('K'),
         'P_{2.5}': 1e2*units('kPa'),
@@ -1702,10 +1702,10 @@ def test():
         'h_{2.5}': 1e6*units('J/kg'),
         'P_{7}': 1e2*units('kPa'),
         'T_{7}': 1e3*units('K'),
-        'u_7': 1e3*units('m/s'),
+        'u_{7}': 1e3*units('m/s'),
         'P_{5}': 1e2*units('kPa'),
         'T_{5}': 1e3*units('K'),
-        'u_5': 1e3*units('m/s'),
+        'u_{5}': 1e3*units('m/s'),
         'P_{atm}': 1e2*units('kPa'),
         'T_{atm}': 1e3*units('K'),
         'V': 1e3*units('knot'),
@@ -1764,7 +1764,7 @@ if __name__ == "__main__":
     eng = 2 is GE90, set N = 2
     eng = 3 is TASOPT D8.2, set N=2
     """
-    eng = 2
+    eng = 3
     
     if eng == 0 or eng == 2 or eng == 3:
         N = 2
@@ -1801,12 +1801,12 @@ if __name__ == "__main__":
         'P_{t_{1.8}}': 1e1*units('kPa'),
         'T_{t_{1.8}}': 1e3*units('K'),
         'h_{t_{1.8}}': 1e6*units('J/kg'),
-        'P_{t_2}': 1e1*units('kPa'),
-        'T_{t_2}': 1e3*units('K'),
-        'h_{t_2}': 1e6*units('J/kg'),
-        'P_{t_2.1}': 1e3*units('K'),
-        'T_{t_2.1}': 1e3*units('K'),
-        'h_{t_2.1}': 1e6*units('J/kg'),
+        'P_{T_{2}}': 1e1*units('kPa'),
+        'T_{T_{2}}': 1e3*units('K'),
+        'h_{T_{2}}': 1e6*units('J/kg'),
+        'P_{t_{2.1}}': 1e3*units('K'),
+        'T_{t_{2.1}}': 1e3*units('K'),
+        'h_{t_{2.1}}': 1e6*units('J/kg'),
         'P_{t_{2.5}}': 1e3*units('kPa'),
         'T_{t_{2.5}}': 1e3*units('K'),
         'h_{t_{2.5}}': 1e6*units('J/kg'),
@@ -1831,38 +1831,38 @@ if __name__ == "__main__":
         'P_{t_{4.9}}': 1e2*units('kPa'),
         'T_{t_{4.9}}': 1e3*units('K'),
         'h_{t_{4.9}}': 1e6*units('J/kg'),
-        '\pi_{HPT}': 1e-1,
-        '\pi_{LPT}': 1e-1,
+        '\\pi_{HPT}': 1e-1,
+        '\\pi_{LPT}': 1e-1,
         'P_{t_5}': 1e2*units('kPa'),
         'T_{t_5}': 1e3*units('K'),
         'h_{t_5}': 1e6*units('J/kg'),
-        'P_8': 1e2*units('kPa'),
+        'P_{8}': 1e2*units('kPa'),
         'P_{t_8}': 1e2*units('kPa'),
         'h_{t_8}': 1e6*units('J/kg'),
-        'h_8': 1e6*units('J/kg'),
+        'h_{8}': 1e6*units('J/kg'),
         'T_{t_8}': 1e3*units('K'),
         'T_{8}': 1e3*units('K'),
-        'P_6': 1e2*units('kPa'),
+        'P_{6}': 1e2*units('kPa'),
         'P_{t_6}': 1e2*units('kPa'),
         'T_{t_6': 1e3*units('K'),
         'h_{t_6}': 1e6*units('J/kg'),
-        'h_6': 1e6*units('J/kg'),
-        'F_8': 1e2 * units('kN'),
-        'F_6': 1e2 * units('kN'),
+        'h_{6}': 1e6*units('J/kg'),
+        'F_{8}': 1e2 * units('kN'),
+        'F_{6}': 1e2 * units('kN'),
         'F': 1e2 * units('kN'),
         'F_{sp}': 1e-1,
         'TSFC': 1e-1,
         'I_{sp}': 1e4*units('s'),
-        'u_6': 1e3*units('m/s'),
-        'u_8': 1e3*units('m/s'),
+        'u_{6}': 1e3*units('m/s'),
+        'u_{8}': 1e3*units('m/s'),
         'm_{core}': 1e2*units('kg/s'),
         'm_{fan}': 1e3*units('kg/s'),
         '\\alpha': 1e1,
-        'alphap1': 1e1,
+        '\\alpha_{+1}': 1e1,
         'm_{total}': 1e3*units('kg/s'),
-        'T_2': 1e3*units('K'),
-        'P_2': 1e2*units('kPa'),
-        'u_2': 1e3*units('m/s'),
+        'T_{2}': 1e3*units('K'),
+        'P_{2}': 1e2*units('kPa'),
+        'u_{2}': 1e3*units('m/s'),
         'h_{2}': 1e6*units('J/kg'),
         'T_{2.5}': 1e3*units('K'),
         'P_{2.5}': 1e2*units('kPa'),
@@ -1870,10 +1870,10 @@ if __name__ == "__main__":
         'h_{2.5}': 1e6*units('J/kg'),
         'P_{7}': 1e2*units('kPa'),
         'T_{7}': 1e3*units('K'),
-        'u_7': 1e3*units('m/s'),
+        'u_{7}': 1e3*units('m/s'),
         'P_{5}': 1e2*units('kPa'),
         'T_{5}': 1e3*units('K'),
-        'u_5': 1e3*units('m/s'),
+        'u_{5}': 1e3*units('m/s'),
         'P_{atm}': 1e2*units('kPa'),
         'T_{atm}': 1e3*units('K'),
         'V': 1e3*units('knot'),
@@ -1911,9 +1911,9 @@ if __name__ == "__main__":
 
         print rotationerror, tocerror, cruiseerror
 
-        print 100*(mag(sol('A_2').to('m^2'))-1.6026)/1.6026
-        print 100*(mag(sol('A_7').to('m^2'))-.7423)/.7423
-        print 100*(mag(sol('A_5').to('m^2'))-.2262)/.2262
+##        print 100*(mag(sol('A_{2}').to('m^2'))-1.6026)/1.6026
+##        print 100*(mag(sol('a_{7}').to('m^2'))-.7423)/.7423
+##        print 100*(mag(sol('a_{5}').to('m^2'))-.2262)/.2262
         print "----weight---"
         print 100*(mag(sol('W_{engine}').to('lbf'))-7870.7)/7870.7
 

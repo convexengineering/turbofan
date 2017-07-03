@@ -10,6 +10,9 @@ from get_d82_subs import get_D82_subs
 from cfm56_subs import get_cfm56_subs
 from get_ge90_subs import get_ge90_subs
 
+# Import constant relaxation tool
+from relaxed_constants import relaxed_constants
+
 #Cp and gamma values estimated from https://www.ohio.edu/mechanical/thermo/property_tables/air/air_Cp_{c}v.html
 
 class Engine(Model):
@@ -1729,19 +1732,20 @@ def test():
     
     #test the TASOPT engine
 
-##    with Vectorize(3):
-##        state = TestState()
-##
-##    engine = Engine(0, True, 3, state, 1)
-##
-##    mission = TestMissionTASOPT(engine)
-##
-##    substitutions = get_737800_subs()
-##
-##    m = Model((10*engine.engineP.thrustP['TSFC'][2]+engine.engineP.thrustP['TSFC'][1]+engine.engineP.thrustP['TSFC'][0]), [engine, mission], substitutions, x0=x0)
-##    m.substitutions.update(substitutions)
-##    sol = m.localsolve(verbosity = 0)
-##
+    with Vectorize(3):
+        state = TestState()
+
+    engine = Engine(0, True, 3, state, 1)
+
+    mission = TestMissionTASOPT(engine)
+
+    substitutions = get_737800_subs()
+
+    m = Model((10*engine.engineP.thrustP['TSFC'][2]+engine.engineP.thrustP['TSFC'][1]+engine.engineP.thrustP['TSFC'][0]), [engine, mission], substitutions, x0=x0)
+    m.substitutions.update(substitutions)
+    m_relax = relaxed_constants(m, None)
+    sol = m_relax.localsolve(verbosity = 0)
+
     #test the D8.2 engine
     with Vectorize(2):
         state = TestState()

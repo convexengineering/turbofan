@@ -1637,21 +1637,6 @@ def test():
     m = Model((10*engine.engineP.thrustP['TSFC'][0]+engine.engineP.thrustP['TSFC'][1]), [engine, mission], substitutions)
     m.substitutions.update(substitutions)
     sol = m.localsolve(verbosity = 0)
-    
-    #test the TASOPT engine
-
-    with Vectorize(3):
-        state = TestState()
-
-    engine = Engine(0, True, 3, state, 1)
-
-    mission = TestMissionTASOPT(engine)
-
-    substitutions = get_737800_subs()
-
-    m = Model((10*engine.engineP.thrustP['TSFC'][2]+engine.engineP.thrustP['TSFC'][1]+engine.engineP.thrustP['TSFC'][0]), [engine, mission], substitutions)
-    m.substitutions.update(substitutions)
-    sol = m.localsolve(verbosity = 0)
 
     #test the D8.2 engine
     with Vectorize(2):

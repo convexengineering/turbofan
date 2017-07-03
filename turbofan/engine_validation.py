@@ -1624,7 +1624,6 @@ def test():
     """
     Test the cfm56 engine model
     """
-    #test the CFM engine
     with Vectorize(2):
         state = TestState()
 

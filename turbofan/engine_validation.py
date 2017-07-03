@@ -957,8 +957,8 @@ class Turbine(Model):
     def setup(self):
         #define new variables
         #turbines
-        Cpt1 = Variable('C_{p_{t1}', 1280, 'J/kg/K', "Cp Value for Combustion Products in HP Turbine") #1300K gamma = 1.318
-        Cpt2 = Variable('C_{p_{t2}', 1184, 'J/kg/K', "Cp Value for Combustion Products in LP Turbine") #800K gamma = 1.354
+        Cpt1 = Variable('C_{p_{t1}}', 1280, 'J/kg/K', "Cp Value for Combustion Products in HP Turbine") #1300K gamma = 1.318
+        Cpt2 = Variable('C_{p_{t2}}', 1184, 'J/kg/K', "Cp Value for Combustion Products in LP Turbine") #800K gamma = 1.354
 
         #-------------------------diffuser pressure ratios--------------------------
         pitn = Variable('\\pi_{tn}', '-', 'Turbine Nozzle Pressure Ratio')
@@ -1007,12 +1007,12 @@ class TurbinePerformance(Model):
         #turbine constraints
         constraints.extend([
             #HPT Exit states (station 4.5)
-            ht45 == self.turbine['C_{p_{t1}'] * Tt45,
+            ht45 == self.turbine['C_{p_{t1}}'] * Tt45,
 
             #LPT Exit States
             Pt49 == pilpt * Pt45,
             pilpt == (Tt49/Tt45)**(lptexp1),    #turbine efficiency is 0.9
-            ht49 == self.turbine['C_{p_{t2}'] * Tt49,
+            ht49 == self.turbine['C_{p_{t2}}'] * Tt49,
 
             #turbine nozzle exit states
             Pt5 == self.turbine['\\pi_{tn}'] * Pt49, #B.167

@@ -1729,32 +1729,32 @@ def test():
     
     #test the TASOPT engine
 
-    with Vectorize(3):
-        state = TestState()
-
-    engine = Engine(0, True, 3, state, 1)
-
-    mission = TestMissionTASOPT(engine)
-
-    substitutions = get_737800_subs()
-
-    m = Model((10*engine.engineP.thrustP['TSFC'][2]+engine.engineP.thrustP['TSFC'][1]+engine.engineP.thrustP['TSFC'][0]), [engine, mission], substitutions, x0=x0)
-    m.substitutions.update(substitutions)
-    sol = m.localsolve(verbosity = 0)
-
-    #test the D8.2 engine
-    with Vectorize(2):
-        state = TestState()
-
-    engine = Engine(0, True, 2, state, 3)
-
-    mission = TestMissionD82(engine)
-
-    substitutions = get_D82_subs()
-
-    m = Model((10*engine.engineP.thrustP['TSFC'][0]+engine.engineP.thrustP['TSFC'][1]), [engine, mission], substitutions, x0=x0)
-    m.substitutions.update(substitutions)
-    sol = m.localsolve(verbosity = 0)
+##    with Vectorize(3):
+##        state = TestState()
+##
+##    engine = Engine(0, True, 3, state, 1)
+##
+##    mission = TestMissionTASOPT(engine)
+##
+##    substitutions = get_737800_subs()
+##
+##    m = Model((10*engine.engineP.thrustP['TSFC'][2]+engine.engineP.thrustP['TSFC'][1]+engine.engineP.thrustP['TSFC'][0]), [engine, mission], substitutions, x0=x0)
+##    m.substitutions.update(substitutions)
+##    sol = m.localsolve(verbosity = 0)
+##
+##    #test the D8.2 engine
+##    with Vectorize(2):
+##        state = TestState()
+##
+##    engine = Engine(0, True, 2, state, 3)
+##
+##    mission = TestMissionD82(engine)
+##
+##    substitutions = get_D82_subs()
+##
+##    m = Model((10*engine.engineP.thrustP['TSFC'][0]+engine.engineP.thrustP['TSFC'][1]), [engine, mission], substitutions, x0=x0)
+##    m.substitutions.update(substitutions)
+##    sol = m.localsolve(verbosity = 0)
 
 
 if __name__ == "__main__":

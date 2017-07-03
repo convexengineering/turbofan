@@ -848,7 +848,7 @@ class Combustor(Model):
     """
     def setup(self):
         #define new variables
-        Cpc = Variable('C_{p_{c}', 1216, 'J/kg/K', "Cp Value for Fuel/Air Mix in Combustor") #1400K, gamma equals 1.312
+        Cpc = Variable('C_{p_{c}}', 1216, 'J/kg/K', "Cp Value for Fuel/Air Mix in Combustor") #1400K, gamma equals 1.312
         Cpfuel = Variable('C_{p_{fuel}', 2010, 'J/kg/K', 'Specific Heat Capacity of Kerosene (~Jet Fuel)')
         hf = Variable('h_{f}', 43.003, 'MJ/kg', 'Heat of Combustion of Jet Fuel')     #http://hypeRbook.com/facts/2003/EvelynGofman.shtml...prob need a better source
 
@@ -914,10 +914,10 @@ class CombustorPerformance(Model):
             #combustor constraints
             constraints.extend([
                 #flow through combustor
-                ht4 == self.combustor['C_{p_{c}'] * Tt4,
+                ht4 == self.combustor['C_{p_{c}}'] * Tt4,
 
                 #compute the station 4.1 enthalpy
-                ht41 == self.combustor['C_{p_{c}'] * Tt41,
+                ht41 == self.combustor['C_{p_{c}}'] * Tt41,
 
                 #making f+1 GP compatible --> needed for convergence
                 SignomialEquality(fp1,f+1),
@@ -931,7 +931,7 @@ class CombustorPerformance(Model):
                 constraints.extend([
                     fp1*u41 == (u4a*(fp1)*self.combustor['\\alpha_c']*uc)**.5,
                     #this is a stagnation relation...need to fix it to not be signomial
-                    SignomialEquality(T41, Tt41-.5*(u41**2)/self.combustor['C_{p_{c}']),
+                    SignomialEquality(T41, Tt41-.5*(u41**2)/self.combustor['C_{p_{c}}']),
                     
                     #here we assume no pressure loss in mixing so P41=P4a
                     Pt41 == P4a*(Tt41/T41)**(ccexp1),

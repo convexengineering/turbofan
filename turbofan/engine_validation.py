@@ -1265,14 +1265,12 @@ class ThrustPerformance(Model):
             constraints.extend([
                 #overall thrust values
                 TCS([F8/(alpha * mCore) + state['V']*engine['f_{BLI_{V}}'] <= u8]),  #B.188
-                TCS([F6/(mCore) + state['V']*engine['f_{BLI_{V}}'] <= u6]),  #B.188, unneeded
                 ])
 
         else:
             constraints.extend([
                 #overall thrust values
                 TCS([F8/(alpha * mCore) + state['V'] <= u8]),  #B.188
-                TCS([F6/(mCore) + state['V'] <= u6]),  #B.188, unneeded
                 ])
 
         return constraints
@@ -1795,6 +1793,21 @@ if __name__ == "__main__":
 ##        print 100*(mag(sol('a_{5}').to('m^2'))-.2262)/.2262
         print "----weight---"
         print 100*(mag(sol('W_{engine}').to('lbf'))-7870.7)/7870.7
+
+        print "TO Tt4.1"
+        print 100*(mag(sol('T_{t_{4.1}}')[0]) - 1658.7)/1658.7
+        print "TOC Tt4.1"
+        print 100*(mag(sol('T_{t_{4.1}}')[1]) - 1605.4)/1605.4
+        print "Cruise Tt4.1"
+        print 100*(mag(sol('T_{t_{4.1}}')[2]) - 1433.8)/1433.8
+
+        print "Cooling deltas"
+        print "TO"
+        print 100*(mag(sol('T_{t_4}')[0]-sol('T_{t_{4.1}}')[0]) - 174.3)/174.3
+        print "TOC"
+        print 100*(mag(sol('T_{t_4}')[1]-sol('T_{t_{4.1}}')[1]) - 178.4)/178.4
+        print "Cruise"
+        print 100*(mag(sol('T_{t_4}')[2]-sol('T_{t_{4.1}}')[2]) - 153.2)/153.2
 
     if eng == 2:
         tocerror = 100*(mag(sol('TSFC')[1]) - 0.5846)/0.5846

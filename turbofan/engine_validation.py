@@ -216,10 +216,10 @@ class Engine(Model):
 
             massflux = [
                 #compute core mass flux
-                self.constants['M_{takeoff}'] * self.engineP['m_{core}'] == self.engineP['\\rho_5'] * self.sizing['a_{5}'] * self.engineP['u_{5}']/(self.engineP['fp1']),
+                self.constants['M_{takeoff}'] * self.engineP['m_{core}'] == self.engineP['\\rho_5'] * self.sizing['A_{5}'] * self.engineP['u_{5}']/(self.engineP['fp1']),
 
                 #compute fan mas flow
-                self.engineP['m_{fan}'] == self.engineP['\\rho_7']*self.sizing['a_{7}']*self.engineP['u_{7}'],
+                self.engineP['m_{fan}'] == self.engineP['\\rho_7']*self.sizing['A_{7}']*self.engineP['u_{7}'],
 
                 self.engineP['m_{total}'] >= self.engineP['m_{fan}'] + self.engineP['m_{core}'],
                 ]
@@ -1293,8 +1293,8 @@ class Sizing(Model):
         #-------------------------Areas------------------------
         A2 = Variable('A_{2}', 'm^2', 'Fan Area')
         A25 = Variable('A_{2.5}', 'm^2', 'HPC Area')
-        A5 = Variable('a_{5}', 'm^2', 'Core Exhaust Nozzle Area')
-        A7 = Variable('a_{7}', 'm^2', 'Fan Exhaust Nozzle Area')
+        A5 = Variable('A_{5}', 'm^2', 'Core Exhaust Nozzle Area')
+        A7 = Variable('A_{7}', 'm^2', 'Fan Exhaust Nozzle Area')
 
         mCoreD = Variable('m_{coreD}', 'kg/s', 'Estimated on Design Mass Flow')  
 
@@ -1789,8 +1789,8 @@ if __name__ == "__main__":
         print rotationerror, tocerror, cruiseerror
 
 ##        print 100*(mag(sol('A_{2}').to('m^2'))-1.6026)/1.6026
-##        print 100*(mag(sol('a_{7}').to('m^2'))-.7423)/.7423
-##        print 100*(mag(sol('a_{5}').to('m^2'))-.2262)/.2262
+##        print 100*(mag(sol('A_{7}').to('m^2'))-.7423)/.7423
+##        print 100*(mag(sol('A_{5}').to('m^2'))-.2262)/.2262
         print "----weight---"
         print 100*(mag(sol('W_{engine}').to('lbf'))-7870.7)/7870.7
 

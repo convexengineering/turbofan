@@ -1,2 +1,2 @@
-skipsolvers : cvxopt
+skipsolvers : cvxopt, mosek_cli
 gpkit-models branch : master 

@@ -9,6 +9,8 @@ from gpkit.constraints.tight import Tight as TCS
 import matplotlib.pyplot as plt
 from simple_ac_imports import Aircraft, CruiseSegment, ClimbSegment, FlightState
 from get_parametric_studies_subs import get_parametric_studies_subs
+from engine_validation import Engine
+Engine.Ttmax = False
 
 """
 Models requird to minimze the aircraft total fuel weight. Rate of climb equation taken from John
@@ -43,17 +45,17 @@ class StateLinking(Model):
             for i in range(Ncruise):
                 constraints.extend([
                     cruisestate[varkey][i] == enginestate[varkey][i+Nclimb]
-                    ])           
-        
+                    ])
+
         return constraints
 
 class FleetMission(Model):
     """
     mission class, links together all subclasses
     """
-    def setup(self, Nclimb, Ncruise, Nfleet, substitutions = None, **kwargs):
+    def setup(self, Nclimb, Ncruise, Nfleet):
         eng = 0
-        
+
         #two level vectorization to make a fleet
         with Vectorize(Nfleet):
             # vectorize
@@ -131,11 +133,11 @@ class FleetMission(Model):
             #set the range for each cruise segment, doesn't take credit for climb
             #down range disatnce covered
             cruise.cruiseP['Rng'] == ReqRng/(Ncruise),
-            
+
             #compute fuel burn from TSFC
-            cruise['W_{burn}'] == ac['numeng']*ac.engine['TSFC'][Nclimb:] * cruise['thr'] * ac.engine['F'][Nclimb:],              
+            cruise['W_{burn}'] == ac['numeng']*ac.engine['TSFC'][Nclimb:] * cruise['thr'] * ac.engine['F'][Nclimb:],
             climb['W_{burn}'] == ac['numeng']*ac.engine['TSFC'][:Nclimb] * climb['thr'] * ac.engine['F'][:Nclimb],
-            
+
             CruiseAlt >= 30000*units('ft'),
 
             #min climb rate constraint
@@ -171,8 +173,8 @@ class FleetMission(Model):
         enginecruise = [
             ac.engine.engineP['M_2'][Nclimb:] == cruise['M'],
             ac.engine.engineP['M_{2.5}'][Nclimb:] == M25,
-            
-            #steady level flight constraint on D 
+
+            #steady level flight constraint on D
             cruise['D'] == ac['numeng'] * ac.engine['F_{spec}'][Nclimb:],
 
             #breguet range eqn
@@ -181,12 +183,12 @@ class FleetMission(Model):
             ]
 
         ranges = [
-            ReqRng[0] == 500*units('nautical_miles'), 
+            ReqRng[0] == 500*units('nautical_miles'),
             ReqRng[1] == 1000*units('nautical_miles'),
             ReqRng[2] == 1500*units('nautical_miles'),
             ReqRng[3] == 2000*units('nautical_miles'),
             ]
-        
+
         return constraints + ac + climb + cruise + enginecruise + engineclimb + enginestate + statelinking + ranges + fleetfuel
 
 def test():
@@ -279,14 +281,14 @@ def test():
         'V': 3e3*units('knot'),
         'a': 1e3*units('m/s'),
     }
-           
+
     mission = FleetMission(2, 2, 4)
     m = Model(mission['W_{f_{fleet}}'], mission, substitutions)
     sol = m.localsolve(solver='mosek', verbosity = 4)
 
 if __name__ == '__main__':
     substitutions = get_parametric_studies_subs()
-    
+
     #dict of initial guesses
     x0 = {
         'W_{engine}': 1e4*units('N'),
@@ -374,7 +376,7 @@ if __name__ == '__main__':
         'V': 3e3*units('knot'),
         'a': 1e3*units('m/s'),
     }
-           
+
     mission = FleetMission(2, 2, 4)
     m = Model(mission['W_{f_{fleet}}'], mission, substitutions)
     sol = m.localsolve(solver='mosek', verbosity = 1)

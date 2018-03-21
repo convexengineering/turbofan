@@ -696,10 +696,10 @@ class EngineConstants(Model):
     def setup(self, BLI):
         #-----------------------air properties------------------
         #ambient
-        R = Variable('R', 287, 'J/kg/K', 'R')
+        R = Variable('R', 287, 'J/kg/K', 'R', constant=True)
 
         #gravity
-        g = Variable('g', 9.81, 'm/(s^2)', 'Gravitational Acceleration')
+        g = Variable('g', 9.81, 'm/(s^2)', 'Gravitational Acceleration', constant=True)
 
         #-------------------------reference temp and pressure--------------------
         Tref = Variable('T_{ref}', 'K', 'Reference Stagnation Temperature')

@@ -9,6 +9,9 @@ def get_D82_subs():
     hpc = 35/8
     
     substitutions = {
+        'OPR_{max}': 32,
+        'T_{t_{4.1_{max}}}': 1400,
+
         '\\pi_{tn}': .995,
         '\\pi_{b}': .94,
         '\\pi_{d}': .995,

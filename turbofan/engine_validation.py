@@ -10,6 +10,10 @@ from get_d82_subs import get_D82_subs
 from cfm56_subs import get_cfm56_subs
 from get_ge90_subs import get_ge90_subs
 
+
+# relaxed constants solve
+from relaxed_constants import relaxed_constants, post_process
+
 #Cp and gamma values estimated from https://www.ohio.edu/mechanical/thermo/property_tables/air/air_Cp_{c}v.html
 
 class Engine(Model):
@@ -25,6 +29,7 @@ class Engine(Model):
     Nfleet - number of discrete missions in a fleet mission optimization problem, default is 0
     """
     Ttmax = True
+    OPRmax = True
 
     def setup(self, res7, cooling, N, state, eng, Nfleet=0, BLI=False):
         """
@@ -78,6 +83,9 @@ class Engine(Model):
         HTRfSub = Variable('HTR_{f_{SUB}}', '-', '1 - HTRf^2')
         HTRlpcSub = Variable('HTR_{lpc_{SUB}}', '-', '1 - HTRlpc^2')
 
+        #OPRmax
+        OPRmax = Variable('OPR_{max}', '-', 'Maximum OPR')
+
         #make the constraints
         constraints = []
 
@@ -93,11 +101,12 @@ class Engine(Model):
                 ]
 
             fmix = [
-                #compute f with mixing
+                # compute f with mixing
                 TCS([self.combustor['\\eta_{B}'] * self.engineP['f'] * self.combustor['h_{f}'] >= (1-self.combustor['\\alpha_c'])*self.engineP['h_{t_4}']-(1-self.combustor['\\alpha_c'])*self.engineP['h_{t_3}']+self.combustor['C_{p_{fuel}']*self.engineP['f']*(self.engineP['T_{t_4}']-self.combustor['T_{t_f}'])]),
-                #compute Tt41...mixing causes a temperature drop
-                #had to include Tt4 here to prevent it from being pushed down to zero
-                SignomialEquality(self.engineP['h_{t_{4.1}}']*self.engineP['fp1'], ((1-self.combustor['\\alpha_c']+self.engineP['f'])*self.engineP['h_{t_4}'] + self.combustor['\\alpha_c']*self.engineP['h_{t_3}'])),
+                # compute Tt41...mixing causes a temperature drop
+                # had to include Tt4 here to prevent it from being pushed down to zero
+                # relaxed SigEq
+                TCS([self.engineP['h_{t_{4.1}}']*self.engineP['fp1'] <= ((1-self.combustor['\\alpha_c']+self.engineP['f'])*self.engineP['h_{t_4}'] + self.combustor['\\alpha_c']*self.engineP['h_{t_3}'])]),
 
                 self.engineP['P_{t_4}'] == self.combustor['\\pi_{b}'] * self.engineP['P_{t_3}'],   #B.145
                 ]
@@ -111,14 +120,12 @@ class Engine(Model):
                 ]
 
             shaftpower = [
-                #HPT shafter power balance
-                #SIGNOMIAL
-                SignomialEquality(self.constants['M_{takeoff}']*self.turbine['\eta_{HPshaft}']*(1+self.engineP['f'])*(self.engineP['h_{t_{4.1}}']-self.engineP['h_{t_{4.5}}']), self.engineP['h_{t_3}'] - self.engineP['h_{t_{2.5}}']),    #B.161
+                # HPT shaft power balance
+                TCS([self.constants['M_{takeoff}']*self.turbine['\eta_{HPshaft}']*(self.engineP['fp1'])*(self.engineP['h_{t_{4.1}}']-self.engineP['h_{t_{4.5}}']) >= self.engineP['h_{t_3}'] - self.engineP['h_{t_{2.5}}']]),    #B.161
 
                 #LPT shaft power balance
-                #SIGNOMIAL
-                SignomialEquality(self.constants['M_{takeoff}']*self.turbine['\eta_{LPshaft}']*(1+self.engineP['f'])*
-                (self.engineP['h_{t_{4.9}}'] - self.engineP['h_{t_{4.5}}']),-((self.engineP['h_{t_{2.5}}']-self.engineP['h_{t_{1.8}}'])+self.engineP['\\alpha_{+1}']*(self.engineP['h_{t_{2.1}}'] - self.engineP['h_{T_{2}}']))),    #B.165
+                TCS([self.constants['M_{takeoff}']*self.turbine['\eta_{LPshaft}']*(self.engineP['fp1'])*
+                (self.engineP['h_{t_{4.5}}'] - self.engineP['h_{t_{4.9}}']) >= self.engineP['h_{t_{2.5}}']-self.engineP['h_{t_{1.8}}']+self.engineP['\\alpha']*(self.engineP['h_{t_{2.1}}'] - self.engineP['h_{T_{2}}'])]),    #B.165
                 ]
 
             hptexit = [
@@ -347,7 +354,6 @@ class Engine(Model):
                 res7list.extend([
                     self.engineP['T_{t_4}'] <= Tt4max,
                     ])
-
         if res7 == 1:
             if cooling:
                 res7list = [
@@ -361,7 +367,9 @@ class Engine(Model):
                     #option #2 constrain the burner exit temperature
                     self.engineP['T_{t_4}'] == Tt4spec,  #B.265
                     ]
-
+        if self.OPRmax:
+            res7list.extend([OPR <= OPRmax])
+            
         if cooling:
             constraints = [weight, diameter, fmix, shaftpower, hptexit, fanmap, lpcmap, hpcmap, opr, thrust, res1, res2, res3, res4, res5, massflux, fanarea, HPCarea, onDest, res7list]
         else:
@@ -920,8 +928,10 @@ class CombustorPerformance(Model):
                 #compute the station 4.1 enthalpy
                 ht41 == self.combustor['C_{p_{c}}'] * Tt41,
 
-                #making f+1 GP compatible --> needed for convergence
+                # making f+1 GP compatible --> needed for convergence
                 SignomialEquality(fp1,f+1),
+                # TCS([fp1 >= f+1]),
+                # Relaxation of this SE makes problem hit iteration limit
 
                 #investigate doing this with a substitution
                 M4a == .1025,
@@ -931,8 +941,8 @@ class CombustorPerformance(Model):
             if mixing:
                 constraints.extend([
                     fp1*u41 == (u4a*(fp1)*self.combustor['\\alpha_c']*uc)**.5,
-                    #this is a stagnation relation...need to fix it to not be signomial
-                    SignomialEquality(T41, Tt41-.5*(u41**2)/self.combustor['C_{p_{c}}']),
+                    #this is a stagnation relation, loosened SigEq
+                    TCS([T41 <= Tt41-.5*(u41**2)/self.combustor['C_{p_{c}}']]),
 
                     #here we assume no pressure loss in mixing so P41=P4a
                     Pt41 == P4a*(Tt41/T41)**(ccexp1),
@@ -1626,16 +1636,14 @@ def test():
     with Vectorize(2):
         state = TestState()
 
-    Engine.Ttmax = False
     engine = Engine(0, True, 2, state, 0)
 
     mission = TestMissionCFM(engine)
 
     substitutions = get_cfm56_subs()
-
     m = Model((10*engine.engineP.thrustP['TSFC'][0]+engine.engineP.thrustP['TSFC'][1]), [engine, mission], substitutions)
-    m.substitutions.update(substitutions)
-    sol = m.localsolve(verbosity = 0)
+    m = relaxed_constants(m)
+    sol = m.localsolve(verbosity = 2)
 
 if __name__ == "__main__":
     """
@@ -1768,7 +1776,8 @@ if __name__ == "__main__":
 
     #update substitutions and solve
     m.substitutions.update(substitutions)
-    sol = m.localsolve(solver = 'mosek', verbosity = 0)
+    m = relaxed_constants(m)
+    sol = m.localsolve(verbosity = 4)
 
     #print out various percent differences in TSFC and engine areas
     if eng == 0:

@@ -8,20 +8,20 @@ from gpkit.small_scripts import mag
 import numpy as np
 
 # Import engine components and maps
-from maps import (FanMap, FanMapPerformance, HPCMap, HPCMapPerformance,
+from .maps import (FanMap, FanMapPerformance, HPCMap, HPCMapPerformance,
                   LPCMap, LPCMapPerformance)
-from turbine import Turbine, TurbinePerformance
-from combustor import Combustor, CombustorPerformance
-from compressor import Compressor, CompressorPerformance
+from .turbine import Turbine, TurbinePerformance
+from .combustor import Combustor, CombustorPerformance
+from .compressor import Compressor, CompressorPerformance
 
 # Import substitution files
-from subs import get_737800_subs, get_D82_subs, get_cfm56_subs, get_ge90_subs
-from test_missions import (TestMissionCFM, TestMissionTASOPT,
-                           TestMissionGE90, TestMissionD82, diffs)
-from initial_guess import initialize_guess
+from .subs import get_737800_subs, get_D82_subs, get_cfm56_subs, get_ge90_subs
+from .test_missions import (TestMissionCFM, TestMissionTASOPT,
+                           TestMissionGE90, TestMissionD82)
+from .initial_guess import initialize_guess
 
 # relaxed constants solve
-from relaxed_constants import relaxed_constants, post_process
+from .relaxed_constants import relaxed_constants, post_process
 
 #Cp and gamma values estimated from https://www.ohio.edu/mechanical/thermo/property_tables/air/air_Cp_{c}v.html
 
@@ -388,7 +388,7 @@ class Engine(Model):
                     ]
         if self.OPRmax:
             res7list.extend([OPR <= OPRmax])
-            
+
         if cooling:
             constraints = [weight, diameter, fmix, shaftpower, hptexit, fanmap, lpcmap, hpcmap, opr, thrust, res1, res2, res3, res4, res5, massflux, fanarea, HPCarea, onDest, res7list]
         else:

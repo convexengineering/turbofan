@@ -32,7 +32,7 @@ SOFTWARE."""
 setup(
     name="turbofan",
     description="Library of geometric and signomial programming models "
-                "modelig the TASOPT turbofan engine that can be manipulated"
+                "modeling the TASOPT turbofan engine that can be manipulated"
                 "and solved using GPkit.",
     author="MIT Department of Aeronautics and Astronautics",
     author_email="gpkit@mit.edu",

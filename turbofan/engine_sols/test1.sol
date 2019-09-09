@@ -41,7 +41,7 @@ p17
 S'N'
 sS'name'
 p18
-S'F_{spec}'
+S'F'
 p19
 sS'models'
 p20
@@ -1866,7 +1866,7 @@ tp457
 sg17
 S'K'
 sg18
-S'T_{T_{2}}'
+S'T_{t_{2}}'
 p458
 sg20
 (lp459
@@ -3633,7 +3633,7 @@ tp860
 sg17
 g88
 sg18
-S'h_{T_{2}}'
+S'h_{t_{2}}'
 p861
 sg20
 (lp862
